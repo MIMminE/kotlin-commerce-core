@@ -55,20 +55,20 @@ class Order protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(userId: UUID, items: List<OrderItem>): Order {
-            require(items.isNotEmpty()) { "order items must not be empty" }
+        fun create(userId: UUID): Order {
             return Order().apply {
                 this.userId = userId
-                items.forEach { addItem(it) }
                 recalculateAmounts(discountAmount = 0)
             }
         }
     }
 
-    fun addItem(item: OrderItem) {
+    fun addItem(productId: UUID, qty: Long, unitPriceSnapshot: Long) {
         require(status == OrderStatus.CREATED) { "cannot modify items unless CREATED" }
+        val item = OrderItem.of(productId, qty, unitPriceSnapshot)
         item.attachTo(this)
         _items.add(item)
+        recalculateAmounts(discountAmount)
     }
 
     fun applyDiscount(discountAmount: Long, couponId: UUID?) {
