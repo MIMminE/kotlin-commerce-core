@@ -1,9 +1,9 @@
 package nuts.project.commerce.application.port.repository
 
-import nuts.project.commerce.domain.inventory.Inventory
+import nuts.project.commerce.domain.stock.Stock
 import java.util.UUID
 
 interface InventoryRepositoryPort {
-    fun save(inventory: Inventory): Inventory
-    fun findByProductId(productId: UUID): Inventory?
+    fun save(stock: Stock): Stock
+    fun findByProductId(productId: UUID): Stock?
 }

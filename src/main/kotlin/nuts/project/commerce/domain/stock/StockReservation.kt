@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.inventory
+package nuts.project.commerce.domain.stock
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "inventory_holds")
-class InventoryReservation : BaseEntity(){
+class StockReservation : BaseEntity(){
 
     @Id
     @Column(name = "reservation_id", nullable = false, columnDefinition = "uuid")
@@ -21,7 +21,7 @@ class InventoryReservation : BaseEntity(){
         protected set
 
     @Column(name = "status", nullable = false, length = 20)
-    var status: InventoryReservationStatus = InventoryReservationStatus.ACTIVE
+    var status: StockReservationStatus = StockReservationStatus.ACTIVE
         protected set
 
     @Version

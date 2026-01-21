@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.inventory
+package nuts.project.commerce.domain.stock
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -9,8 +9,8 @@ import nuts.project.commerce.domain.common.BaseEntity
 import java.util.UUID
 
 @Entity
-@Table(name = "inventory")
-class Inventory protected constructor() : BaseEntity() {
+@Table(name = "stock")
+class Stock protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "product_id", nullable = false, columnDefinition = "uuid")
@@ -31,9 +31,9 @@ class Inventory protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(productId: UUID, initialQty: Long): Inventory {
+        fun create(productId: UUID, initialQty: Long): Stock {
             require(initialQty >= 0) { "Initial quantity must be non-negative" }
-            return Inventory().apply {
+            return Stock().apply {
                 this.productId = productId
                 this.onHandQty = initialQty
             }
