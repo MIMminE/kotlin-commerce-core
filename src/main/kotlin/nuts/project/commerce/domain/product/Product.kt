@@ -4,6 +4,8 @@ import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import nuts.project.commerce.domain.common.BaseEntity
@@ -16,14 +18,16 @@ class Product protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    var id: UUID = UUID.randomUUID()
-        protected set
-
+    val id: UUID = UUID.randomUUID()
 
     @Column(name = "name", nullable = false, length = 120)
     lateinit var name: String
         protected set
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stock_handling_policy", nullable = false, length = 20)
+    lateinit var stockHandlingPolicy: StockHandlingPolicy
+        protected set
 
     @Embedded
     @AttributeOverride(name = "amount", column = Column(name = "price", nullable = false))
@@ -35,10 +39,11 @@ class Product protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(name: String, price: Money, active: Boolean = true): Product {
+        fun create(name: String, stockHandlingPolicy: StockHandlingPolicy, price: Money, active: Boolean = true): Product {
             require(name.isNotBlank()) { "Product name must not be blank" }
             return Product().apply {
                 this.name = name.trim()
+                this.stockHandlingPolicy = stockHandlingPolicy
                 this.price = price
                 this.active = active
             }

@@ -13,7 +13,7 @@ import java.util.UUID
 @Table(
     name = "coupon_use",
     indexes = [
-        Index(name = "idx_coupon_use_coupon_id", columnList = "order_id")
+        Index(name = "idx_coupon_use_coupon_id", columnList = "coupon_id")
     ]
 )
 class CouponUse protected constructor() : BaseEntity() {

@@ -21,8 +21,7 @@ class Payment protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    var id: UUID = UUID.randomUUID()
-        protected set
+    val id: UUID = UUID.randomUUID()
 
     @Column(name = "order_id", nullable = false, columnDefinition = "uuid")
     lateinit var orderId: UUID

@@ -1,15 +1,15 @@
 package nuts.project.commerce.application.usecase
 
-import nuts.project.commerce.application.port.CouponDiscountResult
-import nuts.project.commerce.application.port.CouponPolicyPort
-import nuts.project.commerce.application.port.OrderRepository
-import nuts.project.commerce.application.port.ProductPrice
-import nuts.project.commerce.application.port.ProductPricingPort
+import nuts.project.commerce.application.port.coupon.CouponDiscountResult
+import nuts.project.commerce.application.port.coupon.CouponPolicyPort
+import nuts.project.commerce.application.port.repository.OrderRepositoryPort
+import nuts.project.commerce.application.port.product.ProductPrice
+import nuts.project.commerce.application.port.product.ProductQueryPort
 import nuts.project.commerce.domain.order.Order
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class FakeOrderRepository : OrderRepository {
+class FakeOrderRepositoryPort : OrderRepositoryPort {
     private val store = ConcurrentHashMap<UUID, Order>()
 
     override fun save(order: Order): Order {
@@ -20,9 +20,9 @@ class FakeOrderRepository : OrderRepository {
     override fun findById(id: UUID): Order? = store[id]
 }
 
-class FakeProductPricingPort(
+class FakeProductQueryPort(
     private val priceByProductId: Map<UUID, Long>
-) : ProductPricingPort {
+) : ProductQueryPort {
     override fun getUnitPrices(productIds: List<UUID>): List<ProductPrice> =
         productIds.distinct().map { pid ->
             val price = priceByProductId[pid]

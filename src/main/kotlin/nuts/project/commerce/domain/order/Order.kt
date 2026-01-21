@@ -18,8 +18,7 @@ class Order protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    var id: UUID = UUID.randomUUID()
-        protected set
+    val id: UUID = UUID.randomUUID()
 
     @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
     lateinit var userId: UUID

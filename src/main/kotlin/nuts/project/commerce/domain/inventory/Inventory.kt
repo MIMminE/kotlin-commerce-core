@@ -17,8 +17,12 @@ class Inventory protected constructor() : BaseEntity() {
     var productId: UUID = UUID.randomUUID()
         protected set
 
-    @Column(name = "available_qty", nullable = false)
-    var availableQty: Long = 0
+    @Column(name = "on_hand_qty", nullable = false)
+    var onHandQty: Long = 0
+        protected set
+
+    @Column(name = "reserved_qty", nullable = false)
+    var reservedQty: Long = 0
         protected set
 
     @Version
@@ -31,20 +35,20 @@ class Inventory protected constructor() : BaseEntity() {
             require(initialQty >= 0) { "Initial quantity must be non-negative" }
             return Inventory().apply {
                 this.productId = productId
-                this.availableQty = initialQty
+                this.onHandQty = initialQty
             }
         }
     }
 
     fun increase(qty: Long) {
         require(qty > 0) { "Increase quantity must be positive" }
-        this.availableQty += qty
+        this.onHandQty += qty
     }
 
     fun decrease(qty: Long) {
         require(qty > 0) { "Decrease quantity must be positive" }
-        require(this.availableQty >= qty) { "Insufficient inventory to decrease by $qty" }
-        this.availableQty -= qty
+        require(this.onHandQty >= qty) { "Insufficient inventory to decrease by $qty" }
+        this.onHandQty -= qty
     }
 
     /**

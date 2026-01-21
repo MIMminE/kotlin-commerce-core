@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.usecase
 
-import nuts.project.commerce.application.port.OrderRepository
+import nuts.project.commerce.application.port.repository.OrderRepositoryPort
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -12,17 +12,17 @@ class PlaceOrderUseCaseTest {
     private fun uuid() = UUID.randomUUID()
     private val p1 = uuid()
     private val p2 = uuid()
-    private lateinit var orderRepository: OrderRepository
+    private lateinit var orderRepositoryPort: OrderRepositoryPort
     private lateinit var useCase: PlaceOrderUseCase
 
     @BeforeEach
     fun setup() {
-        orderRepository = FakeOrderRepository()
-        val pricingPort = FakeProductPricingPort(
+        orderRepositoryPort = FakeOrderRepositoryPort()
+        val pricingPort = FakeProductQueryPort(
             mapOf(p1 to 1000L, p2 to 500L)
         )
         val couponPort = FakeCouponPolicyPort(discountAmount = 300L)
-        useCase = PlaceOrderUseCase(orderRepository, pricingPort, couponPort)
+        useCase = PlaceOrderUseCase(orderRepositoryPort, pricingPort, couponPort)
     }
 
     @Test
@@ -44,7 +44,7 @@ class PlaceOrderUseCaseTest {
         assertEquals(0L, result.discountAmount)
         assertEquals(2500L, result.finalAmount)
 
-        val saved = orderRepository.findById(result.orderId)!!
+        val saved = orderRepositoryPort.findById(result.orderId)!!
         assertEquals(userId, saved.userId)
         assertEquals(2, saved.items.size)
         assertEquals(2500L, saved.originalAmount)
@@ -67,7 +67,7 @@ class PlaceOrderUseCaseTest {
         assertEquals(300L, result.discountAmount)
         assertEquals(700L, result.finalAmount)
 
-        val saved = orderRepository.findById(result.orderId)!!
+        val saved = orderRepositoryPort.findById(result.orderId)!!
         assertEquals(couponId, saved.appliedCouponId)
         assertEquals(700L, saved.finalAmount)
     }
@@ -75,8 +75,8 @@ class PlaceOrderUseCaseTest {
     @Test
     fun `주문 생성 - 아이템이 비어있으면 예외`() {
         val useCase = PlaceOrderUseCase(
-            orderRepository = FakeOrderRepository(),
-            productPricingPort = FakeProductPricingPort(emptyMap()),
+            orderRepositoryPort = FakeOrderRepositoryPort(),
+            productQueryPort = FakeProductQueryPort(emptyMap()),
             couponPolicyPort = FakeCouponPolicyPort(0L),
         )
 
@@ -97,8 +97,8 @@ class PlaceOrderUseCaseTest {
         val unknownProductId = uuid()
 
         val useCase = PlaceOrderUseCase(
-            orderRepository = FakeOrderRepository(),
-            productPricingPort = FakeProductPricingPort(priceByProductId = emptyMap()),
+            orderRepositoryPort = FakeOrderRepositoryPort(),
+            productQueryPort = FakeProductQueryPort(priceByProductId = emptyMap()),
             couponPolicyPort = FakeCouponPolicyPort(0L),
         )
 

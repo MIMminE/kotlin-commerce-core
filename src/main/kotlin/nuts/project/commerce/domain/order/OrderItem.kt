@@ -17,8 +17,7 @@ class OrderItem protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    var id: UUID = UUID.randomUUID()
-        protected set
+    val id: UUID = UUID.randomUUID()
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_id", nullable = false)

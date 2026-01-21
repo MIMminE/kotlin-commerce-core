@@ -1,15 +1,16 @@
 package nuts.project.commerce.application.usecase
 
-import nuts.project.commerce.application.port.CouponPolicyPort
-import nuts.project.commerce.application.port.OrderRepository
-import nuts.project.commerce.application.port.ProductPricingPort
+import nuts.project.commerce.application.port.coupon.CouponPolicyPort
+import nuts.project.commerce.application.port.repository.OrderRepositoryPort
+import nuts.project.commerce.application.port.product.ProductQueryPort
 import nuts.project.commerce.domain.order.Order
 import java.util.UUID
 
 class PlaceOrderUseCase(
-    private val orderRepository: OrderRepository,
-    private val productPricingPort: ProductPricingPort,
-    private val couponPolicyPort: CouponPolicyPort
+    private val orderRepositoryPort: OrderRepositoryPort,
+    private val productQueryPort: ProductQueryPort,
+    private val couponPolicyPort: CouponPolicyPort,
+    private val inventoryUpdatePort: InventoryUpdatePort
 ) {
 
     fun place(command: PlaceOrderCommand): PlaceOrderResult {
@@ -18,7 +19,7 @@ class PlaceOrderUseCase(
 
         val order = Order.create(command.userId)
 
-        val prices = productPricingPort
+        val prices = productQueryPort
             .getUnitPrices(command.items.map { it.productId })
             .associateBy { it.productId }
 
@@ -43,7 +44,7 @@ class PlaceOrderUseCase(
             order.applyDiscount(discount.discountAmount, discount.couponId)
         }
 
-        val savedOrder = orderRepository.save(order)
+        val savedOrder = orderRepositoryPort.save(order)
 
         return PlaceOrderResult(
             orderId = savedOrder.id,
@@ -52,7 +53,6 @@ class PlaceOrderUseCase(
             finalAmount = savedOrder.finalAmount
         )
     }
-
 }
 
 data class PlaceOrderCommand(
