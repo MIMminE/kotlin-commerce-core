@@ -1,16 +1,27 @@
 package nuts.project.commerce.application.usecase
 
-import nuts.project.commerce.application.port.coupon.CouponPolicyPort
-import nuts.project.commerce.application.port.repository.OrderRepositoryPort
-import nuts.project.commerce.application.port.product.ProductQueryPort
+import nuts.project.commerce.application.port.query.ProductQuery
+import nuts.project.commerce.application.port.command.OrderCommand
+import nuts.project.commerce.application.service.CouponQueryService
+import nuts.project.commerce.application.service.StockCommandService
+import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
+import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
 import nuts.project.commerce.domain.order.Order
+import nuts.project.commerce.domain.product.StockHandlingPolicy
 import java.util.UUID
 
+
+/**
+ * 재고 관련 기능이 추가되어야 한다.
+ * - 주문된 상품들 중에 재고 처리 방식이 예약 방식일 경우에
+ * - 재고에 예약을 걸어두는 로직이 수행되어야 한다.
+ */
+
 class PlaceOrderUseCase(
-    private val orderRepositoryPort: OrderRepositoryPort,
-    private val productQueryPort: ProductQueryPort,
-    private val couponPolicyPort: CouponPolicyPort,
-    private val inventoryUpdatePort: InventoryUpdatePort
+    private val orderCommand: OrderCommand,
+    private val productQuery: ProductQuery,
+    private val couponQueryService: CouponQueryService,
+    private val stockCommandService: StockCommandService
 ) {
 
     fun place(command: PlaceOrderCommand): PlaceOrderResult {
@@ -19,7 +30,23 @@ class PlaceOrderUseCase(
 
         val order = Order.create(command.userId)
 
-        val prices = productQueryPort
+        command.items
+            .map { item ->
+                val product = productQuery.getProduct(item.productId)
+                    ?: throw IllegalArgumentException("Product not found: ${item.productId}")
+                item to product
+            }
+            .filter { (_, product) -> product.stockHandlingPolicy == StockHandlingPolicy.RESERVE_THEN_DEDUCT }
+            .forEach { (item, _) ->
+                stockCommandService.reserve(
+                    orderId = order.id,
+                    productId = item.productId,
+                    quantity = item.qty,
+                    reservedUntil = 60L
+                )
+            }
+
+        val prices = productQuery
             .getUnitPrices(command.items.map { it.productId })
             .associateBy { it.productId }
 
@@ -34,17 +61,9 @@ class PlaceOrderUseCase(
             )
         }
 
-        val couponId = command.couponId
-        if (couponId != null) {
-            val discount = couponPolicyPort.calculateDiscount(
-                userId = command.userId,
-                couponId = couponId,
-                originalAmount = order.originalAmount
-            )
-            order.applyDiscount(discount.discountAmount, discount.couponId)
-        }
+        applyCouponIfPresent(order, command.couponId)
 
-        val savedOrder = orderRepositoryPort.save(order)
+        val savedOrder = orderCommand.save(order)
 
         return PlaceOrderResult(
             orderId = savedOrder.id,
@@ -53,19 +72,19 @@ class PlaceOrderUseCase(
             finalAmount = savedOrder.finalAmount
         )
     }
-}
 
-data class PlaceOrderCommand(
-    val userId: UUID,
-    val items: List<Item>,
-    val couponId: UUID? = null
-) {
-    data class Item(val productId: UUID, val qty: Long)
-}
+    private fun applyCouponIfPresent(order: Order, couponId: UUID?) {
+        if (couponId == null) return
 
-data class PlaceOrderResult(
-    val orderId: UUID,
-    val originalAmount: Long,
-    val discountAmount: Long,
-    val finalAmount: Long
-)
+        val coupon = couponQueryService.findCoupon(couponId)
+
+        require(coupon.canApply(order.originalAmount)) {
+            "Coupon cannot be applied: $couponId"
+        }
+
+        order.applyDiscount(
+            discountAmount = coupon.calculateDiscount(order.originalAmount),
+            couponId = couponId
+        )
+    }
+}

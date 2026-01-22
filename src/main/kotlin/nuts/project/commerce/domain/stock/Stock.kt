@@ -30,14 +30,24 @@ class Stock protected constructor() : BaseEntity() {
     var version: Long = 0
         protected set
 
-    companion object {
-        fun create(productId: UUID, initialQty: Long): Stock {
-            require(initialQty >= 0) { "Initial quantity must be non-negative" }
-            return Stock().apply {
-                this.productId = productId
-                this.onHandQty = initialQty
-            }
-        }
+    fun reserve(qty: Long) {
+        require(qty > 0) { "Reserve quantity must be positive" }
+        require(this.onHandQty >= qty) { "Insufficient inventory to reserve $qty" }
+        this.onHandQty -= qty
+        this.reservedQty += qty
+    }
+
+    fun confirm(qty: Long) {
+        require(qty > 0) { "Confirm quantity must be positive" }
+        require(this.reservedQty >= qty) { "Insufficient reserved inventory to confirm $qty" }
+        this.reservedQty -= qty
+    }
+
+    fun release(qty: Long) {
+        require(qty > 0) { "Release quantity must be positive" }
+        require(this.reservedQty >= qty) { "Insufficient reserved inventory to release $qty" }
+        this.reservedQty -= qty
+        this.onHandQty += qty
     }
 
     fun increase(qty: Long) {
@@ -51,7 +61,15 @@ class Stock protected constructor() : BaseEntity() {
         this.onHandQty -= qty
     }
 
-    /**
-     * 수량 업데이트 부분은 동시성 차감을 고려해야 한다.
-     */
+    companion object {
+        fun create(productId: UUID, initialQty: Long): Stock {
+            require(initialQty >= 0) { "Initial quantity must be non-negative" }
+            return Stock().apply {
+                this.productId = productId
+                this.onHandQty = initialQty
+            }
+        }
+    }
+
+
 }
