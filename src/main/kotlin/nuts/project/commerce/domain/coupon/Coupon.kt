@@ -33,7 +33,6 @@ class Coupon protected constructor() : BaseEntity() {
     var minOrderAmount: Long = 0
         protected set
 
-
     @Column(name = "valid_from", nullable = false)
     lateinit var validFrom: Instant
         protected set
@@ -46,13 +45,11 @@ class Coupon protected constructor() : BaseEntity() {
     var active: Boolean = true
         protected set
 
-    fun canApply(originalAmount: Long): Boolean {
-        val now = Instant.now()
-        if (!active) return false
-        if (now.isBefore(validFrom) || now.isAfter(validTo)) return false
-        if (originalAmount < minOrderAmount) return false
-        return true
-    }
+    fun isActiveAt(now: Instant): Boolean =
+        active && !now.isBefore(validFrom) && !now.isAfter(validTo)
+
+    fun canApplyTo(originalAmount: Long): Boolean =
+        originalAmount >= minOrderAmount
 
     fun calculateDiscount(originalAmount: Long): Long {
         require(originalAmount >= 0) { "Original amount must be non-negative" }
@@ -64,6 +61,7 @@ class Coupon protected constructor() : BaseEntity() {
 
     companion object {
         fun create(
+            id: UUID,
             type: CouponType,
             value: Long,
             minOrderAmount: Long,
@@ -76,6 +74,7 @@ class Coupon protected constructor() : BaseEntity() {
             require(validFrom.isBefore(validTo)) { "Valid from must be before valid to" }
 
             return Coupon().apply {
+                this.id = id
                 this.type = type
                 this.value = value
                 this.minOrderAmount = minOrderAmount
@@ -85,21 +84,23 @@ class Coupon protected constructor() : BaseEntity() {
             }
         }
 
-        // 기간에 제한이 없는 쿠폰 생성 편의 메서드
         fun create(
+            id: UUID,
             type: CouponType,
             value: Long,
-            minOrderAmount: Long
+            minOrderAmount: Long,
+            active: Boolean = true
         ): Coupon {
             val now = Instant.now()
             val farFuture = now.plusSeconds(60L * 60 * 24 * 365 * 100) // 100년 후
             return create(
+                id = id,
                 type = type,
                 value = value,
                 minOrderAmount = minOrderAmount,
                 validFrom = now,
                 validTo = farFuture,
-                active = true
+                active = active
             )
         }
     }

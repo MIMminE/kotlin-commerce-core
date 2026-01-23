@@ -5,4 +5,5 @@ import java.util.UUID
 
 interface CouponRepository {
     fun findById(couponId: UUID) : Coupon?
+    fun save(coupon: Coupon) : Coupon
 }

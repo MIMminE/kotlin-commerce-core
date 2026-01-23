@@ -5,7 +5,7 @@ import java.util.UUID
 
 interface StockRepository {
 
-    fun save(stock: Stock) : Stock
-    fun findByProductId(productId: UUID) : Stock?
-
+    fun save(stock: Stock): Stock
+    fun findByProductId(productId: UUID): Stock?
+//    fun findByProductIds(productIds: List<UUID>): List<Stock>
 }

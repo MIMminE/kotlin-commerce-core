@@ -18,5 +18,3 @@ data class Money(
         return Money(this.amount - other.amount)
     }
 }
-
-// 원화 기준으로 Long 타입으로 가는 것을 권장한다.

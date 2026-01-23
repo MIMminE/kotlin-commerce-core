@@ -18,7 +18,8 @@ class Product protected constructor() : BaseEntity() {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    val id: UUID = UUID.randomUUID()
+    lateinit var id: UUID
+        protected set
 
     @Column(name = "name", nullable = false, length = 120)
     lateinit var name: String
@@ -39,9 +40,16 @@ class Product protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(name: String, stockHandlingPolicy: StockHandlingPolicy, price: Money, active: Boolean = true): Product {
+        fun create(
+            id: UUID,
+            name: String,
+            stockHandlingPolicy: StockHandlingPolicy,
+            price: Money,
+            active: Boolean = true
+        ): Product {
             require(name.isNotBlank()) { "Product name must not be blank" }
             return Product().apply {
+                this.id = id
                 this.name = name.trim()
                 this.stockHandlingPolicy = stockHandlingPolicy
                 this.price = price

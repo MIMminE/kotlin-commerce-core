@@ -1,5 +1,6 @@
 package nuts.project.commerce.application.service
 
+import jakarta.transaction.Transactional
 import nuts.project.commerce.application.port.repository.StockRepository
 import nuts.project.commerce.application.port.repository.StockReservationRepository
 import nuts.project.commerce.domain.stock.Stock
@@ -17,6 +18,7 @@ class StockCommandService(
         return stockRepository.save(stock)
     }
 
+    @Transactional
     fun reserve(orderId: UUID, productId: UUID, quantity: Long, reservedUntil: Long) {
 
         val stock = stockRepository.findByProductId(productId)
@@ -34,6 +36,7 @@ class StockCommandService(
         stockReservationRepository.save(stockReservation)
     }
 
+    @Transactional
     fun confirm(orderId: UUID) {
         stockReservationRepository.findByOrderId(orderId).forEach { reservation ->
             val stock = stockRepository.findByProductId(reservation.productId)
