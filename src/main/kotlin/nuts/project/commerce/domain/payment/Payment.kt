@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import nuts.project.commerce.domain.common.BaseEntity
+import nuts.project.commerce.domain.common.Money
 import java.util.UUID
 
 @Entity
@@ -27,32 +28,44 @@ class Payment protected constructor() : BaseEntity() {
     lateinit var orderId: UUID
         protected set
 
+    @Column(name = "amout", nullable = false)
+    lateinit var amount: Money
+        protected set
+
+    @Column(name = "pg_provider", length = 50)
+    var pgProvider: String? = null
+        protected set
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     var status: PaymentStatus = PaymentStatus.APPROVED
+        protected set
+
+    @Column(name = "pg_payment_key", nullable = false, length = 100)
+    lateinit var pgPaymentKey: String
         protected set
 
     @Column(name = "idempotency_key", nullable = false, length = 80)
     lateinit var idempotencyKey: String
         protected set
 
-    companion object {
-        fun approved(orderId: UUID, idempotencyKey: String): Payment {
-            require(idempotencyKey.isNotBlank()) { "idempotencyKey must not be blank" }
-            return Payment().apply {
-                this.orderId = orderId
-                this.status = PaymentStatus.APPROVED
-                this.idempotencyKey = idempotencyKey.trim()
-            }
-        }
-
-        fun declined(orderId: UUID, idempotencyKey: String): Payment {
-            require(idempotencyKey.isNotBlank()) { "idempotencyKey must not be blank" }
-            return Payment().apply {
-                this.orderId = orderId
-                this.status = PaymentStatus.DECLINED
-                this.idempotencyKey = idempotencyKey.trim()
-            }
-        }
-    }
+//    companion object {
+//        fun approved(orderId: UUID, idempotencyKey: String): Payment {
+//            require(idempotencyKey.isNotBlank()) { "idempotencyKey must not be blank" }
+//            return Payment().apply {
+//                this.orderId = orderId
+//                this.status = PaymentStatus.APPROVED
+//                this.idempotencyKey = idempotencyKey.trim()
+//            }
+//        }
+//
+//        fun declined(orderId: UUID, idempotencyKey: String): Payment {
+//            require(idempotencyKey.isNotBlank()) { "idempotencyKey must not be blank" }
+//            return Payment().apply {
+//                this.orderId = orderId
+//                this.status = PaymentStatus.DECLINED
+//                this.idempotencyKey = idempotencyKey.trim()
+//            }
+//        }
+//    }
 }
