@@ -9,9 +9,11 @@ import java.time.Instant
 import java.util.UUID
 
 @Service
-class CouponQueryService(private val couponRepository: CouponRepository) {
-
-    fun getValidCoupon(couponId: UUID, orderAmount: Long): Coupon {
+class CouponService(private val couponRepository: CouponRepository) {
+    fun save(coupon: Coupon): Coupon {
+        return couponRepository.save(coupon)
+    }
+      fun getValidCoupon(couponId: UUID, orderAmount: Long): Coupon {
 
         val coupon = couponRepository.findById(couponId)
             ?: throw CouponNotFoundException(couponId)

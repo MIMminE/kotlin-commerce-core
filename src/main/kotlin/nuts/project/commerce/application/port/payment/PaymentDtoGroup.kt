@@ -3,65 +3,59 @@ package nuts.project.commerce.application.port.payment
 import nuts.project.commerce.domain.common.Money
 import nuts.project.commerce.domain.payment.PaymentStatus
 import java.time.Instant
+import java.util.UUID
 
 data class CreatePaymentSessionRequest(
-    val merchantOrderId: String,
+    val merchantOrderId: UUID,
     val amount: Money
 )
 
 data class CreatePaymentSessionResponse(
-    val paymentId: String,
-    val redirectUrl: String
+    val paymentId: UUID,
+    val pgProvider : String,
+    val pgSessionId: String,
+    val createAt: Instant
 )
 
-// ---- confirm ----
-
 data class ConfirmPaymentRequest(
-    val paymentId: String
+    val paymentId: UUID
 )
 
 data class ConfirmPaymentResponse(
-    val paymentId: String,
+    val paymentId: UUID,
     val status: PaymentStatus,
     val occurredAt: Instant
 )
 
-// ---- cancel ----
-
 data class CancelPaymentRequest(
-    val paymentId: String
+    val paymentId: UUID
 )
 
 data class CancelPaymentResponse(
-    val paymentId: String,
+    val paymentId: UUID,
     val status: PaymentStatus,
     val occurredAt: Instant
 )
 
-// ---- refund ----
-
 data class RefundPaymentRequest(
-    val paymentId: String,
-    val amount: Money
+    val paymentId: UUID
 )
 
 data class RefundPaymentResponse(
-    val paymentId: String,
+    val paymentId: UUID,
     val status: PaymentStatus,
     val occurredAt: Instant
 )
 
-// ---- get ----
-
 data class GetPaymentRequest(
-    val paymentId: String
+    val paymentId: UUID
 )
 
 data class PaymentSnapshot(
-    val paymentId: String,
-    val merchantOrderId: String,
+    val paymentId: UUID,
+    val merchantOrderId: UUID,
     val status: PaymentStatus,
-    val amount: Money,             // 최초 결제 금액
-    val refundedAmount: Money,     // 누적 환불 금액(0부터)
+    val amount: Money,
+    val refundedAmount: Money,
     val updatedAt: Instant
 )

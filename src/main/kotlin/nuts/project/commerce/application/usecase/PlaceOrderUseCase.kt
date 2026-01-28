@@ -1,9 +1,9 @@
 package nuts.project.commerce.application.usecase
 
-import nuts.project.commerce.application.service.CouponQueryService
-import nuts.project.commerce.application.service.OrderCommandService
-import nuts.project.commerce.application.service.ProductQueryService
-import nuts.project.commerce.application.service.StockCommandService
+import nuts.project.commerce.application.service.CouponService
+import nuts.project.commerce.application.service.OrderService
+import nuts.project.commerce.application.service.ProductService
+import nuts.project.commerce.application.service.StockService
 import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
 import nuts.project.commerce.domain.order.Order
@@ -11,10 +11,10 @@ import nuts.project.commerce.domain.product.StockHandlingPolicy
 import java.util.UUID
 
 class PlaceOrderUseCase(
-    private val orderCommandService: OrderCommandService,
-    private val stockCommandService: StockCommandService,
-    private val couponQueryService: CouponQueryService,
-    private val productQueryService: ProductQueryService
+    private val orderService: OrderService,
+    private val stockService: StockService,
+    private val couponService: CouponService,
+    private val productService: ProductService
 ) {
 
     fun place(command: PlaceOrderCommand): PlaceOrderResult {
@@ -24,13 +24,13 @@ class PlaceOrderUseCase(
 
         val order = Order.create(command.userId)
 
-        val products = productQueryService.getProducts(command.items.map { it.productId })
+        val products = productService.getProducts(command.items.map { it.productId })
 
         products
             .filter { it.stockHandlingPolicy == StockHandlingPolicy.RESERVE_THEN_DEDUCT }
             .forEach { product ->
                 val item = command.items.find { it.productId == product.id }!!
-                stockCommandService.reserve(
+                stockService.reserve(
                     orderId = order.id,
                     productId = item.productId,
                     quantity = item.qty,
@@ -48,7 +48,7 @@ class PlaceOrderUseCase(
 
         applyCouponIfPresent(order, command.couponId)
 
-        val savedOrder = orderCommandService.save(order)
+        val savedOrder = orderService.save(order)
 
         return PlaceOrderResult(
             orderId = savedOrder.id,
@@ -61,7 +61,7 @@ class PlaceOrderUseCase(
     private fun applyCouponIfPresent(order: Order, couponId: UUID?) {
         if (couponId == null) return
 
-        val coupon = couponQueryService.getValidCoupon(couponId, order.originalAmount)
+        val coupon = couponService.getValidCoupon(couponId, order.originalAmount)
         order.applyDiscount(
             discountAmount = coupon.calculateDiscount(order.originalAmount),
             couponId = couponId

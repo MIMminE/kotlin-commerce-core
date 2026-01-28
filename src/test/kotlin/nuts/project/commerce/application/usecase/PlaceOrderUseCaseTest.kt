@@ -8,10 +8,10 @@ import nuts.project.commerce.application.port.repository.OrderRepository
 import nuts.project.commerce.application.port.repository.ProductRepository
 import nuts.project.commerce.application.port.repository.StockRepository
 import nuts.project.commerce.application.port.repository.StockReservationRepository
-import nuts.project.commerce.application.service.CouponQueryService
-import nuts.project.commerce.application.service.OrderCommandService
-import nuts.project.commerce.application.service.ProductQueryService
-import nuts.project.commerce.application.service.StockCommandService
+import nuts.project.commerce.application.service.CouponService
+import nuts.project.commerce.application.service.OrderService
+import nuts.project.commerce.application.service.ProductService
+import nuts.project.commerce.application.service.StockService
 import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
 import nuts.project.commerce.domain.common.Money
@@ -56,10 +56,10 @@ class PlaceOrderUseCaseTest {
         stockReservationRepository = InMemoryStockReservationRepository()
 
         useCase = PlaceOrderUseCase(
-            orderCommandService = OrderCommandService(orderRepository, orderItemRepository),
-            stockCommandService = StockCommandService(stockRepository, stockReservationRepository),
-            couponQueryService = CouponQueryService(couponRepository),
-            productQueryService = ProductQueryService(productRepository)
+            orderService = OrderService(orderRepository, orderItemRepository),
+            stockService = StockService(stockRepository, stockReservationRepository),
+            couponService = CouponService(couponRepository),
+            productService = ProductService(productRepository)
         )
     }
 

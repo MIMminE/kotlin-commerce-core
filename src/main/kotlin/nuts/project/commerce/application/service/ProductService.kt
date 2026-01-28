@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class ProductQueryService(private val productRepository: ProductRepository) {
+class ProductService(private val productRepository: ProductRepository) {
 
     fun getProducts(productIds: List<UUID>): List<Product> {
         val products = productRepository.findByIds(productIds)
