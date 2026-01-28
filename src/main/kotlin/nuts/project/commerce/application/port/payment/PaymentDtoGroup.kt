@@ -1,7 +1,7 @@
 package nuts.project.commerce.application.port.payment
 
 import nuts.project.commerce.domain.common.Money
-import nuts.project.commerce.domain.payment.PaymentStatus
+import nuts.project.commerce.domain.core.payment.PaymentStatus
 import java.time.Instant
 import java.util.UUID
 

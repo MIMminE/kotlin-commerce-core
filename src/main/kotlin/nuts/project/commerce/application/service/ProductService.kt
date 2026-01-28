@@ -1,7 +1,7 @@
 package nuts.project.commerce.application.service
 
 import nuts.project.commerce.application.port.repository.ProductRepository
-import nuts.project.commerce.domain.product.Product
+import nuts.project.commerce.domain.core.product.Product
 import org.springframework.stereotype.Service
 import java.util.*
 

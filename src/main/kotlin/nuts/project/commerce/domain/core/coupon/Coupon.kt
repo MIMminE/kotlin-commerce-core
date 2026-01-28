@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.coupon
+package nuts.project.commerce.domain.core.coupon
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

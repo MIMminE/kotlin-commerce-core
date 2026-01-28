@@ -1,7 +1,7 @@
 package nuts.project.commerce.port.repository
 
 import nuts.project.commerce.application.port.repository.StockReservationRepository
-import nuts.project.commerce.domain.stock.StockReservation
+import nuts.project.commerce.domain.core.stock.StockReservation
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList

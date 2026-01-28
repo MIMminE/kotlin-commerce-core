@@ -2,7 +2,7 @@ package nuts.project.commerce.application.service
 
 import nuts.project.commerce.application.port.repository.OrderItemRepository
 import nuts.project.commerce.application.port.repository.OrderRepository
-import nuts.project.commerce.domain.order.Order
+import nuts.project.commerce.domain.core.order.Order
 import org.springframework.stereotype.Service
 import java.util.UUID
 

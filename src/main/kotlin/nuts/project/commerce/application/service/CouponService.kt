@@ -3,7 +3,7 @@ package nuts.project.commerce.application.service
 import nuts.project.commerce.application.exception.CouponNotFoundException
 import nuts.project.commerce.application.exception.InvalidCouponException
 import nuts.project.commerce.application.port.repository.CouponRepository
-import nuts.project.commerce.domain.coupon.Coupon
+import nuts.project.commerce.domain.core.coupon.Coupon
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID

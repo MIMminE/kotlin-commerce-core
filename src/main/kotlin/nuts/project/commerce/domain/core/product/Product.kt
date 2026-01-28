@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.product
+package nuts.project.commerce.domain.core.product
 
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column

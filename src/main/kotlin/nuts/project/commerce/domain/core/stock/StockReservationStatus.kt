@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.stock
+package nuts.project.commerce.domain.core.stock
 
 enum class StockReservationStatus {
     ACTIVE,

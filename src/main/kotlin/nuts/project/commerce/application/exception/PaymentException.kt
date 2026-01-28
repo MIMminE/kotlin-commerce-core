@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.exception
 
-open class PaymentException (message: String, cause: Throwable? = null) : Exception(message)
+open class PaymentException (message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 class PaymentNotFoundException(paymentId: String) :
     PaymentException("Payment with ID $paymentId not found.")

@@ -5,7 +5,8 @@ import java.util.UUID
 data class PlaceOrderCommand(
     val userId: UUID,
     val items: List<Item>,
-    val couponId: UUID? = null
+    val couponId: UUID? = null,
+    val commandIdempotencyKey: UUID
 ) {
     data class Item(val productId: UUID, val qty: Long)
 }

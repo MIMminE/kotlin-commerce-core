@@ -1,7 +1,7 @@
-package nuts.project.commerce.infrastructure.adapter
+package nuts.project.commerce.infrastructure.repository
 
 import nuts.project.commerce.application.port.repository.StockRepository
-import nuts.project.commerce.domain.stock.Stock
+import nuts.project.commerce.domain.core.stock.Stock
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID

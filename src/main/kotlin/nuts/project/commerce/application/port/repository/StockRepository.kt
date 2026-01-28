@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.port.repository
 
-import nuts.project.commerce.domain.stock.Stock
+import nuts.project.commerce.domain.core.stock.Stock
 import java.util.UUID
 
 interface StockRepository {

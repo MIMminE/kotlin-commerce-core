@@ -3,24 +3,27 @@ package nuts.project.commerce.application.usecase
 import nuts.project.commerce.application.exception.CouponNotFoundException
 import nuts.project.commerce.application.exception.InvalidCouponException
 import nuts.project.commerce.application.port.repository.CouponRepository
+import nuts.project.commerce.application.port.repository.IdempotencyRepository
 import nuts.project.commerce.application.port.repository.OrderItemRepository
 import nuts.project.commerce.application.port.repository.OrderRepository
 import nuts.project.commerce.application.port.repository.ProductRepository
 import nuts.project.commerce.application.port.repository.StockRepository
 import nuts.project.commerce.application.port.repository.StockReservationRepository
 import nuts.project.commerce.application.service.CouponService
+import nuts.project.commerce.application.service.IdempotencyService
 import nuts.project.commerce.application.service.OrderService
 import nuts.project.commerce.application.service.ProductService
 import nuts.project.commerce.application.service.StockService
 import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
 import nuts.project.commerce.domain.common.Money
-import nuts.project.commerce.domain.coupon.Coupon
-import nuts.project.commerce.domain.coupon.CouponType
-import nuts.project.commerce.domain.product.Product
-import nuts.project.commerce.domain.product.StockHandlingPolicy
-import nuts.project.commerce.domain.stock.Stock
+import nuts.project.commerce.domain.core.coupon.Coupon
+import nuts.project.commerce.domain.core.coupon.CouponType
+import nuts.project.commerce.domain.core.product.Product
+import nuts.project.commerce.domain.core.product.StockHandlingPolicy
+import nuts.project.commerce.domain.core.stock.Stock
 import nuts.project.commerce.port.repository.InMemoryCouponRepository
+import nuts.project.commerce.port.repository.InMemoryIdempotencyRepository
 import nuts.project.commerce.port.repository.InMemoryOrderItemRepository
 import nuts.project.commerce.port.repository.InMemoryOrderRepository
 import nuts.project.commerce.port.repository.InMemoryProductRepository
@@ -43,6 +46,7 @@ class PlaceOrderUseCaseTest {
     private lateinit var orderRepository: OrderRepository
     private lateinit var orderItemRepository: OrderItemRepository
     private lateinit var stockReservationRepository: StockReservationRepository
+    private lateinit var idempotencyRepository: IdempotencyRepository
 
     private lateinit var useCase: PlaceOrderUseCase
 
@@ -54,14 +58,56 @@ class PlaceOrderUseCaseTest {
         orderRepository = InMemoryOrderRepository()
         orderItemRepository = InMemoryOrderItemRepository()
         stockReservationRepository = InMemoryStockReservationRepository()
+        idempotencyRepository = InMemoryIdempotencyRepository()
 
         useCase = PlaceOrderUseCase(
             orderService = OrderService(orderRepository, orderItemRepository),
             stockService = StockService(stockRepository, stockReservationRepository),
             couponService = CouponService(couponRepository),
-            productService = ProductService(productRepository)
+            productService = ProductService(productRepository),
+            idempotencyService = IdempotencyService(idempotencyRepository)
         )
     }
+
+    @Test
+    fun `같은 멱등키로 place를 2번 호출해도 주문-재고예약이 중복 생성되지 않는다`() {
+        // given
+        val productId = UUID.randomUUID()
+        val stockId = UUID.randomUUID()
+        val userId = UUID.randomUUID()
+        val idemKey = UUID.randomUUID()
+
+        productRepository.save(
+            Product.create(
+                id = productId,
+                name = "Test Product 1",
+                price = Money(10_000L),
+                stockHandlingPolicy = StockHandlingPolicy.RESERVE_THEN_DEDUCT
+            )
+        )
+
+        stockRepository.save(
+            Stock.create(
+                id = stockId,
+                productId = productId,
+                initialQty = 5
+            )
+        )
+
+        val command = PlaceOrderCommand(
+            userId = userId,
+            items = listOf(PlaceOrderCommand.Item(productId = productId, qty = 2)),
+            couponId = null,
+            commandIdempotencyKey = idemKey
+        )
+
+        // when: 같은 요청을 2번
+        val first = useCase.place(command)
+        val second = useCase.place(command)
+
+        println(second)
+    }
+
 
     @Test
     fun `상품이 존재하고 재고가 충분하면 주문이 생성되고 재고가 예약된다`() {
@@ -92,7 +138,8 @@ class PlaceOrderUseCaseTest {
             items = listOf(
                 PlaceOrderCommand.Item(productId = productId, qty = 2)
             ),
-            couponId = null
+            couponId = null,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -147,7 +194,8 @@ class PlaceOrderUseCaseTest {
         val command = PlaceOrderCommand(
             userId = userId,
             items = listOf(PlaceOrderCommand.Item(productId = productId, qty = 2)),
-            couponId = couponId
+            couponId = couponId,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -184,7 +232,8 @@ class PlaceOrderUseCaseTest {
         val command = PlaceOrderCommand(
             userId = userId,
             items = listOf(PlaceOrderCommand.Item(productId = productId, qty = 1)),
-            couponId = missingCouponId
+            couponId = missingCouponId,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         assertThrows(CouponNotFoundException::class.java) {
@@ -229,7 +278,8 @@ class PlaceOrderUseCaseTest {
         val command = PlaceOrderCommand(
             userId = userId,
             items = listOf(PlaceOrderCommand.Item(productId = productId, qty = 1)),
-            couponId = couponId
+            couponId = couponId,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         // when & then
@@ -276,7 +326,8 @@ class PlaceOrderUseCaseTest {
         val command = PlaceOrderCommand(
             userId = userId,
             items = listOf(PlaceOrderCommand.Item(productId = productId, qty = 1)),
-            couponId = couponId
+            couponId = couponId,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         // when & then
@@ -335,7 +386,8 @@ class PlaceOrderUseCaseTest {
                 PlaceOrderCommand.Item(productId = reservingProductId, qty = 2),
                 PlaceOrderCommand.Item(productId = nonReservingProductId, qty = 3),
             ),
-            couponId = null
+            couponId = null,
+            commandIdempotencyKey = UUID.randomUUID()
         )
 
         // when

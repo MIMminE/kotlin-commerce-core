@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.port.repository
 
-import nuts.project.commerce.domain.order.Order
+import nuts.project.commerce.domain.core.order.Order
 import java.util.UUID
 
 interface OrderRepository {

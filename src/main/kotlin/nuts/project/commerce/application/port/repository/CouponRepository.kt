@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.port.repository
 
-import nuts.project.commerce.domain.coupon.Coupon
+import nuts.project.commerce.domain.core.coupon.Coupon
 import java.util.UUID
 
 interface CouponRepository {

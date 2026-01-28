@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.payment
+package nuts.project.commerce.domain.core.payment
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -53,12 +53,11 @@ class Payment protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(orderId: UUID, amount: Money, idempotencyKey: String): Payment {
+        fun create(orderId: UUID, amount: Money): Payment {
             return Payment().apply {
                 this.orderId = orderId
                 this.amount = amount
                 this.status = PaymentStatus.INITIATED
-                this.idempotencyKey = idempotencyKey
             }
         }
     }

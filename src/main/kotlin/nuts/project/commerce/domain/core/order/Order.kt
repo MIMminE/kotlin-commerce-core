@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.order
+package nuts.project.commerce.domain.core.order
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column

@@ -1,7 +1,5 @@
 package nuts.project.commerce.application.port.payment
 
-import nuts.project.commerce.domain.payment.Payment
-
 
 interface PaymentGateway {
     fun createPaymentSession(

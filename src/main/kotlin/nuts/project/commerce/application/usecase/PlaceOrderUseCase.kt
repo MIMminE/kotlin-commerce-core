@@ -1,25 +1,55 @@
 package nuts.project.commerce.application.usecase
 
 import nuts.project.commerce.application.service.CouponService
+import nuts.project.commerce.application.service.IdempotencyService
 import nuts.project.commerce.application.service.OrderService
 import nuts.project.commerce.application.service.ProductService
+import nuts.project.commerce.application.service.StartResult
 import nuts.project.commerce.application.service.StockService
 import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
-import nuts.project.commerce.domain.order.Order
-import nuts.project.commerce.domain.product.StockHandlingPolicy
+import nuts.project.commerce.domain.common.Idempotency
+import nuts.project.commerce.domain.common.Idempotency.ActionType
+import nuts.project.commerce.domain.core.order.Order
+import nuts.project.commerce.domain.core.product.StockHandlingPolicy
 import java.util.UUID
 
 class PlaceOrderUseCase(
     private val orderService: OrderService,
     private val stockService: StockService,
     private val couponService: CouponService,
-    private val productService: ProductService
+    private val productService: ProductService,
+    private val idempotencyService: IdempotencyService
 ) {
 
     fun place(command: PlaceOrderCommand): PlaceOrderResult {
 
         require(command.items.isNotEmpty()) { "Order must have at least one item." }
+
+        val result = idempotencyService.tryStart(
+            scopeId = command.userId,
+            action = ActionType.PLACE_ORDER,
+            idemKey = command.commandIdempotencyKey
+        )
+
+        when (result) {
+            is StartResult.Existing -> {
+                result.resourceId?.let {
+                    val order = orderService.findById(result.resourceId)
+                    return PlaceOrderResult(
+                        orderId = order.id,
+                        originalAmount = order.originalAmount,
+                        discountAmount = order.discountAmount,
+                        finalAmount = order.finalAmount
+                    )
+                }
+            }
+
+            is StartResult.Started -> {
+                println("Idempotent operation started: id=${result.id}, createdAt=${result.createdAt}")
+            }
+        }
+
         val orderItems = command.items.associateBy { it.productId }
 
         val order = Order.create(command.userId)

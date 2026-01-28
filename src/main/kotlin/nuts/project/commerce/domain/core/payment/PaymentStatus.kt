@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.payment
+package nuts.project.commerce.domain.core.payment
 
 enum class PaymentStatus {
     INITIATED,

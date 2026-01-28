@@ -1,7 +1,7 @@
 package nuts.project.commerce.port.repository
 
 import nuts.project.commerce.application.port.repository.ProductRepository
-import nuts.project.commerce.domain.product.Product
+import nuts.project.commerce.domain.core.product.Product
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 

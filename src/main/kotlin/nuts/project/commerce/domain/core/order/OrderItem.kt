@@ -1,4 +1,4 @@
-package nuts.project.commerce.domain.order
+package nuts.project.commerce.domain.core.order
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

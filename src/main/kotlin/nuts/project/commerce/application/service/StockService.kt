@@ -3,8 +3,8 @@ package nuts.project.commerce.application.service
 import jakarta.transaction.Transactional
 import nuts.project.commerce.application.port.repository.StockRepository
 import nuts.project.commerce.application.port.repository.StockReservationRepository
-import nuts.project.commerce.domain.stock.Stock
-import nuts.project.commerce.domain.stock.StockReservation
+import nuts.project.commerce.domain.core.stock.Stock
+import nuts.project.commerce.domain.core.stock.StockReservation
 import org.springframework.stereotype.Service
 import java.util.UUID
 
