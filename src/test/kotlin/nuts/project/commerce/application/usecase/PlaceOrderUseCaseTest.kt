@@ -16,11 +16,9 @@ import nuts.project.commerce.application.service.ProductService
 import nuts.project.commerce.application.service.StockService
 import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
-import nuts.project.commerce.domain.common.Money
 import nuts.project.commerce.domain.core.coupon.Coupon
 import nuts.project.commerce.domain.core.coupon.CouponType
-import nuts.project.commerce.domain.core.product.Product
-import nuts.project.commerce.domain.core.product.StockHandlingPolicy
+import nuts.project.commerce.domain.core.Product
 import nuts.project.commerce.domain.core.stock.Stock
 import nuts.project.commerce.port.repository.InMemoryCouponRepository
 import nuts.project.commerce.port.repository.InMemoryIdempotencyRepository

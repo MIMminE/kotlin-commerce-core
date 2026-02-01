@@ -1,24 +1,15 @@
 package nuts.project.commerce.domain.common
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.PreUpdate
-import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
+import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
 
 
 @Entity
 @Table(
-    name = "idempotency",
+    name = "idempotency_records",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_idem_scope_action_key",
+            name = "uq_idem",
             columnNames = ["scope_id", "action", "idem_key"]
         )
     ],
@@ -28,50 +19,39 @@ import java.util.UUID
 )
 class Idempotency(
 
-    @Id
-    @Column(name = "id", nullable = false, columnDefinition = "uuid")
-    var id: UUID = UUID.randomUUID(),
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
 
-    @Column(name = "scope_id", nullable = false, length = 64)
-    var scopeId: UUID,
-
-    @Column(name = "action", nullable = false, length = 64)
-    @Enumerated(EnumType.STRING)
-    var action: ActionType,
-
-    @Column(name = "idem_key", nullable = false, length = 128)
-    var idemKey: UUID,
+    var clientId: String = "",
+    var operation: String = "",
+    var idemKey: String = "",
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
-    var status: Status = Status.IN_PROGRESS,
+    var status: IdemStatus = IdemStatus.IN_PROGRESS,
 
-    @Column(name = "resource_type", length = 32)
-    var resourceType: ResourceType? = null,
+    var resourceId: String? = null,
 
-    @Column(name = "resource_id", length = 64)
-    var resourceId: UUID? = null,
-
-    @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
-
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: Instant = Instant.now(),
+    var updatedAt: Instant = Instant.now()
 ) {
-    enum class Status {
-        IN_PROGRESS, SUCCEEDED, FAILED
-    }
-
-    enum class ResourceType {
-        ORDER, PAYMENT, COUPON
-    }
-
-    enum class ActionType {
-        PLACE_ORDER
-    }
-
-    @PreUpdate
-    fun preUpdate() {
+    fun succeed(resourceId: String) {
+        status = IdemStatus.SUCCEEDED
+        this.resourceId = resourceId
         updatedAt = Instant.now()
+    }
+
+    fun fail() {
+        status = IdemStatus.FAILED
+        updatedAt = Instant.now()
+    }
+
+    companion object {
+        fun inProgress(clientId: String, operation: String, idemKey: String): Idempotency =
+            Idempotency(
+                clientId = clientId,
+                operation = operation,
+                idemKey = idemKey,
+                status = IdemStatus.IN_PROGRESS
+            )
     }
 }

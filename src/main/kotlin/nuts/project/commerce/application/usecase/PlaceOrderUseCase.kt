@@ -10,8 +10,7 @@ import nuts.project.commerce.application.usecase.dto.PlaceOrderCommand
 import nuts.project.commerce.application.usecase.dto.PlaceOrderResult
 import nuts.project.commerce.domain.common.Idempotency
 import nuts.project.commerce.domain.common.Idempotency.ActionType
-import nuts.project.commerce.domain.core.order.Order
-import nuts.project.commerce.domain.core.product.StockHandlingPolicy
+import nuts.project.commerce.domain.core.Order
 import java.util.UUID
 
 class PlaceOrderUseCase(

@@ -4,8 +4,7 @@ import nuts.project.commerce.application.port.payment.ConfirmPaymentRequest
 import nuts.project.commerce.application.port.payment.CreatePaymentSessionRequest
 import nuts.project.commerce.application.port.payment.PaymentGateway
 import nuts.project.commerce.application.port.repository.PaymentRepository
-import nuts.project.commerce.domain.common.Money
-import nuts.project.commerce.domain.core.payment.Payment
+import nuts.project.commerce.domain.core.Payment
 import nuts.project.commerce.domain.core.payment.PaymentStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate

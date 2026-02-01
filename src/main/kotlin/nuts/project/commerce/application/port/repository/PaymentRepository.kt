@@ -1,6 +1,6 @@
 package nuts.project.commerce.application.port.repository
 
-import nuts.project.commerce.domain.core.payment.Payment
+import nuts.project.commerce.domain.core.Payment
 import nuts.project.commerce.domain.core.payment.PaymentStatus
 import java.util.UUID
 

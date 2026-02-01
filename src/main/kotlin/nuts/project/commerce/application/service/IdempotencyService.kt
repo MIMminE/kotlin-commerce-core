@@ -39,7 +39,6 @@ class IdempotencyService(private val idempotencyRepository: IdempotencyRepositor
         idempotencyId: UUID,
         resourceType: Idempotency.ResourceType,
         resourceId: UUID,
-        at: Instant = Instant.now()
     ) {
         idempotencyRepository.find(idempotencyId)?.let { idempotency ->
             idempotency.status = Idempotency.Status.SUCCEEDED
