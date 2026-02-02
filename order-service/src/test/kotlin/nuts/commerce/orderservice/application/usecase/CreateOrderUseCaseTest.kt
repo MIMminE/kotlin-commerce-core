@@ -1,17 +1,29 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.adapter.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.application.exception.OrderException
-import nuts.commerce.orderservice.domain.OrderStatus
+import nuts.commerce.orderservice.model.domain.exception.OrderException
+import nuts.commerce.orderservice.model.domain.OrderStatus
+import nuts.commerce.orderservice.model.domain.Order
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
 class CreateOrderUseCaseTest {
     private val orderRepository = InMemoryOrderRepository()
-    private val useCase = CreateOrderUseCase(orderRepository, )
+    private val useCase = CreateOrderUseCase(orderRepository)
+
+    @BeforeEach
+    fun setUp() {
+        orderRepository.clear()
+    }
+
 
     @Test
     fun `주문 생성 시 orderId가 반환되고 저장소에 존재한다`() {
+        orderRepository.save(
+            Order.create()
+        )
+
         val cmd = CreateOrderUseCase.Command(
             userId = "user-1",
             items = listOf(

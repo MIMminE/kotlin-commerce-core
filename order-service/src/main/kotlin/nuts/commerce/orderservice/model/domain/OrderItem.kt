@@ -1,8 +1,8 @@
-package nuts.commerce.orderservice.domain.core
+package nuts.commerce.orderservice.model.domain
 
 import jakarta.persistence.*
-import nuts.commerce.orderservice.domain.BaseEntity
-import nuts.commerce.orderservice.domain.Money
+import nuts.commerce.orderservice.model.BaseEntity
+import nuts.commerce.orderservice.model.domain.Money
 import java.util.UUID
 
 @Entity

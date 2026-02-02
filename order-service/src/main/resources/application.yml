@@ -1,0 +1,27 @@
+order:
+  outbox:
+    events:
+      kafka:
+        topic: order-events
+    publish:
+      enabled: true
+      fixed-delay-ms: 1000
+    batch-size: 100
+    max-retries: 5
+
+payment:
+  result:
+    topic: payment-results
+
+spring:
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  jpa:
+    properties:
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_updates: true
+      hibernate.order_inserts: true

@@ -1,12 +1,12 @@
 package nuts.commerce.orderservice.application.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.orderservice.application.repository.OrderOutboxRepository
-import nuts.commerce.orderservice.application.repository.OrderRepository
-import nuts.commerce.orderservice.domain.Money
-import nuts.commerce.orderservice.domain.core.Order
-import nuts.commerce.orderservice.domain.core.OrderItem
-import nuts.commerce.orderservice.domain.core.OrderOutboxEvent
+import nuts.commerce.orderservice.application.port.repository.OrderOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.OrderRepository
+import nuts.commerce.orderservice.model.domain.Money
+import nuts.commerce.orderservice.model.domain.Order
+import nuts.commerce.orderservice.model.domain.OrderItem
+import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 import java.util.UUID
@@ -38,8 +38,8 @@ class CreateOrderUseCase(
 
         val saved = orderRepository.save(order)
 
-        val outboxEvent = OrderOutboxEvent.create(
-            aggregateId = UUID.randomUUID(),
+        val outboxEvent = OrderOutboxRecord.create(
+            aggregateId = orderId,
             eventType = "OrderCreated",
             payload = objectMapper.writeValueAsString(
                 OutboxEventPayload(
@@ -51,32 +51,32 @@ class CreateOrderUseCase(
             )
         )
 
-        orderOutboxRepository.save(outboxEvent)
         order.markPaying()
+        orderOutboxRepository.save(outboxEvent)
 
         return Result(saved.id)
     }
+
+    data class Command(
+        val userId: String,
+        val items: List<Item>,
+        val totalAmount: Long,
+        val currency: String,
+    )
+
+    data class Item(
+        val productId: String,
+        val qty: Int,
+        val unitPriceAmount: Long,
+        val unitPriceCurrency: String,
+    )
+
+    data class OutboxEventPayload(
+        val orderId: UUID,
+        val userId: String,
+        val totalAmount: Long,
+        val currency: String,
+    )
+
+    data class Result(val orderId: UUID)
 }
-
-data class Command(
-    val userId: String,
-    val items: List<Item>,
-    val totalAmount: Long,
-    val currency: String,
-)
-
-data class Item(
-    val productId: String,
-    val qty: Int,
-    val unitPriceAmount: Long,
-    val unitPriceCurrency: String,
-)
-
-data class OutboxEventPayload(
-    val orderId: UUID,
-    val userId: String,
-    val totalAmount: Long,
-    val currency: String,
-)
-
-data class Result(val orderId: UUID)

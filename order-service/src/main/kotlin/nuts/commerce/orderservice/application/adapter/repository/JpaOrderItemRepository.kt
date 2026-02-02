@@ -1,7 +1,7 @@
-package nuts.commerce.orderservice.infra.repository
+package nuts.commerce.orderservice.application.adapter.repository
 
-import nuts.commerce.orderservice.application.repository.OrderItemRepository
-import nuts.commerce.orderservice.domain.core.OrderItem
+import nuts.commerce.orderservice.application.port.repository.OrderItemRepository
+import nuts.commerce.orderservice.model.domain.OrderItem
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID

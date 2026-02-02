@@ -1,4 +1,4 @@
-package nuts.commerce.orderservice.domain
+package nuts.commerce.orderservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass

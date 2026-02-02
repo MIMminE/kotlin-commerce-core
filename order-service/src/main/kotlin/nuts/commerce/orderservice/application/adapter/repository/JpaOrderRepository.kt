@@ -1,7 +1,7 @@
-package nuts.commerce.orderservice.infra.repository
+package nuts.commerce.orderservice.application.adapter.repository
 
-import nuts.commerce.orderservice.application.repository.OrderRepository
-import nuts.commerce.orderservice.domain.core.Order
+import nuts.commerce.orderservice.application.port.repository.OrderRepository
+import nuts.commerce.orderservice.model.domain.Order
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

@@ -1,6 +1,6 @@
-package nuts.commerce.orderservice.application.repository
+package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.domain.core.OrderItem
+import nuts.commerce.orderservice.model.domain.OrderItem
 import java.util.UUID
 
 interface OrderItemRepository {

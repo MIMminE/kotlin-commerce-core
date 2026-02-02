@@ -1,14 +1,12 @@
 package nuts.commerce.orderservice.adapter.repository
 
-import nuts.commerce.orderservice.application.repository.OrderRepository
-import nuts.commerce.orderservice.domain.core.Order
+import nuts.commerce.orderservice.application.port.repository.OrderRepository
+import nuts.commerce.orderservice.model.domain.Order
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 class InMemoryOrderRepository : OrderRepository {
 

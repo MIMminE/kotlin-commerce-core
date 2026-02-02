@@ -1,10 +1,8 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.adapter.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.domain.Money
-import nuts.commerce.orderservice.domain.OrderStatus
-import nuts.commerce.orderservice.domain.core.Order
-import nuts.commerce.orderservice.domain.core.OrderItem
+import nuts.commerce.orderservice.model.domain.OrderStatus
+import nuts.commerce.orderservice.utils.FixtureUtils.orderFixtureCreated
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import java.util.UUID
@@ -74,26 +72,5 @@ class OnPaymentApprovedUseCaseTest {
         // then
         val saved = orderRepository.findById(orderId)!!
         assertEquals(OrderStatus.PAID, saved.status)
-    }
-
-    /**
-     * 테스트용 Order 생성 Fixture
-     */
-    private fun orderFixtureCreated(id: UUID, userId: String): Order {
-        val items = listOf(
-            OrderItem.create(
-                productId = "p-1",
-                orderId = id,
-                qty = 1,
-                unitPrice = Money(1000L, "KRW")
-            )
-        )
-
-        return Order.create(
-            userId = userId,
-            items = items,
-            total = Money(1000L, "KRW"),
-            idGenerator = { id }
-        )
     }
 }

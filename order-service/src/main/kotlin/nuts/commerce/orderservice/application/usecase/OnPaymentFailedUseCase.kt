@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.application.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.orderservice.application.repository.OrderRepository
+import nuts.commerce.orderservice.application.port.repository.OrderRepository
 import org.springframework.stereotype.Service
 
 @Service

@@ -1,15 +1,20 @@
-package nuts.commerce.orderservice.domain.core
+package nuts.commerce.orderservice.model.integration
 
-import jakarta.persistence.*
-import nuts.commerce.orderservice.domain.BaseEntity
-import nuts.commerce.orderservice.domain.OutboxStatus
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
+import jakarta.persistence.Lob
+import jakarta.persistence.Table
+import nuts.commerce.orderservice.model.BaseEntity
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import kotlin.math.min
 
 @Entity
 @Table(name = "order_outbox_events")
-class OrderOutboxEvent protected constructor() : BaseEntity() {
+class OrderOutboxRecord protected constructor() : BaseEntity() {
 
     @Id
     @Column(nullable = false, updatable = false)
@@ -37,10 +42,6 @@ class OrderOutboxEvent protected constructor() : BaseEntity() {
     var retryCount: Int = 0
         protected set
 
-    /**
-     * - PENDING/FAILED: 다음 시도 시각(스케줄링)
-     * - PUBLISHED/DEAD: null
-     */
     @Column(nullable = true)
     var nextRetryAt: Instant? = null
         protected set
@@ -55,8 +56,8 @@ class OrderOutboxEvent protected constructor() : BaseEntity() {
             eventType: String,
             payload: String,
             now: Instant = Instant.now(),
-        ): OrderOutboxEvent =
-            OrderOutboxEvent().apply {
+        ): OrderOutboxRecord =
+            OrderOutboxRecord().apply {
                 this.aggregateId = aggregateId
                 this.eventType = eventType
                 this.payload = payload
@@ -100,7 +101,16 @@ class OrderOutboxEvent protected constructor() : BaseEntity() {
 
     fun isReady(now: Instant = Instant.now()): Boolean =
         status != OutboxStatus.PUBLISHED &&
-            status != OutboxStatus.DEAD &&
-            nextRetryAt != null &&
-            !nextRetryAt!!.isAfter(now)
+                status != OutboxStatus.DEAD &&
+                nextRetryAt != null &&
+                !nextRetryAt!!.isAfter(now)
+
+    enum class OutboxStatus {
+        PENDING,    // 아직 발행 시도 전(또는 즉시 처리 대기)
+        PROCESSING, // 발행 시도 중
+        PUBLISHED,  // 발행 완료
+        FAILED,     // 마지막 시도가 실패(재시도 예정일 수 있음)
+        DEAD        // 최대 재시도 초과 등으로 더 이상 처리하지 않음
+    }
 }
+

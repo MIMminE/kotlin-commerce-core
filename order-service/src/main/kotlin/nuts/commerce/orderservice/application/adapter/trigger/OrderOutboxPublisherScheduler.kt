@@ -1,0 +1,23 @@
+package nuts.commerce.orderservice.application.adapter.trigger
+
+import nuts.commerce.orderservice.application.usecase.PublishOrderOutboxUseCase
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+
+@Component
+@ConditionalOnProperty(
+    prefix = "order.outbox.publish",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = true, // 기본은 켜짐
+)
+class OrderOutboxPublisherScheduler(
+    private val publishOrderOutboxUseCase: PublishOrderOutboxUseCase
+) {
+
+    @Scheduled(fixedDelayString = "\${order.outbox.publish.fixed-delay-ms}")
+    fun publishOutbox() {
+        publishOrderOutboxUseCase.publishPendingOutboxMessages()
+    }
+}

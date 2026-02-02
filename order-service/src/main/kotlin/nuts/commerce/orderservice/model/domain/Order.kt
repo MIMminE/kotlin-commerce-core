@@ -1,11 +1,9 @@
-package nuts.commerce.orderservice.domain.core
+package nuts.commerce.orderservice.model.domain
 
 import jakarta.persistence.*
-import nuts.commerce.orderservice.application.exception.OrderException
-import nuts.commerce.orderservice.domain.BaseEntity
-import nuts.commerce.orderservice.domain.Money
-import nuts.commerce.orderservice.domain.OrderStatus
-import java.util.UUID
+import nuts.commerce.orderservice.model.domain.exception.OrderException
+import nuts.commerce.orderservice.model.BaseEntity
+import java.util.*
 
 @Entity
 @Table(
@@ -92,4 +90,6 @@ class Order protected constructor() : BaseEntity() {
     }
 
     private fun idOrNull(): UUID? = if (this::id.isInitialized) id else null
+
+    enum class OrderStatus { CREATED, PAYING, PAID, PAYMENT_FAILED, CANCELED }
 }

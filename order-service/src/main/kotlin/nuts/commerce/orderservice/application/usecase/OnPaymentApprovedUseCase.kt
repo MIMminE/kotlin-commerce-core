@@ -1,35 +1,65 @@
 package nuts.commerce.orderservice.application.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.orderservice.application.repository.OrderRepository
+import nuts.commerce.orderservice.application.port.repository.OrderRepository
+import nuts.commerce.orderservice.application.port.repository.PaymentResultRecordRepository
+import nuts.commerce.orderservice.model.domain.Order
+import nuts.commerce.orderservice.model.domain.exception.OrderException
+import nuts.commerce.orderservice.model.integration.PaymentResultRecord
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class OnPaymentApprovedUseCase(
     private val orderRepository: OrderRepository,
-    // private val processedEventRepository: ProcessedEventRepository (권장: 멱등)
+    private val paymentResultRecordRepository: PaymentResultRecordRepository
 ) {
 
     @Transactional
     fun handle(event: PaymentApprovedEvent) {
-        // (권장) 멱등: event.eventId를 유니크로 저장하고 이미 처리했으면 return
-        // if (processedEventRepository.isProcessed(event.eventId)) return
+        val getOrCreateResult = paymentResultRecordRepository.getOrCreate(
+            PaymentResultRecord.receive(
+                eventId = event.eventId,
+                orderId = event.orderId,
+                eventType = PaymentResultRecord.EventType.PAYMENT_SUCCESS,
+                payload = event.payload
+            )
+        )
 
+        if (!getOrCreateResult.isCreated) return
+
+        val record = getOrCreateResult.record
         val order = orderRepository.findById(event.orderId)
-            ?: return // 이벤트가 늦게 와서 주문이 없으면 무시/DLQ는 정책에 따라
+            ?: run {
+                record.markFailed("order not found")
+                paymentResultRecordRepository.save(record)
+                return
+            }
 
-        // 이미 PAID면 중복 이벤트로 보고 no-op 처리(멱등)
-        if (order.status.name == "PAID") return
+        if (order.status == Order.OrderStatus.PAID) {
+            record.markFailed("order already PAID")
+            paymentResultRecordRepository.save(record)
+            return
+        }
 
-        order.applyPaymentApproved()
+        try {
+            order.applyPaymentApproved()
+        } catch (e: OrderException.InvalidTransition) {
+            record.markFailed("invalid transition: ${e.message}")
+            paymentResultRecordRepository.save(record)
+            throw e
+        }
+
         orderRepository.save(order)
-
-        // processedEventRepository.markProcessed(event.eventId)
+        record.markProcessed()
+        paymentResultRecordRepository.save(record)
     }
 
     data class PaymentApprovedEvent(
-        val eventId: String,
-        val orderId: java.util.UUID,
-        val paymentId: String,
+        val eventId: UUID,
+        val orderId: UUID,
+        val paymentId: UUID,
+        val payload: String,
     )
 }

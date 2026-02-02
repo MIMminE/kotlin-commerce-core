@@ -1,7 +1,8 @@
 package nuts.commerce.orderservice.adapter.repository
 
-import nuts.commerce.orderservice.application.repository.OrderOutboxRepository
-import nuts.commerce.orderservice.domain.core.OrderOutboxEvent
+import nuts.commerce.orderservice.application.port.repository.OrderOutboxRepository
+import nuts.commerce.orderservice.model.integration.OutboxStatus
+import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -12,9 +13,9 @@ class InMemoryOrderOutboxRepository(
     private val maxDelaySeconds: Long = 60,
 ) : OrderOutboxRepository {
 
-    private val store = ConcurrentHashMap<UUID, OrderOutboxEvent>()
+    private val store = ConcurrentHashMap<UUID, OrderOutboxRecord>()
 
-    override fun save(event: OrderOutboxEvent): OrderOutboxEvent {
+    override fun save(event: OrderOutboxRecord): OrderOutboxRecord {
         store[event.id] = event
         return event
     }
@@ -22,7 +23,7 @@ class InMemoryOrderOutboxRepository(
     /**
      * "unpublished"를 엄밀히 "아직 발행 안 됨 + 지금 시도 가능한 것"으로 해석(권장)
      */
-    override fun findUnpublished(limit: Int): List<OrderOutboxEvent> {
+    override fun findUnpublished(limit: Int): List<OrderOutboxRecord> {
         val now = Instant.now()
         return store.values
             .asSequence()
@@ -67,6 +68,6 @@ class InMemoryOrderOutboxRepository(
     }
 
     // 테스트 편의
-    fun findById(id: UUID): OrderOutboxEvent? = store[id]
+    fun findById(id: UUID): OrderOutboxRecord? = store[id]
     fun clear() = store.clear()
 }
