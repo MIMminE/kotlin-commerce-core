@@ -1,11 +1,11 @@
-package nuts.commerce.orderservice.adapter.repository
+package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.application.port.repository.OrderItemRepository
 import nuts.commerce.orderservice.model.domain.OrderItem
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryOrderItemRepository : OrderItemRepository {
+class
+InMemoryOrderItemRepository : OrderItemRepository {
 
     private val byOrderId: MutableMap<UUID, MutableList<OrderItem>> = ConcurrentHashMap()
 

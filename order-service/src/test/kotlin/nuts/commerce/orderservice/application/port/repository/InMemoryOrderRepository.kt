@@ -1,6 +1,5 @@
-package nuts.commerce.orderservice.adapter.repository
+package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.application.port.repository.OrderRepository
 import nuts.commerce.orderservice.model.domain.Order
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl

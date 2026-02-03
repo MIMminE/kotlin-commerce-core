@@ -12,17 +12,21 @@ class JpaPaymentResultRecordRepository(
     private val paymentResultRecordJpa: PaymentResultRecordJpa
 ) : PaymentResultRecordRepository {
 
-    override fun getOrCreate(record: PaymentResultRecord): PaymentResultRecordRepository.GerOrCreateResult {
+    override fun getOrCreate(record: PaymentResultRecord): PaymentResultRecordRepository.GetOrCreateResult {
         return try {
-            PaymentResultRecordRepository.GerOrCreateResult(paymentResultRecordJpa.save(record), true)
+            PaymentResultRecordRepository.GetOrCreateResult(paymentResultRecordJpa.save(record), true)
         } catch (e: DataIntegrityViolationException) {
             val resultRecord = (paymentResultRecordJpa.findByEventId(record.eventId)
                 ?: throw e)
-            PaymentResultRecordRepository.GerOrCreateResult(resultRecord, false)
+            PaymentResultRecordRepository.GetOrCreateResult(resultRecord, false)
         }
     }
 
     override fun listByOrder(orderId: UUID): List<PaymentResultRecord> {
+        TODO("Not yet implemented")
+    }
+
+    override fun save(record: PaymentResultRecord): PaymentResultRecord {
         TODO("Not yet implemented")
     }
 }

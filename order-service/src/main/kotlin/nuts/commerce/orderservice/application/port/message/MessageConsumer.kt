@@ -4,9 +4,9 @@ import java.time.Instant
 import java.util.UUID
 
 interface MessageConsumer {
-    fun onPaymentResult(event: PaymentResultEvent)
+    fun onPaymentResult(message: PaymentResultMessage)
 
-    data class PaymentResultEvent(
+    data class PaymentResultMessage(
         val eventId: UUID,
         val eventType: String,      // "payment.succeeded" | "payment.failed"
         val orderId: UUID,      // orderId (Kafka key도 이 값으로)

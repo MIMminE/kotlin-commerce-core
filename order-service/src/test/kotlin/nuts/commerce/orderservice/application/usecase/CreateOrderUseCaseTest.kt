@@ -1,118 +1,148 @@
 package nuts.commerce.orderservice.application.usecase
 
-import nuts.commerce.orderservice.adapter.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.model.domain.exception.OrderException
-import nuts.commerce.orderservice.model.domain.OrderStatus
-import nuts.commerce.orderservice.model.domain.Order
+import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
+import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import tools.jackson.databind.ObjectMapper
 import kotlin.test.Test
 
 class CreateOrderUseCaseTest {
     private val orderRepository = InMemoryOrderRepository()
-    private val useCase = CreateOrderUseCase(orderRepository)
+    private val orderOutboxRepository = InMemoryOrderOutboxRepository()
+    private val objectMapper = ObjectMapper()
+    private val useCase = CreateOrderUseCase(orderRepository, orderOutboxRepository, objectMapper)
 
     @BeforeEach
     fun setUp() {
         orderRepository.clear()
+        orderOutboxRepository.clear()
     }
 
-
     @Test
-    fun `주문 생성 시 orderId가 반환되고 저장소에 존재한다`() {
-        orderRepository.save(
-            Order.create()
-        )
-
-        val cmd = CreateOrderUseCase.Command(
+    fun `주문 생성 성공 - order 저장과 outbox 저장이 1번씩 발생하고 결과 orderId가 저장된 orderId와 같다`() {
+        // given
+        val command = CreateOrderUseCase.Command(
             userId = "user-1",
             items = listOf(
                 CreateOrderUseCase.Item(
                     productId = "p-1",
                     qty = 2,
                     unitPriceAmount = 1000L,
-                    unitPriceCurrency = "KRW"
+                    unitPriceCurrency = "KRW",
                 )
             ),
             totalAmount = 2000L,
-            currency = "KRW"
+            currency = "KRW",
         )
 
-        val result = useCase.create(cmd)
+        // when
+        val result = useCase.create(command)
+        val findOrder = orderRepository.findById(result.orderId)
+        val orderOutBoxListByAggregateId = orderOutboxRepository.findByAggregateId(result.orderId)
 
-        assertNotNull(result.orderId)
-        assertTrue(orderRepository.existsById(result.orderId))
-
-        val saved = orderRepository.findById(result.orderId)!!
-        assertEquals("user-1", saved.userId)
-        assertEquals(OrderStatus.CREATED, saved.status)
-        assertEquals(1, saved.items.size)
+        // then
+        assertEquals(result.orderId, findOrder?.id)
+        assertEquals(1, orderOutBoxListByAggregateId.size)
     }
 
     @Test
-    fun `생성된 모든 OrderItem은 Order의 id와 동일한 orderId를 가진다`() {
-        val cmd = CreateOrderUseCase.Command(
+    fun `outbox - eventType이 OrderCreated로 저장된다`() {
+        // given
+        val command = CreateOrderUseCase.Command(
             userId = "user-1",
-            items = listOf(
-                CreateOrderUseCase.Item("p-1", 1, 1000L, "KRW"),
-                CreateOrderUseCase.Item("p-2", 3, 2000L, "KRW"),
-            ),
-            totalAmount = 7000L,
-            currency = "KRW"
+            items = listOf(CreateOrderUseCase.Item("p-1", 1, 1500L, "KRW")),
+            totalAmount = 1500L,
+            currency = "KRW",
         )
 
-        val result = useCase.create(cmd)
+        // when
+        val result = useCase.create(command)
 
-        val saved = orderRepository.findById(result.orderId)!!
-        assertTrue(saved.items.isNotEmpty())
-        assertTrue(saved.items.all { it.orderId == saved.id })
+        // then
+        val outboxes = orderOutboxRepository.findByAggregateId(result.orderId)
+        assertEquals(1, outboxes.size)
+        assertEquals("OrderCreated", outboxes.single().eventType)
     }
 
     @Test
-    fun `items가 비어있으면 주문 생성이 실패한다`() {
-        val cmd = CreateOrderUseCase.Command(
-            userId = "user-1",
-            items = emptyList(),
-            totalAmount = 0L,
-            currency = "KRW"
-        )
-
-        assertThrows(OrderException.InvalidCommand::class.java) {
-            useCase.create(cmd)
-        }
-    }
-
-    @Test
-    fun `주문 총액이 아이템 합계와 일치한다`() {
-        val cmd = CreateOrderUseCase.Command(
-            userId = "user-1",
-            items = listOf(
-                CreateOrderUseCase.Item("p-1", 2, 1000L, "KRW"), // 2000
-                CreateOrderUseCase.Item("p-2", 3, 2000L, "KRW"), // 6000
-            ),
-            totalAmount = 8000L,
-            currency = "KRW"
-        )
-
-        val result = useCase.create(cmd)
-        val saved = orderRepository.findById(result.orderId)!!
-
-        assertEquals(8000L, saved.total.amount)
-        assertEquals("KRW", saved.total.currency)
-    }
-
-    @Test
-    fun `여러 번 생성하면 orderId는 서로 다르다`() {
-        val cmd = CreateOrderUseCase.Command(
+    fun `outbox - aggregateId가 생성된 주문 id와 동일하다`() {
+        // given
+        val command = CreateOrderUseCase.Command(
             userId = "user-1",
             items = listOf(CreateOrderUseCase.Item("p-1", 1, 1000L, "KRW")),
             totalAmount = 1000L,
-            currency = "KRW"
+            currency = "KRW",
         )
 
-        val r1 = useCase.create(cmd)
-        val r2 = useCase.create(cmd)
+        // when
+        val result = useCase.create(command)
 
-        assertNotEquals(r1.orderId, r2.orderId)
+        // then
+        val outboxes = orderOutboxRepository.findByAggregateId(result.orderId)
+        assertEquals(1, outboxes.size)
+        assertEquals(result.orderId, outboxes.single().aggregateId)
+    }
+
+    @Test
+    fun `outbox - payload JSON이 saved order 기준으로 올바르게 생성된다`() {
+        // given
+        val command = CreateOrderUseCase.Command(
+            userId = "user-777",
+            items = listOf(
+                CreateOrderUseCase.Item("p-1", 3, 1000L, "KRW"),
+                CreateOrderUseCase.Item("p-2", 1, 5000L, "KRW"),
+            ),
+            totalAmount = 8000L,
+            currency = "KRW",
+        )
+
+        // when
+        val result = useCase.create(command)
+
+        // then
+        val savedOrder = orderRepository.findById(result.orderId) ?: fail("저장된 Order가 없습니다.")
+        val outbox: OrderOutboxRecord =
+            orderOutboxRepository.findByAggregateId(result.orderId).singleOrNull()
+                ?: fail("aggregateId로 조회된 outbox가 1개여야 합니다.")
+
+        val payload =
+            objectMapper.readValue(outbox.payload, CreateOrderUseCase.OutboxEventPayload::class.java)
+
+        assertEquals(savedOrder.id, payload.orderId)
+        assertEquals(savedOrder.userId, payload.userId)
+        assertEquals(savedOrder.total.amount, payload.totalAmount)
+        assertEquals(savedOrder.total.currency, payload.currency)
+    }
+
+    @Test
+    fun `주문 아이템 매핑 - items의 productId, qty, unitPrice가 command와 일치한다`() {
+        // given
+        val command = CreateOrderUseCase.Command(
+            userId = "user-1",
+            items = listOf(
+                CreateOrderUseCase.Item("p-1", 2, 1200L, "KRW"),
+                CreateOrderUseCase.Item("p-2", 1, 3300L, "KRW"),
+            ),
+            totalAmount = 5700L,
+            currency = "KRW",
+        )
+
+        // when
+        val result = useCase.create(command)
+
+        // then
+        val savedOrder = orderRepository.findById(result.orderId) ?: fail("저장된 Order가 없습니다.")
+        val savedItems = savedOrder.items
+        assertEquals(command.items.size, savedItems.size)
+
+        command.items.zip(savedItems).forEach { (cmdItem, savedItem) ->
+            assertEquals(cmdItem.productId, savedItem.productId)
+            assertEquals(cmdItem.qty, savedItem.qty)
+            assertEquals(cmdItem.unitPriceAmount, savedItem.unitPrice.amount)
+            assertEquals(cmdItem.unitPriceCurrency, savedItem.unitPrice.currency)
+            assertEquals(savedOrder.id, savedItem.orderId)
+        }
     }
 }

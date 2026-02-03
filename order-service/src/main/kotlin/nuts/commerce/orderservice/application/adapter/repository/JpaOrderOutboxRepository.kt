@@ -13,7 +13,7 @@ class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOut
         return outBoxJpa.save(event)
     }
 
-    override fun lockReadyToPublishIds(limit: Int): List<UUID> {
+    override fun findById(id: UUID): OrderOutboxRecord? {
         TODO("Not yet implemented")
     }
 
@@ -21,9 +21,13 @@ class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOut
         TODO("Not yet implemented")
     }
 
-//    override fun findUnpublished(limit: Int): List<OrderOutboxEvent> {
-//        return outBoxJpa.findByPublishedFalseOrderByCreatedAtAsc(pageable = Pageable.ofSize(limit))
-//    }
+    override fun findByAggregateId(aggregateId: UUID): List<OrderOutboxRecord> {
+        TODO("Not yet implemented")
+    }
+
+    override fun claimReadyToPublishIds(limit: Int): List<UUID> {
+        TODO("Not yet implemented")
+    }
 
     override fun tryMarkPublished(eventId: UUID, publishedAt: Instant): Boolean {
         TODO("Not yet implemented")

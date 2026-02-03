@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.application.usecase
 
-import nuts.commerce.orderservice.application.port.message.MessagePublisher
+import nuts.commerce.orderservice.application.port.message.MessageProducer
 import nuts.commerce.orderservice.application.port.repository.OrderOutboxRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -11,7 +11,7 @@ import java.util.*
 @Service
 class PublishOrderOutboxUseCase(
     private val orderOutboxRepository: OrderOutboxRepository,
-    private val messagePublisher: MessagePublisher,
+    private val messageProducer: MessageProducer,
     private val transactionTemplate: TransactionTemplate,
     @Value("\${order.outbox.batch-size}") private val batchSize: Int,
     @Value("\${order.outbox.max-retries}") private val maxRetries: Int
@@ -27,11 +27,13 @@ class PublishOrderOutboxUseCase(
 
         orderOutboxRepository.findByIds(ids).forEach { outboxMessage ->
             runCatching {
-                messagePublisher.publish(
-                    eventId = outboxMessage.id,
-                    payload = outboxMessage.payload,
-                    aggregateId = outboxMessage.aggregateId,
-                    eventType = outboxMessage.eventType
+                messageProducer.produce(
+                    MessageProducer.ProduceMessage(
+                        eventId = outboxMessage.id,
+                        payload = outboxMessage.payload,
+                        aggregateId = outboxMessage.aggregateId,
+                        eventType = outboxMessage.eventType
+                    )
                 )
             }.onSuccess {
                 publishedIds += outboxMessage.id

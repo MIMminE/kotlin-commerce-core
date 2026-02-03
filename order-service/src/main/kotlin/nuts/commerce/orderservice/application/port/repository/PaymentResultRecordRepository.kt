@@ -4,10 +4,11 @@ import nuts.commerce.orderservice.model.integration.PaymentResultRecord
 import java.util.UUID
 
 interface PaymentResultRecordRepository {
-    fun getOrCreate(record: PaymentResultRecord): GerOrCreateResult
+    fun getOrCreate(record: PaymentResultRecord): GetOrCreateResult
     fun listByOrder(orderId: UUID): List<PaymentResultRecord>
+    fun save(record: PaymentResultRecord): PaymentResultRecord
 
-    data class GerOrCreateResult(
+    data class GetOrCreateResult(
         val record: PaymentResultRecord,
         val isCreated: Boolean
     )

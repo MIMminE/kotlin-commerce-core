@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.application.adapter.message
 
 import nuts.commerce.orderservice.model.domain.exception.OrderException
-import nuts.commerce.orderservice.application.port.message.MessagePublisher
+import nuts.commerce.orderservice.application.port.message.MessageProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
@@ -10,17 +10,17 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 @Component
-class KafkaMessagePublisher(
+class KafkaMessageProducer(
     private val kafkaTemplate: KafkaTemplate<String, String>,
     private val props: OrderEventTopicProperties
 
-) : MessagePublisher {
-    override fun publish(
-        eventId: UUID,
-        eventType: String,
-        payload: String,
-        aggregateId: UUID
-    ) {
+) : MessageProducer {
+    override fun produce(produceMessage: MessageProducer.ProduceMessage) {
+        val eventId = produceMessage.eventId
+        val eventType = produceMessage.eventType
+        val payload = produceMessage.payload
+        val aggregateId = produceMessage.aggregateId
+
         val topic = props.topic
         val record = ProducerRecord(topic, aggregateId.toString(), payload).apply {
             headers().add("eventId", eventId.toString().toByteArray(StandardCharsets.UTF_8))

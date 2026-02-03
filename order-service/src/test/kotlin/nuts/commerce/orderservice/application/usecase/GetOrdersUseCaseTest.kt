@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.application.usecase
 
-import nuts.commerce.orderservice.adapter.repository.InMemoryOrderRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
 import nuts.commerce.orderservice.utils.FixtureUtils
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.data.domain.PageRequest
