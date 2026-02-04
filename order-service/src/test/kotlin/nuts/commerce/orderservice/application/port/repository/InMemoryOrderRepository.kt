@@ -36,6 +36,15 @@ class InMemoryOrderRepository : OrderRepository {
         return PageImpl(content, pageable, total)
     }
 
+    override fun findByUserIdAndIdempotencyKey(
+        userId: String,
+        idempotencyKey: UUID
+    ): Order? {
+        return store.values.firstOrNull {
+            it.userId == userId && it.idempotencyKey == idempotencyKey
+        }
+    }
+
     fun clear() {
         store.clear()
     }

@@ -11,6 +11,13 @@ import java.util.*
     indexes = [
         Index(name = "idx_orders_user_id", columnList = "user_id"),
         Index(name = "idx_orders_status", columnList = "status"),
+        Index(name = "idx_orders_idempotency_key", columnList = "idempotency_key"),
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_orders_user_id_idempotency_key",
+            columnNames = ["user_id", "idempotency_key"]
+        )
     ]
 )
 class Order protected constructor() : BaseEntity() {
@@ -20,6 +27,9 @@ class Order protected constructor() : BaseEntity() {
     lateinit var id: UUID
         protected set
 
+    @Column(name = "idempotency_key", nullable = false, length = 64, updatable = false)
+    lateinit var idempotencyKey: UUID
+        protected set
 
     @Version
     @Column(name = "version", nullable = false)
@@ -51,8 +61,10 @@ class Order protected constructor() : BaseEntity() {
     companion object {
         fun create(
             userId: String,
+            idempotencyKey: UUID,
             items: List<OrderItem>,
             total: Money,
+            status: OrderStatus = OrderStatus.CREATED,
             idGenerator: () -> UUID = { UUID.randomUUID() }
         ): Order {
             if (userId.isBlank()) throw OrderException.InvalidCommand("userId is required")
@@ -61,7 +73,8 @@ class Order protected constructor() : BaseEntity() {
             return Order().apply {
                 this.id = idGenerator()
                 this.userId = userId
-                this.status = OrderStatus.CREATED
+                this.idempotencyKey = idempotencyKey
+                this.status = status
                 this.items = items.toMutableList()
                 this.total = total
             }

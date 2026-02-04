@@ -19,6 +19,5 @@ sealed class OrderException(message: String, cause: Throwable? = null) : Runtime
         val eventId: UUID? = null,
         val aggregateId: UUID? = null,
         val eventType: String? = null,
-        val topic: String? = null,
     ) : OrderException(message, cause)
 }

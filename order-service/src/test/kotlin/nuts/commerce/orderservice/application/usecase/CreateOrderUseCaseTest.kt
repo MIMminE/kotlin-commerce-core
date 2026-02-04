@@ -6,6 +6,7 @@ import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import tools.jackson.databind.ObjectMapper
+import java.util.UUID
 import kotlin.test.Test
 
 class CreateOrderUseCaseTest {
@@ -35,6 +36,7 @@ class CreateOrderUseCaseTest {
             ),
             totalAmount = 2000L,
             currency = "KRW",
+            idempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -55,6 +57,7 @@ class CreateOrderUseCaseTest {
             items = listOf(CreateOrderUseCase.Item("p-1", 1, 1500L, "KRW")),
             totalAmount = 1500L,
             currency = "KRW",
+            idempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -74,6 +77,7 @@ class CreateOrderUseCaseTest {
             items = listOf(CreateOrderUseCase.Item("p-1", 1, 1000L, "KRW")),
             totalAmount = 1000L,
             currency = "KRW",
+            idempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -96,6 +100,7 @@ class CreateOrderUseCaseTest {
             ),
             totalAmount = 8000L,
             currency = "KRW",
+            idempotencyKey = UUID.randomUUID()
         )
 
         // when
@@ -127,6 +132,7 @@ class CreateOrderUseCaseTest {
             ),
             totalAmount = 5700L,
             currency = "KRW",
+            idempotencyKey = UUID.randomUUID()
         )
 
         // when

@@ -7,6 +7,7 @@ import nuts.commerce.orderservice.model.domain.Money
 import nuts.commerce.orderservice.model.domain.Order
 import nuts.commerce.orderservice.model.domain.OrderItem
 import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 import java.util.UUID
@@ -19,6 +20,19 @@ class CreateOrderUseCase(
 ) {
     @Transactional
     fun create(command: Command): Result {
+
+        orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
+            ?.let { return Result(it.id) }
+
+        val saved = createAndPersistOrder(command)
+        return try {
+            Result(saved.id)
+        } catch (e: DataIntegrityViolationException) {
+            Result(orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)!!.id)
+        }
+    }
+
+    private fun createAndPersistOrder(command: Command): Order {
         val orderId = UUID.randomUUID()
         val orderItems: List<OrderItem> = command.items.map {
             OrderItem.create(
@@ -33,9 +47,9 @@ class CreateOrderUseCase(
             userId = command.userId,
             items = orderItems,
             total = Money(command.totalAmount, command.currency),
-            idGenerator = { orderId }
+            idGenerator = { orderId },
+            idempotencyKey = command.idempotencyKey
         )
-
         val saved = orderRepository.save(order)
 
         val outboxEvent = OrderOutboxRecord.create(
@@ -53,11 +67,11 @@ class CreateOrderUseCase(
 
         order.markPaying()
         orderOutboxRepository.save(outboxEvent)
-
-        return Result(saved.id)
+        return saved
     }
 
     data class Command(
+        val idempotencyKey: UUID,
         val userId: String,
         val items: List<Item>,
         val totalAmount: Long,

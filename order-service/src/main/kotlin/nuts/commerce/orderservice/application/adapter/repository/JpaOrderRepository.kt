@@ -28,6 +28,14 @@ class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
     ): Page<Order> {
         TODO("Not yet implemented")
     }
+
+    override fun findByUserIdAndIdempotencyKey(
+        userId: String,
+        idempotencyKey: UUID
+    ): Order? =
+        orderJpa.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
 }
 
-interface OrderJpa : JpaRepository<Order, UUID>
+interface OrderJpa : JpaRepository<Order, UUID> {
+    fun findByUserIdAndIdempotencyKey(userId: String, idempotencyKey: UUID): Order?
+}

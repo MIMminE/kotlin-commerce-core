@@ -10,5 +10,6 @@ interface OrderRepository {
     fun save(order: Order): Order
     fun findById(id: UUID): Order?
     fun existsById(id: UUID): Boolean
-    fun findAllByUserId(userId: String, pageable: Pageable) : Page<Order>
+    fun findAllByUserId(userId: String, pageable: Pageable): Page<Order>
+    fun findByUserIdAndIdempotencyKey(userId: String, idempotencyKey: UUID): Order?
 }
