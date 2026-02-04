@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.domain
+package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass

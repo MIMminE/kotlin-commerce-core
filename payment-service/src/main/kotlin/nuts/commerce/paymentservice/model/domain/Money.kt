@@ -1,5 +1,7 @@
-package nuts.commerce.paymentservice.domain
+package nuts.commerce.paymentservice.model.domain
 
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
 
 @Embeddable
 data class Money(

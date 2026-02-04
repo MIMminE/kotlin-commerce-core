@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
     prefix = "order.outbox.publish",
     name = ["enabled"],
     havingValue = "true",
-    matchIfMissing = true, // 기본은 켜짐
+    matchIfMissing = true
 )
 class OrderOutboxPublisherScheduler(
     private val publishOrderOutboxUseCase: PublishOrderOutboxUseCase
