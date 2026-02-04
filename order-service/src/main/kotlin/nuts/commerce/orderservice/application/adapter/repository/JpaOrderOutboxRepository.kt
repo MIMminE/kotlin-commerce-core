@@ -3,6 +3,9 @@ package nuts.commerce.orderservice.application.adapter.repository
 import nuts.commerce.orderservice.application.port.repository.OrderOutboxRepository
 import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.UUID
@@ -14,23 +17,29 @@ class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOut
     }
 
     override fun findById(id: UUID): OrderOutboxRecord? {
-        TODO("Not yet implemented")
+        return outBoxJpa.findById(id).orElse(null)
     }
 
     override fun findByIds(ids: List<UUID>): List<OrderOutboxRecord> {
-        TODO("Not yet implemented")
+        return outBoxJpa.findAllById(ids).toList()
     }
 
     override fun findByAggregateId(aggregateId: UUID): List<OrderOutboxRecord> {
-        TODO("Not yet implemented")
+        return outBoxJpa.findAll().filter { it.aggregateId == aggregateId }
     }
 
     override fun claimReadyToPublishIds(limit: Int): List<UUID> {
-        TODO("Not yet implemented")
+        // 퍼블리싱 대상 조회하는 메서드이며, 대상의 상태가 팬딩또는 페일일때 조회되어야 함
+        outBoxJpa.findByStatusIn(
+            listOf(
+                OrderOutboxRecord.OutboxStatus.PENDING,
+                OrderOutboxRecord.OutboxStatus.FAILED
+            )
+        )
     }
 
     override fun tryMarkPublished(eventId: UUID, publishedAt: Instant): Boolean {
-        TODO("Not yet implemented")
+
     }
 
     override fun markFailed(
@@ -38,9 +47,26 @@ class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOut
         error: String,
         failedAt: Instant
     ): Boolean {
-        TODO("Not yet implemented")
+
     }
 }
 
 interface OrderOutboxJpa : JpaRepository<OrderOutboxRecord, UUID> {
+    fun findByStatusIn(statuses: List<OrderOutboxRecord.OutboxStatus>): List<OrderOutboxRecord>
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        """
+        update OrderOutboxRecord o
+           set o.status = OrderOutboxRecord.OutboxStatus.PUBLISHED,
+               o.updatedAt = :now
+         where o.id = :id
+           and o.status = nuts.commerce.orderservice.model.domain.OrderOutboxRecord.OutboxStatus.PROCESSING
+    """
+    )
+    fun markPublishedIfProcessing(
+        @Param("id") id: UUID,
+        @Param("publishedAt") publishedAt: Instant,
+        @Param("now") now: Instant
+    ): Int
 }

@@ -6,7 +6,6 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 @Component

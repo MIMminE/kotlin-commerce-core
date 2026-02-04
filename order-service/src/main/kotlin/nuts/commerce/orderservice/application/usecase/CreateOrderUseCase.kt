@@ -24,8 +24,8 @@ class CreateOrderUseCase(
         orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
             ?.let { return Result(it.id) }
 
-        val saved = createAndPersistOrder(command)
         return try {
+            val saved = createAndPersistOrder(command)
             Result(saved.id)
         } catch (e: DataIntegrityViolationException) {
             Result(orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)!!.id)
