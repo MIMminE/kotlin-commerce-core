@@ -14,13 +14,16 @@ class InMemoryMessageProducer(
             occurredAt = null,
             correlationId = null
         )
-    }
+    },
+    private val failWhen: (MessageProducer.ProduceMessage) -> Throwable? = { null }
 ) : MessageProducer {
 
     private val _produced = CopyOnWriteArrayList<MessageProducer.ProduceMessage>()
     val produced: List<MessageProducer.ProduceMessage> get() = _produced
 
     override fun produce(produceMessage: MessageProducer.ProduceMessage) {
+        failWhen(produceMessage)?.let { throw it }
+
         _produced += produceMessage
         wiredConsumer?.onPaymentResult(mapper(produceMessage))
     }
