@@ -46,7 +46,7 @@ class OnPaymentRequestUseCaseTest {
         assertEquals("APPROVED", result.status)
         val saved = repo.findById(result.paymentId)
         assertNotNull(saved)
-        assertEquals("APPROVED", saved.status().name)
+        assertEquals("APPROVED", saved.status.name)
     }
 
     @Test
@@ -71,15 +71,14 @@ class OnPaymentRequestUseCaseTest {
         assertEquals("DECLINED", result.status)
         val saved = repo.findByOrderId(orderId)
         assertNotNull(saved)
-        assertEquals("DECLINED", saved.status().name)
+        assertEquals("DECLINED", saved.status.name)
     }
 
     @Test
-    fun `프로바이더 예외 발생 - 결과는 FAILED, 저장된 결제 상태는 DECLINED`() {
+    fun `프로바이더 예외 발생 - 결과는 FAILED, 저장된 결제 상태는 FAILED`() {
         val orderId = UUID.randomUUID()
         val idempotency = UUID.randomUUID()
 
-        // create a provider that throws
         val throwingProvider = object : PaymentProvider {
             override fun charge(request: PaymentProvider.ChargeRequest): PaymentProvider.ChargeResponse {
                 throw RuntimeException("provider down")
@@ -101,8 +100,8 @@ class OnPaymentRequestUseCaseTest {
         assertEquals("FAILED", result.status)
         val saved = repo.findByOrderId(orderId)
         assertNotNull(saved)
-        // on exception we call decline(), which sets DECLINED
-        assertEquals("DECLINED", saved.status().name)
+        // on exception we call fail(), which sets FAILED
+        assertEquals("FAILED", saved.status.name)
     }
 
     @Test
@@ -117,7 +116,7 @@ class OnPaymentRequestUseCaseTest {
 
         // mark approved to simulate prior success
         existing.startProcessing(java.time.Instant.now())
-        existing.approve(java.time.Instant.now(), providerPaymentId = "prov-xyz")
+        existing.approve(java.time.Instant.now())
 
         repo.save(existing)
 
@@ -131,7 +130,7 @@ class OnPaymentRequestUseCaseTest {
 
         val result = useCase.handle(cmd)
 
-        assertEquals(existing.paymentId(), result.paymentId)
-        assertEquals(existing.status().name, result.status)
+        assertEquals(existing.paymentId, result.paymentId)
+        assertEquals(existing.status.name, result.status)
     }
 }

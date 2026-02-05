@@ -29,26 +29,23 @@ class PublishOrderOutboxUseCase(
             runCatching {
                 messageProducer.produce(
                     MessageProducer.ProduceMessage(
-                        eventId = outboxMessage.id,
+                        eventId = outboxMessage.outboxId,
                         payload = outboxMessage.payload,
                         aggregateId = outboxMessage.aggregateId,
                         eventType = outboxMessage.eventType
                     )
                 )
             }.onSuccess {
-                publishedIds += outboxMessage.id
+                publishedIds += outboxMessage.outboxId
             }.onFailure { ex ->
                 val cause = ex.cause ?: ex
                 val error = cause.message ?: (cause::class.qualifiedName ?: "unknown")
 
                 transactional {
-                    val managed = orderOutboxRepository.findById(outboxMessage.id) ?: return@transactional
+                    val managed = orderOutboxRepository.findById(outboxMessage.outboxId) ?: return@transactional
                     managed.markFailed(
                         error = error,
                         now = now,
-                        maxRetries = maxRetries,
-                        baseDelaySeconds = 1,
-                        maxDelaySeconds = 60
                     )
                 }
             }
@@ -56,7 +53,7 @@ class PublishOrderOutboxUseCase(
         if (publishedIds.isEmpty()) return
         transactional {
             val eventList = orderOutboxRepository.findByIds(publishedIds)
-            eventList.forEach { it.markPublished() }
+            eventList.forEach { it.markPublished(now) }
         }
     }
 

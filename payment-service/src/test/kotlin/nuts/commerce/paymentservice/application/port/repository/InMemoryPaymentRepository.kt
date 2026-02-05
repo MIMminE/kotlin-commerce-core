@@ -15,9 +15,9 @@ class InMemoryPaymentRepository : PaymentRepository {
     }
 
     override fun save(payment: Payment): Payment {
-        val id = payment.paymentId()
+        val id = payment.paymentId
         byId[id] = payment
-        byOrderId[payment.orderId()] = id
+        byOrderId[payment.orderId] = id
         return payment
     }
 
@@ -28,4 +28,3 @@ class InMemoryPaymentRepository : PaymentRepository {
         return byId[id]
     }
 }
-

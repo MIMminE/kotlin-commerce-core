@@ -5,7 +5,7 @@ import nuts.commerce.orderservice.application.port.repository.InMemoryPaymentRes
 import nuts.commerce.orderservice.model.domain.Money
 import nuts.commerce.orderservice.model.domain.Order
 import nuts.commerce.orderservice.model.domain.OrderItem
-import nuts.commerce.orderservice.model.integration.PaymentResultRecord
+import nuts.commerce.orderservice.model.infra.PaymentResultRecord
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID

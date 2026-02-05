@@ -1,4 +1,4 @@
-package nuts.commerce.orderservice.model.domain.exception
+package nuts.commerce.orderservice.model.exception
 
 import nuts.commerce.orderservice.model.domain.Order
 import java.util.UUID

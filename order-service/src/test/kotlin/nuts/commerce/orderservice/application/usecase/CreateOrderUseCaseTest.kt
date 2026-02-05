@@ -2,7 +2,7 @@ package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
+import nuts.commerce.orderservice.model.infra.OutboxRecord
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import tools.jackson.databind.ObjectMapper
@@ -108,7 +108,7 @@ class CreateOrderUseCaseTest {
 
         // then
         val savedOrder = orderRepository.findById(result.orderId) ?: fail("저장된 Order가 없습니다.")
-        val outbox: OrderOutboxRecord =
+        val outbox: OutboxRecord =
             orderOutboxRepository.findByAggregateId(result.orderId).singleOrNull()
                 ?: fail("aggregateId로 조회된 outbox가 1개여야 합니다.")
 

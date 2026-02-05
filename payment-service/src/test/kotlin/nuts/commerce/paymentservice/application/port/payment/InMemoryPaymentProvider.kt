@@ -3,11 +3,6 @@ package nuts.commerce.paymentservice.application.port.payment
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 
-/**
- * Simple in-memory payment provider for tests.
- * You can enqueue predefined responses (ChargeResponse) that will be returned in order.
- * If no responses are enqueued, default behaviour is to return success with a random providerPaymentId.
- */
 class InMemoryPaymentProvider(
     private val defaultSuccess: Boolean = true
 ) : PaymentProvider {

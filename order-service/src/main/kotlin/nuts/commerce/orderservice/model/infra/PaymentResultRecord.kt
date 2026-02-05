@@ -1,11 +1,10 @@
-package nuts.commerce.orderservice.model.integration
+package nuts.commerce.orderservice.model.infra
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
-import jakarta.persistence.Index
 import jakarta.persistence.Table
 import nuts.commerce.orderservice.model.BaseEntity
 import java.time.Instant

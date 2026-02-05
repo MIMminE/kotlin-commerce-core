@@ -4,7 +4,7 @@ import nuts.commerce.inventoryservice.application.port.message.InMemoryInventory
 import nuts.commerce.inventoryservice.application.port.repository.InMemoryInventoryRepository
 import nuts.commerce.inventoryservice.model.domain.Inventory
 import nuts.commerce.inventoryservice.model.domain.Inventory.InventoryStatus
-import nuts.commerce.inventoryservice.model.InventoryException
+import nuts.commerce.inventoryservice.model.exception.InventoryException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID

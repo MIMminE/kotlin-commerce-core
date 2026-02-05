@@ -1,7 +1,7 @@
 package nuts.commerce.productservice.model.exception
 
-import nuts.commerce.productservice.model.domain.Product
-import java.util.UUID
+import nuts.commerce.productservice.model.domain.ProductStatus
+import java.util.*
 
 sealed class ProductException(
     message: String,
@@ -10,10 +10,9 @@ sealed class ProductException(
 
     class InvalidTransition(
         val productId: UUID?,
-        val from: Product.ProductStatus,
-        val to: Product.ProductStatus
+        val from: ProductStatus,
+        val to: ProductStatus
     ) : ProductException("invalid transition: $from -> $to (productId=$productId)")
-
 
     class InvalidCommand(message: String) : ProductException(message)
 }

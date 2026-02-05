@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.model.integration.PaymentResultRecord
+import nuts.commerce.orderservice.model.infra.PaymentResultRecord
 import java.util.UUID
 
 interface PaymentResultRecordRepository {

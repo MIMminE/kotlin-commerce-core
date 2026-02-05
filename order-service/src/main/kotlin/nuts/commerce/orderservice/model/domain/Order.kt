@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.model.domain
 
 import jakarta.persistence.*
-import nuts.commerce.orderservice.model.domain.exception.OrderException
+import nuts.commerce.orderservice.model.exception.OrderException
 import nuts.commerce.orderservice.model.BaseEntity
 import java.util.*
 

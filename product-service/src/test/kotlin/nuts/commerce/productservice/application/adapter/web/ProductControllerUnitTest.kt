@@ -5,6 +5,7 @@ import nuts.commerce.productservice.application.port.repository.InMemoryStockQue
 import nuts.commerce.productservice.application.usecase.*
 import nuts.commerce.productservice.model.domain.Money
 import nuts.commerce.productservice.model.domain.Product
+import nuts.commerce.productservice.model.domain.ProductStatus
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
 import org.junit.jupiter.api.BeforeEach
@@ -58,9 +59,9 @@ class ProductControllerUnitTest {
 
     @Test
     fun `활성 제품만 조회된다`() {
-        val p1 = Product.create(productName = "p1", price = Money(100L, "KRW"), status = Product.ProductStatus.ACTIVE)
-        val p2 = Product.create(productName = "p2", price = Money(200L, "KRW"), status = Product.ProductStatus.INACTIVE)
-        val p3 = Product.create(productName = "p3", price = Money(300L, "KRW"), status = Product.ProductStatus.ACTIVE)
+        val p1 = Product.create(productName = "p1", price = Money(100L, "KRW"), status = ProductStatus.ACTIVE)
+        val p2 = Product.create(productName = "p2", price = Money(200L, "KRW"), status = ProductStatus.INACTIVE)
+        val p3 = Product.create(productName = "p3", price = Money(300L, "KRW"), status = ProductStatus.ACTIVE)
 
         repo.save(p1)
         repo.save(p2)
@@ -88,7 +89,7 @@ class ProductControllerUnitTest {
 
     @Test
     fun `제품 활성화 엔드포인트가 작동한다`() {
-        val p = Product.create(productName = "toActivate", price = Money(100L, "KRW"), status = Product.ProductStatus.INACTIVE)
+        val p = Product.create(productName = "toActivate", price = Money(100L, "KRW"), status = ProductStatus.INACTIVE)
         repo.save(p)
 
         mockMvc.perform(post("/api/products/${p.productId}/activate"))
@@ -96,12 +97,12 @@ class ProductControllerUnitTest {
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
         val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
-        assert(saved.status == Product.ProductStatus.ACTIVE)
+        assert(saved.status == ProductStatus.ACTIVE)
     }
 
     @Test
     fun `제품 비활성화 엔드포인트가 작동한다`() {
-        val p = Product.create(productName = "toDeactivate", price = Money(100L, "KRW"), status = Product.ProductStatus.ACTIVE)
+        val p = Product.create(productName = "toDeactivate", price = Money(100L, "KRW"), status = ProductStatus.ACTIVE)
         repo.save(p)
 
         mockMvc.perform(post("/api/products/${p.productId}/deactivate"))
@@ -109,12 +110,12 @@ class ProductControllerUnitTest {
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
         val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
-        assert(saved.status == Product.ProductStatus.INACTIVE)
+        assert(saved.status == ProductStatus.INACTIVE)
     }
 
     @Test
     fun `제품 삭제 엔드포인트가 작동한다`() {
-        val p = Product.create(productName = "toDelete", price = Money(100L, "KRW"), status = Product.ProductStatus.ACTIVE)
+        val p = Product.create(productName = "toDelete", price = Money(100L, "KRW"), status = ProductStatus.ACTIVE)
         repo.save(p)
 
         mockMvc.perform(post("/api/products/${p.productId}/delete"))
@@ -122,6 +123,6 @@ class ProductControllerUnitTest {
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
         val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
-        assert(saved.status == Product.ProductStatus.DELETED)
+        assert(saved.status == ProductStatus.DELETED)
     }
 }

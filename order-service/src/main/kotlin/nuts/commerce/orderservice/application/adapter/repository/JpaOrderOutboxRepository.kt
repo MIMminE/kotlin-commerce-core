@@ -1,45 +1,66 @@
 package nuts.commerce.orderservice.application.adapter.repository
 
 import nuts.commerce.orderservice.application.port.repository.OrderOutboxRepository
-import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
+import nuts.commerce.orderservice.model.infra.OutboxRecord
+import nuts.commerce.orderservice.model.infra.OutboxStatus
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.UUID
 
 @Repository
 class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOutboxRepository {
-    override fun save(event: OrderOutboxRecord): OrderOutboxRecord {
+    override fun save(event: OutboxRecord): OutboxRecord {
         return outBoxJpa.save(event)
     }
 
-    override fun findById(id: UUID): OrderOutboxRecord? {
+    override fun findById(id: UUID): OutboxRecord? {
         return outBoxJpa.findById(id).orElse(null)
     }
 
-    override fun findByIds(ids: List<UUID>): List<OrderOutboxRecord> {
+    override fun findByIds(ids: List<UUID>): List<OutboxRecord> {
         return outBoxJpa.findAllById(ids).toList()
     }
 
-    override fun findByAggregateId(aggregateId: UUID): List<OrderOutboxRecord> {
+    override fun findByAggregateId(aggregateId: UUID): List<OutboxRecord> {
         return outBoxJpa.findAll().filter { it.aggregateId == aggregateId }
     }
 
     override fun claimReadyToPublishIds(limit: Int): List<UUID> {
-        // 퍼블리싱 대상 조회하는 메서드이며, 대상의 상태가 팬딩또는 페일일때 조회되어야 함
-        outBoxJpa.findByStatusIn(
+        val now = Instant.now()
+        // fetch candidates whose status is PENDING / FAILED / RETRY_SCHEDULED
+        val candidates = outBoxJpa.findByStatusIn(
             listOf(
-                OrderOutboxRecord.OutboxStatus.PENDING,
-                OrderOutboxRecord.OutboxStatus.FAILED
+                OutboxStatus.PENDING,
+                OutboxStatus.FAILED,
+                OutboxStatus.RETRY_SCHEDULED
             )
         )
+
+        // filter by nextAttemptAt (null means ready) and order by createdAt (approx via createdAt)
+        return candidates
+            .asSequence()
+            .filter { rec ->
+                val na = rec.nextAttemptAt
+                na == null || !na.isAfter(now)
+            }
+            .sortedBy { it.createdAt }
+            .map { it.outboxId }
+            .take(limit)
+            .toList()
     }
 
     override fun tryMarkPublished(eventId: UUID, publishedAt: Instant): Boolean {
-
+        val rec = outBoxJpa.findById(eventId).orElse(null) ?: return false
+        return try {
+            if (rec.status != OutboxStatus.PROCESSING) return false
+            // use entity method to ensure consistent checks and updatedAt handling
+            rec.markPublished(publishedAt)
+            outBoxJpa.save(rec)
+            true
+        } catch (ex: Exception) {
+            false
+        }
     }
 
     override fun markFailed(
@@ -47,26 +68,18 @@ class JpaOrderOutboxRepository(private val outBoxJpa: OrderOutboxJpa) : OrderOut
         error: String,
         failedAt: Instant
     ): Boolean {
-
+        val rec = outBoxJpa.findById(eventId).orElse(null) ?: return false
+        return try {
+            if (rec.status != OutboxStatus.PROCESSING) return false
+            rec.markFailed(failedAt, error)
+            outBoxJpa.save(rec)
+            true
+        } catch (ex: Exception) {
+            false
+        }
     }
 }
 
-interface OrderOutboxJpa : JpaRepository<OrderOutboxRecord, UUID> {
-    fun findByStatusIn(statuses: List<OrderOutboxRecord.OutboxStatus>): List<OrderOutboxRecord>
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(
-        """
-        update OrderOutboxRecord o
-           set o.status = OrderOutboxRecord.OutboxStatus.PUBLISHED,
-               o.updatedAt = :now
-         where o.id = :id
-           and o.status = nuts.commerce.orderservice.model.domain.OrderOutboxRecord.OutboxStatus.PROCESSING
-    """
-    )
-    fun markPublishedIfProcessing(
-        @Param("id") id: UUID,
-        @Param("publishedAt") publishedAt: Instant,
-        @Param("now") now: Instant
-    ): Int
+interface OrderOutboxJpa : JpaRepository<OutboxRecord, UUID> {
+    fun findByStatusIn(statuses: List<OutboxStatus>): List<OutboxRecord>
 }

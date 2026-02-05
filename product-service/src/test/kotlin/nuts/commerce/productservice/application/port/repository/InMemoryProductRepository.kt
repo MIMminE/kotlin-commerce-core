@@ -1,6 +1,7 @@
 package nuts.commerce.productservice.application.port.repository
 
 import nuts.commerce.productservice.model.domain.Product
+import nuts.commerce.productservice.model.domain.ProductStatus
 import nuts.commerce.productservice.model.exception.ProductException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -19,14 +20,14 @@ class InMemoryProductRepository : ProductRepository {
     }
 
     override fun getActiveProducts(): List<Product> = try {
-        store.values.filter { it.status == Product.ProductStatus.ACTIVE }
+        store.values.filter { it.status == ProductStatus.ACTIVE }
     } catch (e: Throwable) {
         throw ProductException.InvalidCommand(e.message ?: "failed to list active products")
     }
 
     override fun getActiveProduct(productId: UUID): Product {
         try {
-            return store[productId]?.takeIf { it.status == Product.ProductStatus.ACTIVE }
+            return store[productId]?.takeIf { it.status == ProductStatus.ACTIVE }
                 ?: throw ProductException.InvalidCommand("Product not found or inactive: $productId")
         } catch (e: ProductException.InvalidCommand) {
             throw e

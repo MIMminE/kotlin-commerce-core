@@ -4,9 +4,8 @@ import jakarta.transaction.Transactional
 import nuts.commerce.orderservice.application.port.repository.OrderRepository
 import nuts.commerce.orderservice.application.port.repository.PaymentResultRecordRepository
 import nuts.commerce.orderservice.model.domain.Order
-import nuts.commerce.orderservice.model.domain.exception.OrderException
-import nuts.commerce.orderservice.model.integration.PaymentResultRecord
-import org.springframework.dao.DataIntegrityViolationException
+import nuts.commerce.orderservice.model.exception.OrderException
+import nuts.commerce.orderservice.model.infra.PaymentResultRecord
 import org.springframework.stereotype.Service
 import java.util.UUID
 

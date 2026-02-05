@@ -7,9 +7,8 @@ import java.util.*
 
 @Entity
 @Table(
-    name = "products",
-
-    )
+    name = "products"
+)
 class Product protected constructor(
 
     @Id
@@ -93,10 +92,10 @@ class Product protected constructor(
             )
         }
     }
+}
 
-    enum class ProductStatus {
-        ACTIVE,
-        INACTIVE,
-        DELETED
-    }
+enum class ProductStatus {
+    ACTIVE,
+    INACTIVE,
+    DELETED
 }

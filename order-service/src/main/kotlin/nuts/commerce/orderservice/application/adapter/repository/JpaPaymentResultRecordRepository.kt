@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.application.adapter.repository
 
 import nuts.commerce.orderservice.application.port.repository.PaymentResultRecordRepository
-import nuts.commerce.orderservice.model.integration.PaymentResultRecord
+import nuts.commerce.orderservice.model.infra.PaymentResultRecord
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

@@ -2,6 +2,7 @@ package nuts.commerce.productservice.application.adapter.repository
 
 import nuts.commerce.productservice.application.port.repository.ProductRepository
 import nuts.commerce.productservice.model.domain.Product
+import nuts.commerce.productservice.model.domain.ProductStatus
 import nuts.commerce.productservice.model.exception.ProductException
 import org.springframework.dao.DataAccessException
 import org.springframework.data.jpa.repository.JpaRepository
@@ -20,7 +21,7 @@ class JpaProductRepository(private val productJpa: ProductJpa) : ProductReposito
 
     override fun getActiveProducts(): List<Product> {
         try {
-            return productJpa.findProductsByStatusIs(Product.ProductStatus.ACTIVE)
+            return productJpa.findProductsByStatusIs(ProductStatus.ACTIVE)
         } catch (e: DataAccessException) {
             throw ProductException.InvalidCommand(e.message ?: "failed to list active products")
         }
@@ -30,7 +31,7 @@ class JpaProductRepository(private val productJpa: ProductJpa) : ProductReposito
         try {
             return productJpa.findByProductIdAndStatus(
                 productId,
-                Product.ProductStatus.ACTIVE
+                ProductStatus.ACTIVE
             ) ?: throw ProductException.InvalidCommand("Product not found: $productId")
         } catch (e: DataAccessException) {
             throw ProductException.InvalidCommand(e.message ?: "failed to get active product")
@@ -47,9 +48,9 @@ class JpaProductRepository(private val productJpa: ProductJpa) : ProductReposito
 }
 
 interface ProductJpa : JpaRepository<Product, UUID> {
-    fun findProductsByStatusIs(status: Product.ProductStatus): List<Product>
+    fun findProductsByStatusIs(status: ProductStatus): List<Product>
     fun findByProductIdAndStatus(
         productId: UUID,
-        status: Product.ProductStatus
+        status: ProductStatus
     ): Product?
 }

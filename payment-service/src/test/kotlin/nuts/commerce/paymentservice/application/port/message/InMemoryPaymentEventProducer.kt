@@ -13,7 +13,6 @@ class InMemoryPaymentEventProducer(
 
     override fun produce(message: PaymentEventProducer.Message) {
         _produced += message
-        // If a consumer is wired, convert to inbound message and deliver
         wiredConsumer?.consume(
             PaymentEventConsumer.InboundMessage(
                 eventId = message.eventId,

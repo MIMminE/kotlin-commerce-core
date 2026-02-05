@@ -7,7 +7,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
 import nuts.commerce.inventoryservice.model.BaseEntity
-import nuts.commerce.inventoryservice.model.InventoryException
+import nuts.commerce.inventoryservice.model.exception.InventoryException
 import java.util.UUID
 
 @Entity

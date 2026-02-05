@@ -11,7 +11,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import jakarta.persistence.Version
 import nuts.commerce.paymentservice.model.BaseEntity
+import nuts.commerce.paymentservice.model.exception.PaymentException
 import java.time.Instant
 import java.util.UUID
 
@@ -27,10 +29,10 @@ import java.util.UUID
 )
 class Payment protected constructor(
     @Id
-    private val paymentId: UUID,
+    val paymentId: UUID,
 
     @Column(nullable = false, updatable = false)
-    private val orderId: UUID,
+    val orderId: UUID,
 
     @Embedded
     @Column(nullable = false)
@@ -41,24 +43,23 @@ class Payment protected constructor(
             column = Column(name = "unit_price_currency", nullable = false, length = 8)
         )
     )
-    private val money: Money,
+    var money: Money,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private var status: PaymentStatus,
+    var status: PaymentStatus,
 
-    private var paymentMethodType: PaymentMethodType?,
+    @Column(name = "payment_method_type")
+    @Enumerated(EnumType.STRING)
+    var paymentMethodType: PaymentMethodType?,
 
     @Column(nullable = false, updatable = false)
-    private val idempotencyKey: UUID,
+    val idempotencyKey: UUID,
 
-    ) : BaseEntity() {
+    @Version
+    var version: Long? = null
 
-    // Public accessors to avoid reflection by callers
-    fun paymentId(): UUID = paymentId
-    fun orderId(): UUID = orderId
-    fun status(): PaymentStatus = status
-    fun idempotencyKey(): UUID = idempotencyKey
+) : BaseEntity() {
 
     companion object {
         fun create(
@@ -75,27 +76,50 @@ class Payment protected constructor(
                 money = money,
                 status = status,
                 paymentMethodType = paymentMethodType,
-                idempotencyKey = idempotencyKey
+                idempotencyKey = idempotencyKey,
+                version = null
             )
         }
     }
 
     fun startProcessing(now: Instant) {
-        require(status == PaymentStatus.CREATED) { "invalid transition $status -> PROCESSING" }
+        if (status != PaymentStatus.CREATED) {
+            throw PaymentException.InvalidTransition(
+                paymentId = paymentId,
+                from = status,
+                to = PaymentStatus.PROCESSING
+            )
+        }
         status = PaymentStatus.PROCESSING
         updatedAt = now
     }
 
-    fun approve(now: Instant, providerPaymentId: String?) {
-        require(status == PaymentStatus.PROCESSING) { "invalid transition $status -> APPROVED" }
+    fun approve(now: Instant) {
+        if (status != PaymentStatus.PROCESSING) {
+            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.APPROVED)
+        }
         status = PaymentStatus.APPROVED
         updatedAt = now
     }
 
-    fun decline(now: Instant, reason: String?) {
-        require(status == PaymentStatus.PROCESSING) { "invalid transition $status -> DECLINED" }
+    fun decline(now: Instant) {
+        if (status != PaymentStatus.PROCESSING) {
+            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.DECLINED)
+        }
         status = PaymentStatus.DECLINED
         updatedAt = now
+    }
+
+    fun fail(now: Instant) {
+        if (status != PaymentStatus.PROCESSING && status != PaymentStatus.CREATED) {
+            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.FAILED)
+        }
+        status = PaymentStatus.FAILED
+        updatedAt = now
+    }
+
+    fun updatePaymentMethodType(type: PaymentMethodType?) {
+        this.paymentMethodType = type
     }
 }
 

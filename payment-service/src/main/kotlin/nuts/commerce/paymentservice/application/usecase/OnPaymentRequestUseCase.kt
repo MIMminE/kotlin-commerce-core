@@ -7,6 +7,8 @@ import nuts.commerce.paymentservice.model.domain.Payment
 import java.time.Instant
 import java.util.*
 
+
+// TODO
 class OnPaymentRequestUseCase(
     private val paymentProvider: PaymentProvider,
     private val paymentRepository: PaymentRepository
@@ -28,27 +30,22 @@ class OnPaymentRequestUseCase(
     fun handle(cmd: Command): Result {
         val now = Instant.now()
 
-        // idempotency: 이미 동일한 order에 결제가 존재하면 해당 상태를 반환
         val existing = paymentRepository.findByOrderId(cmd.orderId)
         if (existing != null) {
-            return Result(paymentId = existing.paymentId(), status = existing.status().name)
+            return Result(paymentId = existing.paymentId, status = existing.status.name)
         }
 
-        // create payment entity
         val payment = Payment.create(
             orderId = cmd.orderId,
             money = Money(amount = cmd.amount, currency = cmd.currency),
             idempotencyKey = cmd.idempotencyKey
         )
 
-        // save created
         paymentRepository.save(payment)
 
-        // start processing
         payment.startProcessing(now)
         paymentRepository.save(payment)
 
-        // call external provider
         val chargeReq = PaymentProvider.ChargeRequest(
             orderId = cmd.orderId.toString(),
             amount = cmd.amount,
@@ -59,20 +56,19 @@ class OnPaymentRequestUseCase(
         val resp = try {
             paymentProvider.charge(chargeReq)
         } catch (ex: Exception) {
-            // provider error -> decline
-            payment.decline(now, ex.message)
+            payment.fail(now)
             paymentRepository.save(payment)
-            return Result(paymentId = payment.paymentId(), status = "FAILED")
+            return Result(paymentId = payment.paymentId, status = "FAILED")
         }
 
         if (resp.success) {
-            payment.approve(now, resp.providerPaymentId)
+            payment.approve(now)
             paymentRepository.save(payment)
-            return Result(paymentId = payment.paymentId(), status = "APPROVED")
+            return Result(paymentId = payment.paymentId, status = "APPROVED")
         } else {
-            payment.decline(now, resp.failureReason)
+            payment.decline(now)
             paymentRepository.save(payment)
-            return Result(paymentId = payment.paymentId(), status = "DECLINED")
+            return Result(paymentId = payment.paymentId, status = "DECLINED")
         }
     }
 }

@@ -6,7 +6,7 @@ import nuts.commerce.orderservice.application.port.repository.OrderRepository
 import nuts.commerce.orderservice.model.domain.Money
 import nuts.commerce.orderservice.model.domain.Order
 import nuts.commerce.orderservice.model.domain.OrderItem
-import nuts.commerce.orderservice.model.integration.OrderOutboxRecord
+import nuts.commerce.orderservice.model.infra.OutboxRecord
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
@@ -52,7 +52,7 @@ class CreateOrderUseCase(
         )
         val saved = orderRepository.save(order)
 
-        val outboxEvent = OrderOutboxRecord.create(
+        val outboxEvent = OutboxRecord.create(
             aggregateId = orderId,
             eventType = "OrderCreated",
             payload = objectMapper.writeValueAsString(

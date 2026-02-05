@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.application.adapter.message
 
-import nuts.commerce.orderservice.model.domain.exception.OrderException
+import nuts.commerce.orderservice.model.exception.OrderException
 import nuts.commerce.orderservice.application.port.message.MessageProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.springframework.kafka.core.KafkaTemplate
