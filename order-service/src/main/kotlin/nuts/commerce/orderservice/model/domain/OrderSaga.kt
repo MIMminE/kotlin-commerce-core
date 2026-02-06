@@ -3,6 +3,7 @@ package nuts.commerce.orderservice.model.domain
 import jakarta.persistence.*
 import nuts.commerce.orderservice.model.BaseEntity
 import nuts.commerce.orderservice.model.exception.OrderException
+import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -28,9 +29,40 @@ class OrderSaga protected constructor() : BaseEntity() {
     var version: Long = 0L
         protected set
 
+    @Column(name = "order_event_received_at")
+    var orderEventReceivedAt: Instant? = null
+        protected set
+
+    @Column(name = "inventory_requested_at")
+    var inventoryRequestedAt: Instant? = null
+        protected set
+
+    @Column(name = "inventory_reserved_at")
+    var inventoryReservedAt: Instant? = null
+        protected set
+
+    @Column(name = "payment_requested_at")
+    var paymentRequestedAt: Instant? = null
+        protected set
+
+    @Column(name = "payment_completed_at")
+    var paymentCompletedAt: Instant? = null
+        protected set
+
+    @Column(name = "inventory_released_at")
+    var inventoryReleasedAt: Instant? = null
+        protected set
+
+    @Column(name = "completed_at")
+    var completedAt: Instant? = null
+        protected set
+
+    @Column(name = "failed_at")
+    var failedAt: Instant? = null
+        protected set
+
     companion object {
         fun create(orderId: UUID, idGenerator: () -> UUID = { UUID.randomUUID() }): OrderSaga {
-            require(!orderId.toString().isBlank()) { "orderId is required" }
 
             return OrderSaga().apply {
                 this.id = idGenerator()
@@ -40,50 +72,61 @@ class OrderSaga protected constructor() : BaseEntity() {
         }
     }
 
-    fun markInventoryRequested() {
+    fun markOrderEventReceived(at: Instant = Instant.now()) {
+        this.orderEventReceivedAt = at
+    }
+
+    fun markInventoryRequested(at: Instant = Instant.now()) {
         if (status != SagaStatus.CREATED) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.PAYING)
         }
         status = SagaStatus.INVENTORY_REQUESTED
+        this.inventoryRequestedAt = at
     }
 
-    fun markInventoryReserved() {
+    fun markInventoryReserved(at: Instant = Instant.now()) {
         if (status != SagaStatus.CREATED && status != SagaStatus.INVENTORY_REQUESTED) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.PAYING)
         }
         status = SagaStatus.INVENTORY_RESERVED
+        this.inventoryReservedAt = at
     }
 
-    fun markPaymentRequested() {
+    fun markPaymentRequested(at: Instant = Instant.now()) {
         if (status != SagaStatus.INVENTORY_RESERVED) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.PAYING)
         }
         status = SagaStatus.PAYMENT_REQUESTED
+        this.paymentRequestedAt = at
     }
 
-    fun markPaymentCompleted() {
+    fun markPaymentCompleted(at: Instant = Instant.now()) {
         if (status != SagaStatus.PAYMENT_REQUESTED) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.PAID)
         }
         status = SagaStatus.PAYMENT_COMPLETED
+        this.paymentCompletedAt = at
     }
 
-    fun markInventoryReleased() {
+    fun markInventoryReleased(at: Instant = Instant.now()) {
         if (status == SagaStatus.COMPLETED || status == SagaStatus.FAILED) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.CANCELED)
         }
         status = SagaStatus.INVENTORY_RELEASED
+        this.inventoryReleasedAt = at
     }
 
-    fun markCompleted() {
+    fun markCompleted(at: Instant = Instant.now()) {
         if (status != SagaStatus.PAYMENT_COMPLETED && status != SagaStatus.RESOLVE_TO_COMPLETE) {
             throw OrderException.InvalidTransition(idOrNull(), status.toOrderStatus(), Order.OrderStatus.PAID)
         }
         status = SagaStatus.COMPLETED
+        this.completedAt = at
     }
 
-    fun fail() {
+    fun fail(at: Instant = Instant.now()) {
         status = SagaStatus.FAILED
+        this.failedAt = at
     }
 
     private fun idOrNull(): UUID? = if (this::id.isInitialized) id else null

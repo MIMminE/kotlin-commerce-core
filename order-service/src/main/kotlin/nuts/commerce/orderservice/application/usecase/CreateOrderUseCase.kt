@@ -14,8 +14,6 @@ import nuts.commerce.orderservice.model.infra.OutboxEventType
 import nuts.commerce.orderservice.model.infra.OutboxRecord
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.ObjectMapper
 import java.util.UUID
@@ -27,55 +25,81 @@ class CreateOrderUseCase(
     private val orderSagaRepository: OrderSagaRepository,
     private val productClient: ProductRestClient,
     private val objectMapper: ObjectMapper,
-    transactionManager: PlatformTransactionManager
+    private val txTemplate: TransactionTemplate,
 ) {
-    // 기본 트랜잭션 템플릿 (주문+아웃박스 저장)
-    private val txTemplate = TransactionTemplate(transactionManager)
-
-    // 사가/상태전이용 별도 템플릿(새 트랜잭션, 짧은 타임아웃)
-    private val sagaTxTemplate = TransactionTemplate(transactionManager).apply {
-        propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
-        timeout = 5
-    }
 
     fun create(command: Command): Result {
 
-        // 멱등성 체크(비트랜잭션) — 이미 생성된 주문이 있으면 바로 반환
-        orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
-            ?.let { return Result(it.id) }
+        checkExistingOrder(command.userId, command.idempotencyKey)?.let { return Result(it.id) }
 
-        // 상품 ID 배치 조회
+        // 상품 스냅샷 조회
         val productIds = command.items.map { it.productId }.distinct()
+        val snapshotById = fetchSnapshots(productIds)
+
+        // 주문 아이템 생성 (트랜잭션 외)
+        val orderId = UUID.randomUUID()
+        val orderItems = buildOrderItems(command, orderId, snapshotById)
+
+        // ReserveInventory 페이로드 생성
+        val aggregatePayload = buildReservePayload(orderId, orderItems, snapshotById)
+
+        // 트랜잭션 내 주문 저장 및 outbox 발행
+        val saved = saveOrderAndPublishOutbox(orderItems, command, orderId, aggregatePayload)
+
+        // 트랜잭션 내 후처리: saga 생성, 주문 상태 변경
+        postCreateTransactions(saved)
+
+        return Result(saved.id)
+    }
+
+    private fun checkExistingOrder(userId: String, idempotencyKey: UUID) =
+        orderRepository.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+
+    private fun fetchSnapshots(productIds: List<String>): Map<String, ProductPriceSnapshot> {
         val snapshots: List<ProductPriceSnapshot> = try {
             productClient.getPriceSnapshots(productIds)
         } catch (_: Exception) {
             throw OrderException.InvalidCommand("failed to fetch product price snapshots")
         }
-        val snapshotById = snapshots.associateBy { it.productId }
+        return snapshots.associateBy { it.productId }
+    }
 
-        // 주문 아이템 빌드 (트랜잭션 외부)
-        val orderId = UUID.randomUUID()
-        val orderItems: List<OrderItem> = command.items.map {
-            val snap =
-                snapshotById[it.productId] ?: throw OrderException.InvalidCommand("product not found: ${it.productId}")
-            OrderItem.create(
-                productId = it.productId,
-                orderId = orderId,
-                qty = it.qty,
-                unitPrice = Money(snap.price, snap.currency)
-            )
-        }
+    private fun buildOrderItems(
+        command: Command,
+        orderId: UUID,
+        snapshotById: Map<String, ProductPriceSnapshot>
+    ): List<OrderItem> = command.items.map {
+        val snap = snapshotById[it.productId]
+            ?: throw OrderException.InvalidCommand("product not found: ${it.productId}")
+        OrderItem.create(
+            productId = it.productId,
+            orderId = orderId,
+            qty = it.qty,
+            unitPrice = Money(snap.price, snap.currency)
+        )
+    }
 
+    private fun buildReservePayload(
+        orderId: UUID,
+        orderItems: List<OrderItem>,
+        snapshotById: Map<String, ProductPriceSnapshot>
+    ): String {
         val reserveItems = orderItems.map { item ->
             val snap = snapshotById[item.productId]!!
             ReserveInventoryPayload.Item(item.productId, item.qty, snap.price, snap.currency)
         }
-        val aggregatePayload = objectMapper.writeValueAsString(
+        return objectMapper.writeValueAsString(
             ReserveInventoryPayload(orderId = orderId, items = reserveItems)
         )
+    }
 
-        val saved = txTemplate.execute {
-            // 트랜잭션 내 멱등성 재확인
+    private fun saveOrderAndPublishOutbox(
+        orderItems: List<OrderItem>,
+        command: Command,
+        orderId: UUID,
+        aggregatePayload: String
+    ): Order {
+        return txTemplate.execute {
             orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
                 ?.let { return@execute it }
 
@@ -90,7 +114,6 @@ class CreateOrderUseCase(
             val savedLocal = try {
                 orderRepository.save(order)
             } catch (_: DataIntegrityViolationException) {
-                // 이미 생성된 경우 기존 결과 반환
                 return@execute orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)!!
             }
 
@@ -102,10 +125,11 @@ class CreateOrderUseCase(
             orderOutboxRepository.save(outboxEvent)
 
             return@execute savedLocal
-        }!!
+        }
+    }
 
-        // 트랜잭션 B: 사가 생성 및 주문 상태 전이(짧게 유지, REQUIRES_NEW)
-        sagaTxTemplate.execute<Unit> {
+    private fun postCreateTransactions(saved: Order) {
+        txTemplate.execute<Unit> {
             val saga = OrderSaga.create(saved.id)
             saga.markInventoryRequested()
             orderSagaRepository.save(saga)
@@ -115,10 +139,7 @@ class CreateOrderUseCase(
             order.markPaying()
             orderRepository.save(order)
         }
-
-        return Result(saved.id)
     }
-
 }
 
 

@@ -16,6 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.SimpleTransactionStatus
+import org.springframework.transaction.support.TransactionTemplate
 
 class CreateOrderUseCaseTest {
     private val orderRepository = InMemoryOrderRepository()
@@ -37,7 +38,9 @@ class CreateOrderUseCaseTest {
         orderOutboxRepository.clear()
         orderSagaRepository.clear()
         productClient = TestProductClient()
-        useCase = CreateOrderUseCase(orderRepository, orderOutboxRepository, orderSagaRepository, productClient, objectMapper, txManager)
+        // TransactionTemplate을 생성해서 CreateOrderUseCase에 전달
+        val txTemplate = TransactionTemplate(txManager)
+        useCase = CreateOrderUseCase(orderRepository, orderOutboxRepository, orderSagaRepository, productClient, objectMapper, txTemplate)
     }
 
     // 간단한 테스트용 ProductRestClient 스텁
