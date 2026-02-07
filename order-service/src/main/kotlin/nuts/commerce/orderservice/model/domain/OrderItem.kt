@@ -2,15 +2,15 @@ package nuts.commerce.orderservice.model.domain
 
 import jakarta.persistence.*
 import nuts.commerce.orderservice.model.BaseEntity
-import nuts.commerce.orderservice.model.domain.Money
+import nuts.commerce.orderservice.model.exception.OrderException
 import java.util.UUID
 
 @Entity
 @Table(
     name = "order_items",
     indexes = [
-        Index(name = "ix_order_items_order_id", columnList = "order_id"),
-        Index(name = "ix_order_items_product_id", columnList = "product_id")
+        Index(name = "idx_order_items_order_id", columnList = "order_id"),
+        Index(name = "idx_order_items_product_id", columnList = "product_id")
     ]
 )
 class OrderItem protected constructor() : BaseEntity() {
@@ -51,10 +51,10 @@ class OrderItem protected constructor() : BaseEntity() {
             unitPrice: Money,
             idGenerator: () -> UUID = { UUID.randomUUID() }
         ): OrderItem {
-            require(productId.isNotBlank()) { "productId is required" }
-            require(qty > 0) { "qty must be > 0" }
-            require(unitPrice.amount >= 0) { "unitPrice.amount must be >= 0" }
-            require(unitPrice.currency.isNotBlank()) { "unitPrice.currency is required" }
+            if (productId.isBlank()) throw OrderException.InvalidCommand("productId is required")
+            if (qty <= 0) throw OrderException.InvalidCommand("qty must be > 0")
+            if (unitPrice.amount < 0) throw OrderException.InvalidCommand("unitPrice.amount must be >= 0")
+            if (unitPrice.currency.isBlank()) throw OrderException.InvalidCommand("unitPrice.currency is required")
 
             return OrderItem().apply {
                 this.id = idGenerator()

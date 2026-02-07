@@ -3,33 +3,27 @@ package nuts.commerce.orderservice.application.usecase
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
+import nuts.commerce.orderservice.application.port.rest.InMemoryProductRestClient
 import nuts.commerce.orderservice.application.port.rest.ProductPriceSnapshot
-import nuts.commerce.orderservice.application.port.rest.ProductRestClient
 import nuts.commerce.orderservice.model.infra.OutboxRecord
+import nuts.commerce.orderservice.support.TestTransactionManager
 import org.junit.jupiter.api.BeforeEach
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.ObjectMapper
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.TransactionStatus
-import org.springframework.transaction.support.SimpleTransactionStatus
-import org.springframework.transaction.support.TransactionTemplate
 
+@Suppress("NonAsciiCharacters")
 class CreateOrderUseCaseTest {
     private val orderRepository = InMemoryOrderRepository()
     private val orderOutboxRepository = InMemoryOrderOutboxRepository()
     private val orderSagaRepository = InMemoryOrderSagaRepository()
     private val objectMapper = ObjectMapper()
-    private val txManager: PlatformTransactionManager = object : PlatformTransactionManager {
-        override fun getTransaction(definition: TransactionDefinition?): TransactionStatus = SimpleTransactionStatus()
-        override fun commit(status: TransactionStatus) {}
-        override fun rollback(status: TransactionStatus) {}
-    }
-
-    private lateinit var productClient: TestProductClient
+    private val txManager: PlatformTransactionManager = TestTransactionManager()
+    private val productClient = InMemoryProductRestClient()
     private lateinit var useCase: CreateOrderUseCase
 
     @BeforeEach
@@ -37,21 +31,20 @@ class CreateOrderUseCaseTest {
         orderRepository.clear()
         orderOutboxRepository.clear()
         orderSagaRepository.clear()
-        productClient = TestProductClient()
-        // TransactionTemplate을 생성해서 CreateOrderUseCase에 전달
+        productClient
         val txTemplate = TransactionTemplate(txManager)
-        useCase = CreateOrderUseCase(orderRepository, orderOutboxRepository, orderSagaRepository, productClient, objectMapper, txTemplate)
-    }
-
-    // 간단한 테스트용 ProductRestClient 스텁
-    class TestProductClient(var snapshots: Map<String, ProductPriceSnapshot> = emptyMap()) : ProductRestClient {
-        override fun getPriceSnapshots(productIds: List<String>): List<ProductPriceSnapshot> {
-            return productIds.mapNotNull { snapshots[it] }
-        }
+        useCase = CreateOrderUseCase(
+            orderRepository,
+            orderOutboxRepository,
+            orderSagaRepository,
+            productClient,
+            objectMapper,
+            txTemplate
+        )
     }
 
     @Test
-    fun `주문 생성 성공 - order 저장과 outbox 저장이 1번씩 발생하고 결과 orderId가 저장된 orderId와 같다`() {
+    fun `주문 생성 성공 - 주문과 아웃박스가 저장된다`() {
         // given
         val idemp = UUID.randomUUID()
         val command = Command(
@@ -83,7 +76,7 @@ class CreateOrderUseCaseTest {
     }
 
     @Test
-    fun `outbox - eventType이 RESERVE_INVENTORY_REQUEST로 저장된다`() {
+    fun `아웃박스 이벤트 타입은 RESERVE_INVENTORY_REQUEST 이다`() {
         // given
         val idemp = UUID.randomUUID()
         val command = Command(
@@ -106,7 +99,7 @@ class CreateOrderUseCaseTest {
     }
 
     @Test
-    fun `outbox - aggregateId가 생성된 주문 id와 동일하다`() {
+    fun `아웃박스의 aggregateId는 생성된 주문 id와 같다`() {
         // given
         val idemp = UUID.randomUUID()
         val command = Command(
@@ -129,7 +122,7 @@ class CreateOrderUseCaseTest {
     }
 
     @Test
-    fun `outbox - payload JSON이 saved order 기준으로 올바르게 생성된다`() {
+    fun `아웃박스 payload는 저장된 주문을 반영한다`() {
         // given
         val idemp = UUID.randomUUID()
         val command = Command(
@@ -163,7 +156,7 @@ class CreateOrderUseCaseTest {
     }
 
     @Test
-    fun `주문 아이템 매핑 - items의 productId, qty, unitPrice가 command와 일치한다`() {
+    fun `주문 아이템 매핑은 command와 일치한다`() {
         // given
         val idemp = UUID.randomUUID()
         val command = Command(

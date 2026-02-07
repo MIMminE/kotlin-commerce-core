@@ -62,12 +62,16 @@ class OrderSaga protected constructor() : BaseEntity() {
         protected set
 
     companion object {
-        fun create(orderId: UUID, idGenerator: () -> UUID = { UUID.randomUUID() }): OrderSaga {
+        fun create(
+            orderId: UUID,
+            status: SagaStatus = SagaStatus.CREATED,
+            idGenerator: () -> UUID = { UUID.randomUUID() }
+        ): OrderSaga {
 
             return OrderSaga().apply {
                 this.id = idGenerator()
                 this.orderId = orderId
-                this.status = SagaStatus.CREATED
+                this.status = status
             }
         }
     }
