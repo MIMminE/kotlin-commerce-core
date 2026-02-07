@@ -1,7 +1,6 @@
-package nuts.commerce.inventoryservice.model.infra
+package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.inventoryservice.model.BaseEntity
 import java.time.Instant
 import java.util.UUID
 
@@ -12,10 +11,11 @@ class OutboxRecord protected constructor(
     val outboxId: UUID,
 
     @Column(nullable = false, updatable = false)
-    val aggregateId: UUID,
+    val inventoryId: UUID,
 
-    @Column(nullable = false, updatable = false)
-    val eventType: String,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_type", nullable = false, updatable = false)
+    val eventType: OutboxEventType,
 
     @Lob
     @Column(nullable = false)
@@ -31,26 +31,24 @@ class OutboxRecord protected constructor(
     @Column(nullable = true)
     var nextAttemptAt: Instant?,
 
-    @Version
-    var version: Long? = null
+    ) : BaseEntity() {
 
-) : BaseEntity() {
-
-  companion object {
+    companion object {
         fun create(
-            id: UUID = UUID.randomUUID(),
-            aggregateId: UUID,
-            eventType: String,
+            outboxId: UUID = UUID.randomUUID(),
+            inventoryId: UUID,
+            eventType: OutboxEventType,
             payload: String,
             attempts: Int = 0,
+            status: OutboxStatus = OutboxStatus.PENDING,
             nextAttemptAt: Instant? = null
         ): OutboxRecord {
             return OutboxRecord(
-                outboxId = id,
-                aggregateId = aggregateId,
+                outboxId = outboxId,
+                inventoryId = inventoryId,
                 eventType = eventType,
                 payload = payload,
-                status = OutboxStatus.PENDING,
+                status = status,
                 attempts = attempts,
                 nextAttemptAt = nextAttemptAt
             )
@@ -88,3 +86,6 @@ class OutboxRecord protected constructor(
 
 enum class OutboxStatus { PENDING, PROCESSING, PUBLISHED, FAILED, RETRY_SCHEDULED }
 
+enum class OutboxEventType {
+    INVENTORY_UPDATED
+}

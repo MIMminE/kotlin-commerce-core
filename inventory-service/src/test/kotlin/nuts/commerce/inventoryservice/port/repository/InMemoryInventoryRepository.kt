@@ -1,12 +1,13 @@
-package nuts.commerce.inventoryservice.application.port.repository
+package nuts.commerce.inventoryservice.port.repository
 
-import nuts.commerce.inventoryservice.model.domain.Inventory
+import nuts.commerce.inventoryservice.model.Inventory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryInventoryRepository : InventoryRepository {
-
+class InMemoryInventoryRepository : InventoryRepository{
     private val store: MutableMap<UUID, Inventory> = ConcurrentHashMap()
+
+    fun clear() = store.clear()
 
     override fun save(inventory: Inventory): Inventory {
         store[inventory.inventoryId] = inventory
@@ -14,6 +15,4 @@ class InMemoryInventoryRepository : InventoryRepository {
     }
 
     override fun findById(inventoryId: UUID): Inventory? = store[inventoryId]
-
-    fun clear() = store.clear()
 }

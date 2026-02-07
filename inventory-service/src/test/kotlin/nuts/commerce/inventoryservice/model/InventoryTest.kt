@@ -1,7 +1,6 @@
-package nuts.commerce.inventoryservice.model.domain
+package nuts.commerce.inventoryservice.model
 
-import nuts.commerce.inventoryservice.model.exception.InventoryException
-import java.time.Instant
+import nuts.commerce.inventoryservice.exception.InventoryException
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +16,7 @@ class InventoryTest {
             quantity = 10L
         )
 
-        assertEquals(Inventory.InventoryStatus.AVAILABLE, inventory.status)
+        assertEquals(InventoryStatus.AVAILABLE, inventory.status)
     }
 
     @Test
@@ -72,7 +71,6 @@ class InventoryTest {
         )
 
         val ex = assertFailsWith<InventoryException.InsufficientInventory> { inventory.decreaseQuantity(5L) }
-        // 메시지에 요청/가용 정보가 포함되어 있는지 확인
         assertTrue(
             ex.message!!.contains("requested") || ex.message!!.contains("insufficient") || ex.message!!.contains(
                 "available"
@@ -84,7 +82,7 @@ class InventoryTest {
     fun `상태 unavailable으로 전환 성공`() {
         val inventory = Inventory.create(productId = UUID.randomUUID(), quantity = 1L)
         inventory.unavailable()
-        assertEquals(Inventory.InventoryStatus.UNAVAILABLE, inventory.status)
+        assertEquals(InventoryStatus.UNAVAILABLE, inventory.status)
     }
 
     @Test
@@ -99,14 +97,14 @@ class InventoryTest {
         val inventory = Inventory.create(productId = UUID.randomUUID(), quantity = 1L)
         inventory.unavailable()
         inventory.available()
-        assertEquals(Inventory.InventoryStatus.AVAILABLE, inventory.status)
+        assertEquals(InventoryStatus.AVAILABLE, inventory.status)
     }
 
     @Test
     fun `delete 호출시 상태가 DELETED로 변경된다`() {
         val inventory = Inventory.create(productId = UUID.randomUUID(), quantity = 1L)
         inventory.delete()
-        assertEquals(Inventory.InventoryStatus.DELETED, inventory.status)
+        assertEquals(InventoryStatus.DELETED, inventory.status)
     }
 
     @Test

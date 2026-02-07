@@ -1,4 +1,4 @@
-package nuts.commerce.inventoryservice.model.domain
+package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -6,8 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
-import nuts.commerce.inventoryservice.model.BaseEntity
-import nuts.commerce.inventoryservice.model.exception.InventoryException
+import nuts.commerce.inventoryservice.exception.InventoryException
 import java.util.UUID
 
 @Entity
@@ -102,10 +101,10 @@ class Inventory protected constructor(
             )
         }
     }
+}
 
-    enum class InventoryStatus {
-        AVAILABLE,
-        UNAVAILABLE,
-        DELETED
-    }
+enum class InventoryStatus {
+    AVAILABLE,
+    UNAVAILABLE,
+    DELETED
 }
