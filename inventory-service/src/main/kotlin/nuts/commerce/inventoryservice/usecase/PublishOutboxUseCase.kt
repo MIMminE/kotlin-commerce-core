@@ -24,7 +24,7 @@ class PublishOutboxUseCase(
         records.forEach { rec ->
             try {
                 val event = objectMapper.readValue(rec.payload, QuantityUpdateEvent::class.java)
-                producer.produce(rec.inventoryId, event)
+                producer.produce(rec.outboxId, event)
                     .whenComplete { _, ex ->
                         if (ex == null) outboxRepository.markOutboxRecordsAsProcessed(listOf(rec.outboxId))
                         else outboxRepository.markOutboxRecordsAsFailed(listOf(rec.outboxId))

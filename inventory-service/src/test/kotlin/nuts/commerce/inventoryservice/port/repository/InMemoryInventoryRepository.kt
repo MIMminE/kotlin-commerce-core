@@ -4,7 +4,7 @@ import nuts.commerce.inventoryservice.model.Inventory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryInventoryRepository : InventoryRepository{
+class InMemoryInventoryRepository : InventoryRepository {
     private val store: MutableMap<UUID, Inventory> = ConcurrentHashMap()
 
     fun clear() = store.clear()
@@ -14,5 +14,6 @@ class InMemoryInventoryRepository : InventoryRepository{
         return inventory
     }
 
-    override fun findById(inventoryId: UUID): Inventory? = store[inventoryId]
+    override fun findById(inventoryId: UUID): Inventory =
+        store[inventoryId] ?: throw NoSuchElementException("Inventory not found for id: $inventoryId")
 }

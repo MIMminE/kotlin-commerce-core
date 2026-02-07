@@ -3,6 +3,7 @@ package nuts.commerce.inventoryservice.model
 import jakarta.persistence.*
 import java.time.Instant
 import java.util.UUID
+import tools.jackson.databind.ObjectMapper
 
 @Entity
 @Table(name = "inventory_outbox_records")
@@ -10,8 +11,8 @@ class OutboxRecord protected constructor(
     @Id
     val outboxId: UUID,
 
-    @Column(nullable = false, updatable = false)
-    val inventoryId: UUID,
+    @Column(name = "reservation_id", nullable = false, updatable = false)
+    val reservationId: UUID,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, updatable = false)
@@ -34,22 +35,25 @@ class OutboxRecord protected constructor(
     ) : BaseEntity() {
 
     companion object {
-        fun create(
-            outboxId: UUID = UUID.randomUUID(),
-            inventoryId: UUID,
+
+        fun createWithPayload(
+            reservationId: UUID,
             eventType: OutboxEventType,
-            payload: String,
+            payloadObj: Any,
+            objectMapper: ObjectMapper,
+            outboxId: UUID = UUID.randomUUID(),
             attempts: Int = 0,
             status: OutboxStatus = OutboxStatus.PENDING,
             nextAttemptAt: Instant? = null
         ): OutboxRecord {
+            val payloadStr = objectMapper.writeValueAsString(payloadObj)
             return OutboxRecord(
                 outboxId = outboxId,
-                inventoryId = inventoryId,
+                reservationId = reservationId,
                 eventType = eventType,
-                payload = payload,
-                status = status,
+                payload = payloadStr,
                 attempts = attempts,
+                status = status,
                 nextAttemptAt = nextAttemptAt
             )
         }
@@ -87,5 +91,8 @@ class OutboxRecord protected constructor(
 enum class OutboxStatus { PENDING, PROCESSING, PUBLISHED, FAILED, RETRY_SCHEDULED }
 
 enum class OutboxEventType {
-    INVENTORY_UPDATED
+    INVENTORY_UPDATED,
+    RESERVATION_CREATED,
+    RESERVATION_COMMITTED,
+    RESERVATION_RELEASED
 }
