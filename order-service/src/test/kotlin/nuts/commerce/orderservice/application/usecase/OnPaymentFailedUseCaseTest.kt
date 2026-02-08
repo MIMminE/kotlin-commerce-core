@@ -1,6 +1,9 @@
+
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
 import nuts.commerce.orderservice.model.domain.Money
 import nuts.commerce.orderservice.model.domain.Order
 import nuts.commerce.orderservice.model.domain.OrderItem
@@ -9,15 +12,28 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import tools.jackson.databind.ObjectMapper
 
+@Suppress("NonAsciiCharacters")
 class OnPaymentFailedUseCaseTest {
 
-    private val orderRepository = InMemoryOrderRepository()
-    private val useCase = OnPaymentFailedUseCase(orderRepository)
+    private lateinit var orderRepository: InMemoryOrderRepository
+    private lateinit var orderSagaRepository: InMemoryOrderSagaRepository
+    private lateinit var orderOutboxRepository: InMemoryOrderOutboxRepository
+    private lateinit var objectMapper: ObjectMapper
+    private lateinit var useCase: OnPaymentFailedUseCase
 
     @BeforeEach
     fun setup() {
+        orderRepository = InMemoryOrderRepository()
+        orderSagaRepository = InMemoryOrderSagaRepository()
+        orderOutboxRepository = InMemoryOrderOutboxRepository()
+        objectMapper = ObjectMapper()
+        useCase = OnPaymentFailedUseCase(orderRepository, orderSagaRepository, orderOutboxRepository, objectMapper)
+
         orderRepository.clear()
+        orderSagaRepository.clear()
+        orderOutboxRepository.clear()
     }
 
     @Test
@@ -82,4 +98,3 @@ class OnPaymentFailedUseCaseTest {
         }
     }
 }
-

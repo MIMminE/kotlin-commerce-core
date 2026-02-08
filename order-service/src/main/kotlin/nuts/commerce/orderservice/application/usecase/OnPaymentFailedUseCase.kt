@@ -28,24 +28,19 @@ class OnPaymentFailedUseCase(
         if (order.status == Order.OrderStatus.PAYMENT_FAILED) return
         if (order.status == Order.OrderStatus.PAID) return
 
-        // 주문 상태 전이: PAYING -> PAYMENT_FAILED
         try {
             order.applyPaymentFailed()
         } catch (e: OrderException.InvalidTransition) {
-            // 전이 불가능한 경우 upstream에서 잘못된 메시지 순서일 수 있으므로 예외 전파
             throw e
         }
         orderRepository.save(order)
 
-        // 사가 조회 및 보상(재고 반납) 처리
         val saga = orderSagaRepository.findByOrderId(order.id)
         var inventoryWasReserved = false
         if (saga != null) {
-            // 이미 실패 처리된 경우 중복 처리 방지
             if (saga.status == OrderSaga.SagaStatus.FAILED) return
 
             try {
-                // 사가가 이미 INVENTORY_RESERVED 또는 그 이전 단계였다면 보상 대상
                 if (saga.status == OrderSaga.SagaStatus.INVENTORY_RESERVED ||
                     saga.status == OrderSaga.SagaStatus.INVENTORY_REQUESTED ||
                     saga.status == OrderSaga.SagaStatus.PAYMENT_REQUESTED
@@ -53,11 +48,9 @@ class OnPaymentFailedUseCase(
                     inventoryWasReserved = true
                 }
 
-                // 가능한 경우 재고 반환으로 전이
                 try {
                     saga.markInventoryReleased()
                 } catch (_: OrderException.InvalidTransition) {
-                    // 만약 현재 사가 상태에서 inventory released로 직접 전이 불가하면 무시
                 }
 
                 // 최종적으로 사가를 실패로 표시

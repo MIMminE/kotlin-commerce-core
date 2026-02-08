@@ -93,3 +93,7 @@ class ReservationRequestUseCase(
         data class Item(val inventoryId: UUID, val qty: Long)
     }
 }
+
+data class ReservationRequestPayload(val items: List<Item>) {
+    data class Item(val productId: UUID, val qty: Long)
+}

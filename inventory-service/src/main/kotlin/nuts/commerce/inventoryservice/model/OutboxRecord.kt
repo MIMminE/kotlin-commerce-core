@@ -1,6 +1,7 @@
 package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
+import nuts.commerce.inventoryservice.event.EventType
 import java.time.Instant
 import java.util.UUID
 import tools.jackson.databind.ObjectMapper
@@ -14,9 +15,8 @@ class OutboxRecord protected constructor(
     @Column(name = "reservation_id", nullable = false, updatable = false)
     val reservationId: UUID,
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, updatable = false)
-    val eventType: OutboxEventType,
+    val eventType: String,
 
     @Lob
     @Column(nullable = false)
@@ -38,7 +38,7 @@ class OutboxRecord protected constructor(
 
         fun createWithPayload(
             reservationId: UUID,
-            eventType: OutboxEventType,
+            eventType: EventType,
             payloadObj: Any,
             objectMapper: ObjectMapper,
             outboxId: UUID = UUID.randomUUID(),
@@ -50,7 +50,7 @@ class OutboxRecord protected constructor(
             return OutboxRecord(
                 outboxId = outboxId,
                 reservationId = reservationId,
-                eventType = eventType,
+                eventType = eventType.name,
                 payload = payloadStr,
                 attempts = attempts,
                 status = status,
@@ -89,10 +89,3 @@ class OutboxRecord protected constructor(
 }
 
 enum class OutboxStatus { PENDING, PROCESSING, PUBLISHED, FAILED, RETRY_SCHEDULED }
-
-enum class OutboxEventType {
-    INVENTORY_UPDATED,
-    RESERVATION_CREATED,
-    RESERVATION_COMMITTED,
-    RESERVATION_RELEASED
-}

@@ -6,14 +6,11 @@ import java.time.Instant
 import java.util.UUID
 
 enum class OutboxEventType {
-    // 주문-도메인 아웃박스 이벤트 타입
     RESERVE_INVENTORY_REQUEST,   // 재고 예약 요청
     PAYMENT_REQUEST,             // 결제 요청
     RESERVE_INVENTORY_CONFIRM,   // 재고 예약 확정
     RESERVE_INVENTORY_RELEASE,   // 재고 예약 반환
     PAYMENT_COMPLETED,           // 결제 완료
-
-    ORDER_CREATED
 }
 
 @Entity
@@ -54,6 +51,7 @@ class OutboxRecord protected constructor(
             eventType: OutboxEventType,
             payload: String,
             attempts: Int = 0,
+            status: OutboxStatus = OutboxStatus.PENDING,
             nextAttemptAt: Instant? = null
         ): OutboxRecord {
             return OutboxRecord(
@@ -61,7 +59,7 @@ class OutboxRecord protected constructor(
                 aggregateId = aggregateId,
                 eventType = eventType,
                 payload = payload,
-                status = OutboxStatus.PENDING,
+                status = status,
                 attempts = attempts,
                 nextAttemptAt = nextAttemptAt
             )
@@ -98,7 +96,6 @@ class OutboxRecord protected constructor(
     }
 
 }
-
 enum class OutboxStatus {
     PENDING,
     PROCESSING,

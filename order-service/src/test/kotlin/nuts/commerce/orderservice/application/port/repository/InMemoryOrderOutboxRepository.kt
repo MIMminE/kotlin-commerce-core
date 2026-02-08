@@ -29,8 +29,8 @@ class InMemoryOrderOutboxRepository(
         store.values.filter { it.aggregateId == aggregateId }
 
     override fun claimReadyToPublishIds(limit: Int): List<UUID> {
-        // TODO
-        return store.values
+        val now = nowProvider()
+        val candidates = store.values
             .asSequence()
             .filter { rec ->
                 when (rec.status) {
@@ -38,15 +38,22 @@ class InMemoryOrderOutboxRepository(
                     OutboxStatus.FAILED -> true
                     OutboxStatus.RETRY_SCHEDULED -> {
                         val na = rec.nextAttemptAt
-                        na == null || !na.isAfter(nowProvider())
+                        na == null || !na.isAfter(now)
                     }
                     else -> false
                 }
             }
             .sortedBy { it.createdAt }
-            .map { it.outboxId }
             .take(limit)
             .toList()
+
+        // mark selected records as PROCESSING
+        candidates.forEach { rec ->
+            rec.startProcessing(now)
+            store[rec.outboxId] = rec
+        }
+
+        return candidates.map { it.outboxId }
     }
 
     override fun tryMarkPublished(eventId: UUID, publishedAt: Instant): Boolean {

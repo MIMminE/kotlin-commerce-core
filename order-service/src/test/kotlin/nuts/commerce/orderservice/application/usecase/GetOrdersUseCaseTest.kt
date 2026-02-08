@@ -11,6 +11,7 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Suppress("NonAsciiCharacters")
 class GetOrdersUseCaseTest {
 
     private val orderRepository = InMemoryOrderRepository()
