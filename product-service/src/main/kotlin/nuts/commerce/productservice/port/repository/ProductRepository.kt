@@ -1,6 +1,6 @@
-package nuts.commerce.productservice.application.port.repository
+package nuts.commerce.productservice.port.repository
 
-import nuts.commerce.productservice.model.domain.Product
+import nuts.commerce.productservice.model.Product
 import java.util.UUID
 
 interface ProductRepository {

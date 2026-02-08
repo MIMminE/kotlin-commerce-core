@@ -1,9 +1,9 @@
-package nuts.commerce.productservice.application.adapter.repository
+package nuts.commerce.productservice.adapter.repository
 
-import nuts.commerce.productservice.application.port.repository.ProductRepository
-import nuts.commerce.productservice.model.domain.Product
-import nuts.commerce.productservice.model.domain.ProductStatus
-import nuts.commerce.productservice.model.exception.ProductException
+import nuts.commerce.productservice.port.repository.ProductRepository
+import nuts.commerce.productservice.model.Product
+import nuts.commerce.productservice.model.ProductStatus
+import nuts.commerce.productservice.exception.ProductException
 import org.springframework.dao.DataAccessException
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

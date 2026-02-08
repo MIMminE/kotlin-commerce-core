@@ -1,8 +1,7 @@
-package nuts.commerce.productservice.model.domain
+package nuts.commerce.productservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.productservice.model.BaseEntity
-import nuts.commerce.productservice.model.exception.ProductException
+import nuts.commerce.productservice.exception.ProductException
 import java.util.*
 
 @Entity

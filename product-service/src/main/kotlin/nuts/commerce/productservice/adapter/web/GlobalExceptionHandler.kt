@@ -1,10 +1,9 @@
-package nuts.commerce.productservice.application.adapter.web
+package nuts.commerce.productservice.adapter.web
 
-import nuts.commerce.productservice.model.exception.ProductException
+import nuts.commerce.productservice.exception.ProductException
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import jakarta.persistence.OptimisticLockException

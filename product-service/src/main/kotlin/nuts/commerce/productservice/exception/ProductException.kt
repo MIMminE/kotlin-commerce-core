@@ -1,7 +1,7 @@
-package nuts.commerce.productservice.model.exception
+package nuts.commerce.productservice.exception
 
-import nuts.commerce.productservice.model.domain.ProductStatus
-import java.util.*
+import nuts.commerce.productservice.model.ProductStatus
+import java.util.UUID
 
 sealed class ProductException(
     message: String,

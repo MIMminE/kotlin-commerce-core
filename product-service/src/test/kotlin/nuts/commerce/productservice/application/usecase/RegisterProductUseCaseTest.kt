@@ -1,12 +1,13 @@
 package nuts.commerce.productservice.application.usecase
 
-import nuts.commerce.productservice.application.port.repository.InMemoryProductRepository
-import nuts.commerce.productservice.model.domain.Money
+import nuts.commerce.productservice.application.adapter.repository.InMemoryProductRepository
+import nuts.commerce.productservice.usecase.RegisterProductUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+@Suppress("NonAsciiCharacters")
 class RegisterProductUseCaseTest {
 
     private val productRepository = InMemoryProductRepository()

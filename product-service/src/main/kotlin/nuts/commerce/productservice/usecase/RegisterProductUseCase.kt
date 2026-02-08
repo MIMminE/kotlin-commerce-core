@@ -1,9 +1,9 @@
-package nuts.commerce.productservice.application.usecase
+package nuts.commerce.productservice.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.productservice.application.port.repository.ProductRepository
-import nuts.commerce.productservice.model.domain.Money
-import nuts.commerce.productservice.model.domain.Product
+import nuts.commerce.productservice.port.repository.ProductRepository
+import nuts.commerce.productservice.model.Money
+import nuts.commerce.productservice.model.Product
 import org.springframework.stereotype.Component
 import java.util.UUID
 

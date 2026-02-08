@@ -1,8 +1,9 @@
-package nuts.commerce.productservice.application.port.repository
+package nuts.commerce.productservice.application.adapter.repository
 
-import nuts.commerce.productservice.model.domain.Product
-import nuts.commerce.productservice.model.domain.ProductStatus
-import nuts.commerce.productservice.model.exception.ProductException
+import nuts.commerce.productservice.exception.ProductException
+import nuts.commerce.productservice.model.Product
+import nuts.commerce.productservice.model.ProductStatus
+import nuts.commerce.productservice.port.repository.ProductRepository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 

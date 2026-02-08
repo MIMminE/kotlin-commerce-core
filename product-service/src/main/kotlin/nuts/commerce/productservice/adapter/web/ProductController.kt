@@ -1,7 +1,12 @@
-package nuts.commerce.productservice.application.adapter.web
+package nuts.commerce.productservice.adapter.web
 
-import nuts.commerce.productservice.application.usecase.*
-import nuts.commerce.productservice.model.exception.ProductException
+import nuts.commerce.productservice.exception.ProductException
+import nuts.commerce.productservice.usecase.ActivateProductUseCase
+import nuts.commerce.productservice.usecase.DeactivateProductUseCase
+import nuts.commerce.productservice.usecase.DeleteProductUseCase
+import nuts.commerce.productservice.usecase.GetProductDetailUseCase
+import nuts.commerce.productservice.usecase.GetProductsUseCase
+import nuts.commerce.productservice.usecase.RegisterProductUseCase
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -41,7 +46,7 @@ class ProductController(
             ProductDetailResponse(
                 productId = detail.productId,
                 productName = detail.productName,
-                stock = detail.stock,
+                stock = detail.stock.toInt(),
                 price = detail.price,
                 currency = detail.currency
             )

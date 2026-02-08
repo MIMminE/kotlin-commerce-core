@@ -1,11 +1,17 @@
 package nuts.commerce.productservice.application.adapter.web
 
-import nuts.commerce.productservice.application.port.repository.InMemoryProductRepository
-import nuts.commerce.productservice.application.port.repository.InMemoryStockQuery
-import nuts.commerce.productservice.application.usecase.*
-import nuts.commerce.productservice.model.domain.Money
-import nuts.commerce.productservice.model.domain.Product
-import nuts.commerce.productservice.model.domain.ProductStatus
+import nuts.commerce.productservice.adapter.web.ProductController
+import nuts.commerce.productservice.application.adapter.repository.InMemoryProductRepository
+import nuts.commerce.productservice.model.Money
+import nuts.commerce.productservice.model.Product
+import nuts.commerce.productservice.model.ProductStatus
+import nuts.commerce.productservice.application.adapter.cache.InMemoryProductStockCachePort
+import nuts.commerce.productservice.usecase.ActivateProductUseCase
+import nuts.commerce.productservice.usecase.DeactivateProductUseCase
+import nuts.commerce.productservice.usecase.DeleteProductUseCase
+import nuts.commerce.productservice.usecase.GetProductDetailUseCase
+import nuts.commerce.productservice.usecase.GetProductsUseCase
+import nuts.commerce.productservice.usecase.RegisterProductUseCase
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
 import org.junit.jupiter.api.BeforeEach
@@ -19,10 +25,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import tools.jackson.databind.ObjectMapper
 
+@Suppress("NonAsciiCharacters")
 class ProductControllerUnitTest {
 
     private lateinit var repo: InMemoryProductRepository
-    private lateinit var stockQuery: InMemoryStockQuery
+    private lateinit var productStockCache: InMemoryProductStockCachePort
     private lateinit var controller: ProductController
     private lateinit var mockMvc: MockMvc
     private val mapper = ObjectMapper()
@@ -30,17 +37,18 @@ class ProductControllerUnitTest {
     @BeforeEach
     fun setup() {
         repo = InMemoryProductRepository()
-        stockQuery = InMemoryStockQuery()
+        productStockCache = InMemoryProductStockCachePort()
         val regUseCase = RegisterProductUseCase(repo)
         val getUseCase = GetProductsUseCase(repo)
-        val detailUseCase = GetProductDetailUseCase(repo, stockQuery)
+        val detailUseCase = GetProductDetailUseCase(repo, productStockCache)
         val activateUseCase = ActivateProductUseCase(repo)
         val deactivateUseCase = DeactivateProductUseCase(repo)
         val deleteUseCase = DeleteProductUseCase(repo)
-        controller = ProductController(regUseCase, getUseCase, detailUseCase, activateUseCase, deactivateUseCase, deleteUseCase)
+        controller =
+            ProductController(regUseCase, getUseCase, detailUseCase, activateUseCase, deactivateUseCase, deleteUseCase)
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build()
         repo.clear()
-        stockQuery.clear()
+        productStockCache.clear()
     }
 
     @Test
@@ -77,9 +85,10 @@ class ProductControllerUnitTest {
     fun `상세 조회 시 재고 포함 상세 정보를 반환한다`() {
         val p = Product.create(productName = "detail", price = Money(1500L, "KRW"))
         repo.save(p)
-        stockQuery.setStock(p.productId, 5)
+        productStockCache.setStock(p.productId, 5)
 
-        mockMvc.perform(get("/api/products/${p.productId}"))
+        val resultActions = mockMvc.perform(get("/api/products/${p.productId}"))
+        resultActions
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
             .andExpect(jsonPath("$.productName").value("detail"))
@@ -96,7 +105,7 @@ class ProductControllerUnitTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
-        val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
+        val saved = repo.findById(p.productId)
         assert(saved.status == ProductStatus.ACTIVE)
     }
 
@@ -109,7 +118,7 @@ class ProductControllerUnitTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
-        val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
+        val saved = repo.findById(p.productId)
         assert(saved.status == ProductStatus.INACTIVE)
     }
 
@@ -122,7 +131,7 @@ class ProductControllerUnitTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.productId").value(p.productId.toString()))
 
-        val saved = repo.findById(p.productId) ?: throw AssertionError("product missing")
+        val saved = repo.findById(p.productId)
         assert(saved.status == ProductStatus.DELETED)
     }
 }

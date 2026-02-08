@@ -1,6 +1,6 @@
-package nuts.commerce.productservice.application.usecase
+package nuts.commerce.productservice.usecase
 
-import nuts.commerce.productservice.application.port.repository.ProductRepository
+import nuts.commerce.productservice.port.repository.ProductRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 

@@ -1,4 +1,4 @@
-package nuts.commerce.productservice.model.domain
+package nuts.commerce.productservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
