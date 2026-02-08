@@ -4,9 +4,13 @@ import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutbo
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
 import nuts.commerce.orderservice.application.port.rest.InMemoryProductRestClient
-import nuts.commerce.orderservice.application.port.rest.ProductPriceSnapshot
-import nuts.commerce.orderservice.model.infra.OutboxRecord
+import nuts.commerce.orderservice.port.rest.ProductPriceSnapshot
+import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.support.TestTransactionManager
+import nuts.commerce.orderservice.usecase.Command
+import nuts.commerce.orderservice.usecase.CreateOrderUseCase
+import nuts.commerce.orderservice.usecase.Item
+import nuts.commerce.orderservice.usecase.ReserveInventoryPayload
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate

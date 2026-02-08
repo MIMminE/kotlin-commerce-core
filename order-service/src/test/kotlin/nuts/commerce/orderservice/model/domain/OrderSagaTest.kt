@@ -5,9 +5,9 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import nuts.commerce.orderservice.model.exception.OrderException
+import nuts.commerce.orderservice.exception.OrderException
+import nuts.commerce.orderservice.model.OrderSaga
 
 class OrderSagaTest {
 

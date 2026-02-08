@@ -1,6 +1,7 @@
 package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.model.domain.Order
+import nuts.commerce.orderservice.model.Order
+import nuts.commerce.orderservice.port.repository.OrderRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable

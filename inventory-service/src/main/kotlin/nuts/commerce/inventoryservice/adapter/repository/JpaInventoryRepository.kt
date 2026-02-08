@@ -17,8 +17,6 @@ class JpaInventoryRepository(
     override fun findById(inventoryId: UUID): Inventory {
         TODO("Not yet implemented")
     }
-
-
 }
 
 interface InventoryJpa : JpaRepository<Inventory, UUID>

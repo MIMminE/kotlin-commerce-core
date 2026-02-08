@@ -5,5 +5,5 @@ import java.util.UUID
 
 interface ReservationRepository {
     fun save(reservation : Reservation): Reservation
-    fun findByOrderId(orderId: UUID): Reservation
+    fun findById(reservationId: UUID): Reservation
 }

@@ -1,6 +1,9 @@
 package nuts.commerce.orderservice.model.domain
 
-import nuts.commerce.orderservice.model.exception.OrderException
+import nuts.commerce.orderservice.exception.OrderException
+import nuts.commerce.orderservice.model.Money
+import nuts.commerce.orderservice.model.Order
+import nuts.commerce.orderservice.model.OrderItem
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals

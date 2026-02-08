@@ -1,9 +1,10 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.model.domain.Money
-import nuts.commerce.orderservice.model.domain.Order
-import nuts.commerce.orderservice.model.domain.OrderItem
+import nuts.commerce.orderservice.model.Money
+import nuts.commerce.orderservice.model.Order
+import nuts.commerce.orderservice.model.OrderItem
+import nuts.commerce.orderservice.usecase.GetOrdersUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageRequest

@@ -1,5 +1,7 @@
 package nuts.commerce.orderservice.application.port.rest
 
+import nuts.commerce.orderservice.port.rest.ProductPriceSnapshot
+import nuts.commerce.orderservice.port.rest.ProductRestClient
 import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryProductRestClient(private val defaultCurrency: String = "KRW") : ProductRestClient {

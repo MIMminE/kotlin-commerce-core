@@ -9,7 +9,12 @@ import java.util.UUID
 class ReservationClaimUseCase(private val reservationClaimRepository: ReservationClaimRepository) {
 
     @Transactional
-    fun execute(orderId: UUID) {
-        val reservationId = reservationClaimRepository.claimReservation(orderId)
+    fun execute(reservationId: UUID) : ReservationClaimResult{
+        reservationClaimRepository.claimReservation(reservationId)
     }
 }
+
+data class ReservationClaimResult(
+    val reservationId: UUID,
+    val alreadyClaimed: Boolean
+)

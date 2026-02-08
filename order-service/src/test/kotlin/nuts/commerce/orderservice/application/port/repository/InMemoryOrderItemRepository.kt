@@ -1,6 +1,7 @@
 package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.model.domain.OrderItem
+import nuts.commerce.orderservice.model.OrderItem
+import nuts.commerce.orderservice.port.repository.OrderItemRepository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 

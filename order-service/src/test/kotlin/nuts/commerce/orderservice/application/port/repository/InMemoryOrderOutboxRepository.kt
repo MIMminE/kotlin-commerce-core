@@ -1,7 +1,8 @@
 package nuts.commerce.orderservice.application.port.repository
 
-import nuts.commerce.orderservice.model.infra.OutboxRecord
-import nuts.commerce.orderservice.model.infra.OutboxStatus
+import nuts.commerce.orderservice.model.OutboxRecord
+import nuts.commerce.orderservice.model.OutboxStatus
+import nuts.commerce.orderservice.port.repository.OrderOutboxRepository
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

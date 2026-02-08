@@ -3,12 +3,15 @@ package nuts.commerce.orderservice.application.usecase
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
-import nuts.commerce.orderservice.model.domain.Money
-import nuts.commerce.orderservice.model.domain.Order
-import nuts.commerce.orderservice.model.domain.OrderItem
-import nuts.commerce.orderservice.model.exception.OrderException
+import nuts.commerce.orderservice.model.Money
+import nuts.commerce.orderservice.model.Order
+import nuts.commerce.orderservice.model.OrderItem
+import nuts.commerce.orderservice.exception.OrderException
+import nuts.commerce.orderservice.model.OrderSaga
+import nuts.commerce.orderservice.usecase.OnPaymentApprovedUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,7 +23,7 @@ class OnPaymentApprovedUseCaseTest {
     private val orderRepository = InMemoryOrderRepository()
     private val orderOutboxRepo = InMemoryOrderOutboxRepository()
     private val orderSagaRepo = InMemoryOrderSagaRepository()
-    private val useCase = OnPaymentApprovedUseCase(orderRepository, orderSagaRepo, orderOutboxRepo, tools.jackson.databind.ObjectMapper())
+    private val useCase = OnPaymentApprovedUseCase(orderRepository, orderSagaRepo, orderOutboxRepo, ObjectMapper())
 
     @BeforeEach
     fun setup() {
@@ -40,7 +43,7 @@ class OnPaymentApprovedUseCaseTest {
             total = Money(1000L, "KRW"), status = Order.OrderStatus.PAYING, idGenerator = { orderId })
         orderRepository.save(order)
 
-        val saga = nuts.commerce.orderservice.model.domain.OrderSaga.create(orderId, nuts.commerce.orderservice.model.domain.OrderSaga.SagaStatus.PAYMENT_REQUESTED)
+        val saga = OrderSaga.create(orderId, OrderSaga.SagaStatus.PAYMENT_REQUESTED)
         orderSagaRepo.save(saga)
 
         val event = OnPaymentApprovedUseCase.PaymentApprovedEvent(
@@ -56,7 +59,7 @@ class OnPaymentApprovedUseCaseTest {
         assertEquals(Order.OrderStatus.PAID, savedOrder.status)
 
         val savedSaga = orderSagaRepo.findByOrderId(orderId) ?: fail("saga not found")
-        assertEquals(nuts.commerce.orderservice.model.domain.OrderSaga.SagaStatus.PAYMENT_COMPLETED, savedSaga.status)
+        assertEquals(OrderSaga.SagaStatus.PAYMENT_COMPLETED, savedSaga.status)
 
         val outboxes = orderOutboxRepo.findByAggregateId(orderId)
         assertEquals(1, outboxes.size)
@@ -76,9 +79,9 @@ class OnPaymentApprovedUseCaseTest {
             idGenerator = { orderId })
         orderRepository.save(order)
 
-        val saga = nuts.commerce.orderservice.model.domain.OrderSaga.create(
+        val saga = OrderSaga.create(
             orderId,
-            nuts.commerce.orderservice.model.domain.OrderSaga.SagaStatus.PAYMENT_REQUESTED
+            OrderSaga.SagaStatus.PAYMENT_REQUESTED
         )
         orderSagaRepo.save(saga)
 
@@ -141,7 +144,7 @@ class OnPaymentApprovedUseCaseTest {
         orderRepository.save(order)
 
         // saga를 default 상태(CREATED)로 생성
-        val saga = nuts.commerce.orderservice.model.domain.OrderSaga.create(orderId)
+        val saga = OrderSaga.create(orderId)
         orderSagaRepo.save(saga)
 
         val event = OnPaymentApprovedUseCase.PaymentApprovedEvent(UUID.randomUUID(), orderId, UUID.randomUUID(), "{}")

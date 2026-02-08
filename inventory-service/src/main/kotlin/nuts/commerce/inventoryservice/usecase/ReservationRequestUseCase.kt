@@ -1,18 +1,15 @@
 package nuts.commerce.inventoryservice.usecase
 
+import nuts.commerce.inventoryservice.model.OutboxRecord
+import nuts.commerce.inventoryservice.model.Reservation
+import nuts.commerce.inventoryservice.model.ReservationItem
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
-import nuts.commerce.inventoryservice.model.Reservation
-import nuts.commerce.inventoryservice.model.ReservationItem
-import nuts.commerce.inventoryservice.model.OutboxRecord
-import nuts.commerce.inventoryservice.model.OutboxEventType
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.ObjectMapper
-import java.util.NoSuchElementException
-import java.util.UUID
+import java.util.*
 
 @Component
 class ReservationRequestUseCase(
@@ -22,8 +19,7 @@ class ReservationRequestUseCase(
     private val objectMapper: ObjectMapper
 ) {
 
-    @Transactional
-    fun execute(command: Command): Result {
+    fun execute(command: ReservationRequestCommand): Result {
         val existing = tryFindByOrderIdOrNull(command.orderId)
         if (existing != null && existing.idempotencyKey == command.idempotencyKey) {
             return Result(existing.reservationId)
@@ -64,7 +60,7 @@ class ReservationRequestUseCase(
         )
         val outbox = OutboxRecord.createWithPayload(
             reservationId = savedReservation.reservationId,
-            eventType = OutboxEventType.RESERVATION_CREATED,
+            eventType = RESERVATION_CREATED,
             payloadObj = payloadObj,
             objectMapper = objectMapper
         )
@@ -79,13 +75,7 @@ class ReservationRequestUseCase(
         null
     }
 
-    data class Command(
-        val orderId: UUID,
-        val idempotencyKey: UUID,
-        val items: List<Item>
-    ) {
-        data class Item(val inventoryId: UUID, val qty: Long)
-    }
+
 
     data class Result(val reservationId: UUID)
 
@@ -94,6 +84,10 @@ class ReservationRequestUseCase(
     }
 }
 
-data class ReservationRequestPayload(val items: List<Item>) {
-    data class Item(val productId: UUID, val qty: Long)
-}
+    data class ReservationRequestCommand(
+        val orderId: UUID,
+        val idempotencyKey: UUID,
+        val items: List<Item>
+    ) {
+        data class Item(val productId: UUID, val qty: Long)
+    }

@@ -2,9 +2,10 @@ package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.message.InMemoryMessageProducer
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
-import nuts.commerce.orderservice.model.infra.OutboxEventType
-import nuts.commerce.orderservice.model.infra.OutboxRecord
-import nuts.commerce.orderservice.model.infra.OutboxStatus
+import nuts.commerce.orderservice.model.OutboxEventType
+import nuts.commerce.orderservice.model.OutboxRecord
+import nuts.commerce.orderservice.model.OutboxStatus
+import nuts.commerce.orderservice.usecase.PublishOrderOutboxUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.PlatformTransactionManager

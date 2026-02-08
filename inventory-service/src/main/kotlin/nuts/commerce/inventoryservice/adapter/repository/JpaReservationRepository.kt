@@ -13,12 +13,12 @@ class JpaReservationRepository(
 
     override fun save(reservation: Reservation): Reservation = reservationJpa.save(reservation)
 
-    override fun findByOrderId(orderId: UUID): Reservation =
-        reservationJpa.findByOrderId(orderId)
-            ?: throw NoSuchElementException("Reservation not found for orderId: $orderId")
-
+    override fun findById(reservationId: UUID): Reservation {
+        return reservationJpa.findById(reservationId).orElseThrow {
+            IllegalArgumentException("Reservation not found: reservationId=$reservationId")
+        }
+    }
 }
 
 interface ReservationJpa : JpaRepository<Reservation, UUID> {
-    fun findByOrderId(orderId: UUID): Reservation?
 }

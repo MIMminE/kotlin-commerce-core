@@ -1,5 +1,6 @@
 package nuts.commerce.orderservice.application.port.message
 
+import nuts.commerce.orderservice.port.message.MessageProducer
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
