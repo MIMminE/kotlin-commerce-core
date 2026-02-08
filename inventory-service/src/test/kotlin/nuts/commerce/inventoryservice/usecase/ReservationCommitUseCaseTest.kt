@@ -5,7 +5,6 @@ package nuts.commerce.inventoryservice.usecase
 import nuts.commerce.inventoryservice.model.Inventory
 import nuts.commerce.inventoryservice.port.repository.InMemoryReservationRepository
 import nuts.commerce.inventoryservice.port.repository.InMemoryOutboxRepository
-import nuts.commerce.inventoryservice.port.repository.InMemoryInventoryRepository
 import tools.jackson.databind.ObjectMapper
 import kotlin.test.BeforeTest
 import kotlin.test.Test

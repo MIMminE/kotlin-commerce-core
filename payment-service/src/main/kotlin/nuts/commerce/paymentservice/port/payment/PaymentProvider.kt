@@ -1,7 +1,9 @@
-package nuts.commerce.paymentservice.application.port.payment
+package nuts.commerce.paymentservice.port.payment
 
 interface PaymentProvider {
     fun charge(request: ChargeRequest): ChargeResponse
+    fun commitPayment(providerPaymentId: String): Boolean
+    fun releasePayment(providerPaymentId: String): Boolean
 
     data class ChargeRequest(
         val orderId: String,

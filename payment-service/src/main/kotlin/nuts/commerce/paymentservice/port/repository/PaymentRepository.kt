@@ -1,6 +1,6 @@
-package nuts.commerce.paymentservice.application.port.repository
+package nuts.commerce.paymentservice.port.repository
 
-import nuts.commerce.paymentservice.model.domain.Payment
+import nuts.commerce.paymentservice.model.Payment
 import java.util.UUID
 
 interface PaymentRepository {

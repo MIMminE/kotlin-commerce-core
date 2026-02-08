@@ -1,5 +1,6 @@
 package nuts.commerce.paymentservice.application.port.message
 
+import nuts.commerce.paymentservice.port.message.PaymentEventProducer
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList

@@ -1,6 +1,6 @@
-package nuts.commerce.paymentservice.model.exception
+package nuts.commerce.paymentservice.exception
 
-import nuts.commerce.paymentservice.model.domain.PaymentStatus
+import nuts.commerce.paymentservice.model.PaymentStatus
 import java.util.UUID
 
 sealed class PaymentException(

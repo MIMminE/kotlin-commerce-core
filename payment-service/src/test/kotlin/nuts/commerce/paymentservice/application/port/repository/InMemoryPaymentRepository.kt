@@ -1,6 +1,7 @@
 package nuts.commerce.paymentservice.application.port.repository
 
-import nuts.commerce.paymentservice.model.domain.Payment
+import nuts.commerce.paymentservice.model.Payment
+import nuts.commerce.paymentservice.port.repository.PaymentRepository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 

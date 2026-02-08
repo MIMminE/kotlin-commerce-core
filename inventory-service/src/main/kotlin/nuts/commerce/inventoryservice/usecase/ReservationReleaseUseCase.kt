@@ -21,21 +21,25 @@ class ReservationReleaseUseCase(
 
     @Transactional
     fun execute(orderId: UUID): Result {
-        val reservation = try {
-            reservationRepository.findByOrderId(orderId)
-        } catch (e: NoSuchElementException) {
-            throw NoSuchElementException("reservation not found for orderId: $orderId")
-        }
 
+        // 1) 비관적 락으로 선점 + PROCESSING 마킹 / 여기서 락이 해제되어야하는데
+        reservationRepository.markProcessingAndGetReservationId(orderId)
+
+        // 2) 같은 트랜잭션에서 다시 조회
+        val reservation = reservationRepository.findByOrderId(orderId)
+
+        // 3) 재고 원복
         reservation.items.forEach { item ->
             val inv = inventoryRepository.findById(item.inventoryId)
             inv.unreserve(item.qty)
             inventoryRepository.save(inv)
         }
 
+        // 4) 상태 전이 + 저장
         reservation.release()
         val saved = reservationRepository.save(reservation)
 
+        // 5) outbox
         val payload = ReservationReleasedPayload(
             reservationId = saved.reservationId,
             items = saved.items.map { ReservationReleasedPayload.Item(it.inventoryId, it.qty) }

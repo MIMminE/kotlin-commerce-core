@@ -40,7 +40,6 @@ class OnPaymentApprovedUseCase(
             orderSagaRepository.save(saga)
         }
 
-        // 아웃박스에 결제 완료 이벤트 저장
         val payload = objectMapper.writeValueAsString(
             mapOf(
                 "paymentId" to event.paymentId.toString(),

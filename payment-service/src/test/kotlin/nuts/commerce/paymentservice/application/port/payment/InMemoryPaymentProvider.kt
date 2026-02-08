@@ -1,5 +1,6 @@
 package nuts.commerce.paymentservice.application.port.payment
 
+import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 

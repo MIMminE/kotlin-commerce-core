@@ -6,7 +6,7 @@ import java.util.UUID
 @Entity
 @Table(
     name = "reservations",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["order_id", "idempotency_key"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["idempotency_key"])]
 )
 class Reservation protected constructor(
 
@@ -23,10 +23,7 @@ class Reservation protected constructor(
     @Column(nullable = false)
     var status: ReservationStatus,
 
-    @Version
-    var version: Long? = null
-
-) : BaseEntity() {
+    ) : BaseEntity() {
 
     @OneToMany(mappedBy = "reservation", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var items: MutableList<ReservationItem> = mutableListOf()
@@ -37,7 +34,7 @@ class Reservation protected constructor(
             reservationId: UUID = UUID.randomUUID(),
             orderId: UUID,
             idempotencyKey: UUID,
-            status: ReservationStatus = ReservationStatus.RESERVED
+            status: ReservationStatus = ReservationStatus.CREATED
         ): Reservation {
             return Reservation(
                 reservationId = reservationId,
@@ -55,19 +52,25 @@ class Reservation protected constructor(
         }
     }
 
+    fun startProcessing() {
+        require(status == ReservationStatus.CREATED) { "invalid transition $status -> PROCESSING" }
+        status = ReservationStatus.PROCESSING
+    }
+
     fun commit() {
-        require(status == ReservationStatus.RESERVED) { "invalid transition $status -> COMMITTED" }
+        require(status == ReservationStatus.PROCESSING) { "invalid transition $status -> COMMITTED" }
         status = ReservationStatus.COMMITTED
     }
 
     fun release() {
-        require(status == ReservationStatus.RESERVED || status == ReservationStatus.COMMITTED) { "invalid transition $status -> RELEASED" }
+        require(status == ReservationStatus.PROCESSING || status == ReservationStatus.COMMITTED) { "invalid transition $status -> RELEASED" }
         status = ReservationStatus.RELEASED
     }
 }
 
 enum class ReservationStatus {
-    RESERVED,
+    CREATED,
+    PROCESSING,
     COMMITTED,
     RELEASED
 }

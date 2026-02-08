@@ -2,7 +2,6 @@
 
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.port.repository.InMemoryInventoryRepository
 import nuts.commerce.inventoryservice.port.repository.InMemoryReservationRepository
 import nuts.commerce.inventoryservice.port.repository.InMemoryOutboxRepository
 import tools.jackson.databind.ObjectMapper

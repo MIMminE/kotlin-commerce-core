@@ -6,16 +6,17 @@ import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
+import java.util.UUID
 
 @Component
-class PublishOutboxUseCase(
+class OutboxPublishUseCase(
     private val outboxRepository: OutboxRepository,
     private val producer: QuantityUpdateEventProducer,
     private val objectMapper: ObjectMapper,
     @Value("\${inventory.outbox.batch-size:50}")
     private val batchSize: Int
 ) {
-    fun execute() {
+    fun execute(claimOutboxIdList : List<UUID>) {
         val ids = outboxRepository.claimPendingOutboxRecords(batchSize)
         if (ids.isEmpty()) return
 

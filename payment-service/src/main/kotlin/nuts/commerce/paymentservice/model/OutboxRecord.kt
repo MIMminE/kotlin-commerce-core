@@ -1,7 +1,6 @@
-package nuts.commerce.paymentservice.model.infra
+package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.paymentservice.model.BaseEntity
 import java.time.Instant
 import java.util.UUID
 

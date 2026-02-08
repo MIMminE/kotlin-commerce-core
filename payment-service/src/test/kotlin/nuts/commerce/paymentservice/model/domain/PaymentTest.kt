@@ -1,5 +1,8 @@
 package nuts.commerce.paymentservice.model.domain
 
+import nuts.commerce.paymentservice.model.Money
+import nuts.commerce.paymentservice.model.Payment
+import nuts.commerce.paymentservice.model.PaymentStatus
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test

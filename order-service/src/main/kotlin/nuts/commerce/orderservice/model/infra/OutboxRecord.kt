@@ -13,7 +13,6 @@ enum class OutboxEventType {
     RESERVE_INVENTORY_RELEASE,   // 재고 예약 반환
     PAYMENT_COMPLETED,           // 결제 완료
 
-    // 기존 사용성을 위해 유지(호환성) - 필요 없으면 제거 가능
     ORDER_CREATED
 }
 

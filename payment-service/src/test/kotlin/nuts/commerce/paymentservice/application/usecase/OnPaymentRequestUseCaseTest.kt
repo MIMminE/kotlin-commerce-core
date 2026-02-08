@@ -2,9 +2,10 @@ package nuts.commerce.paymentservice.application.usecase
 
 import nuts.commerce.paymentservice.application.port.payment.InMemoryPaymentProvider
 import nuts.commerce.paymentservice.application.port.repository.InMemoryPaymentRepository
-import nuts.commerce.paymentservice.application.port.payment.PaymentProvider
-import nuts.commerce.paymentservice.model.domain.Money
-import nuts.commerce.paymentservice.model.domain.Payment
+import nuts.commerce.paymentservice.port.payment.PaymentProvider
+import nuts.commerce.paymentservice.model.Money
+import nuts.commerce.paymentservice.model.Payment
+import nuts.commerce.paymentservice.usecase.PaymentRequestedUseCase
 import org.junit.jupiter.api.BeforeEach
 import java.util.UUID
 import kotlin.test.Test
@@ -15,7 +16,7 @@ class OnPaymentRequestUseCaseTest {
 
     private val provider = InMemoryPaymentProvider(defaultSuccess = true)
     private val repo = InMemoryPaymentRepository()
-    private val useCase = OnPaymentRequestUseCase(paymentProvider = provider, paymentRepository = repo)
+    private val useCase = PaymentRequestedUseCase(paymentProvider = provider, paymentRepository = repo)
 
     @BeforeEach
     fun setup() {
@@ -33,7 +34,7 @@ class OnPaymentRequestUseCaseTest {
             PaymentProvider.ChargeResponse(success = true, providerPaymentId = "prov-1", failureReason = null)
         )
 
-        val cmd = OnPaymentRequestUseCase.Command(
+        val cmd = PaymentRequestedUseCase.Command(
             orderId = orderId,
             amount = 1000L,
             currency = "USD",
@@ -58,7 +59,7 @@ class OnPaymentRequestUseCaseTest {
             PaymentProvider.ChargeResponse(success = false, providerPaymentId = null, failureReason = "insufficient")
         )
 
-        val cmd = OnPaymentRequestUseCase.Command(
+        val cmd = PaymentRequestedUseCase.Command(
             orderId = orderId,
             amount = 500L,
             currency = "USD",
@@ -85,9 +86,9 @@ class OnPaymentRequestUseCaseTest {
             }
         }
 
-        val localUseCase = OnPaymentRequestUseCase(paymentProvider = throwingProvider, paymentRepository = repo)
+        val localUseCase = PaymentRequestedUseCase(paymentProvider = throwingProvider, paymentRepository = repo)
 
-        val cmd = OnPaymentRequestUseCase.Command(
+        val cmd = PaymentRequestedUseCase.Command(
             orderId = orderId,
             amount = 200L,
             currency = "USD",
@@ -120,7 +121,7 @@ class OnPaymentRequestUseCaseTest {
 
         repo.save(existing)
 
-        val cmd = OnPaymentRequestUseCase.Command(
+        val cmd = PaymentRequestedUseCase.Command(
             orderId = orderId,
             amount = 300L,
             currency = "USD",

@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.model.domain
+package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.AttributeOverrides
@@ -12,8 +12,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
-import nuts.commerce.paymentservice.model.BaseEntity
-import nuts.commerce.paymentservice.model.exception.PaymentException
+import nuts.commerce.paymentservice.exception.PaymentException
 import java.time.Instant
 import java.util.UUID
 

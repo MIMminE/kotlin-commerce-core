@@ -31,9 +31,6 @@ class ReservationItem protected constructor() : BaseEntity() {
     var qty: Long = 0
         protected set
 
-    @Version
-    var version: Long? = null
-
     companion object {
         fun create(
             reservation: Reservation,

@@ -1,22 +1,72 @@
 package nuts.commerce.paymentservice.application.port.repository
 
-import nuts.commerce.paymentservice.model.infra.OutboxRecord
-import nuts.commerce.paymentservice.model.infra.OutboxStatus
+
+import nuts.commerce.paymentservice.model.OutboxRecord
+import nuts.commerce.paymentservice.model.OutboxStatus
+import nuts.commerce.paymentservice.port.repository.OutboxRepository
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryOutboxRepository : OutboxRepository {
-    private val byId = ConcurrentHashMap<UUID, OutboxRecord>()
+class InMemoryOutboxRepository(
+    private val nowProvider: () -> Instant = { Instant.now() }
+) : OutboxRepository {
+
+    private val store: MutableMap<UUID, OutboxRecord> = ConcurrentHashMap()
+
+    fun clear() = store.clear()
+
+    fun saveForTest(rec: OutboxRecord) {
+        store[rec.outboxId] = rec
+    }
 
     override fun save(record: OutboxRecord): OutboxRecord {
-        byId[record.outboxId] = record
+        store[record.outboxId] = record
         return record
     }
 
-    override fun findById(id: UUID): OutboxRecord? = byId[id]
+    override fun claimPendingRecords(limit: Int): List<UUID> {
+        val now = nowProvider()
+        val candidates = store.values
+            .asSequence()
+            .filter { rec ->
+                when (rec.status) {
+                    OutboxStatus.PENDING -> true
+                    OutboxStatus.RETRY_SCHEDULED -> {
+                        val na = rec.nextAttemptAt
+                        na == null || !na.isAfter(now)
+                    }
 
-    override fun findPending(): List<OutboxRecord> =
-        byId.values.filter { it.status == OutboxStatus.PENDING || it.status == OutboxStatus.RETRY_SCHEDULED }
+                    else -> false
+                }
+            }
+            .sortedBy { it.createdAt }
+            .take(limit)
+            .toList()
 
-    override fun clear() = byId.clear()
+        candidates.forEach { it.startProcessing(now) }
+
+        return candidates.map { it.outboxId }
+    }
+
+    override fun getOutboxRecordsByIds(ids: List<UUID>): List<OutboxRecord> = ids.mapNotNull { store[it] }
+
+    override fun markAsProcessed(id: UUID) {
+        val now = nowProvider()
+        store[id]?.let { rec ->
+            if (rec.status == OutboxStatus.PROCESSING) {
+                rec.markPublished(now)
+            }
+        }
+    }
+
+    override fun markAsFailed(id: UUID) {
+        val now = nowProvider()
+        store[id]?.let { rec ->
+            if (rec.status == OutboxStatus.PROCESSING) {
+                rec.markFailed(now)
+            }
+        }
+    }
+
 }

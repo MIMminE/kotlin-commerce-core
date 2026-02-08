@@ -20,8 +20,14 @@ class ReservationCommitUseCase(
 
     @Transactional
     fun execute(orderId: UUID): Result {
+
+        // 1) 비관적 락으로 선점 + PROCESSING 마킹
+        reservationRepository.markProcessingAndGetReservationId(orderId)
+
+        // 2) 같은 트랜잭션에서 다시 조회(이미 PROCESSING 상태)
         val reservation = reservationRepository.findByOrderId(orderId)
 
+        // 3) 도메인 전이
         reservation.commit()
 
         val saved = reservationRepository.save(reservation)

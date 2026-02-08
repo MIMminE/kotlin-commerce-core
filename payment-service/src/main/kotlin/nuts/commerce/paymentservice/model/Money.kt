@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.model.domain
+package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable

@@ -17,14 +17,14 @@ class PublishOutboxUseCaseTest {
     private lateinit var outboxRepo: InMemoryOutboxRepository
     private lateinit var producer: InMemoryQuantityUpdateEventProducer
     private lateinit var objectMapper: ObjectMapper
-    private lateinit var usecase: PublishOutboxUseCase
+    private lateinit var usecase: OutboxPublishUseCase
 
     @BeforeTest
     fun setUp() {
         outboxRepo = InMemoryOutboxRepository()
         producer = InMemoryQuantityUpdateEventProducer()
         objectMapper = ObjectMapper()
-        usecase = PublishOutboxUseCase(
+        usecase = OutboxPublishUseCase(
             outboxRepository = outboxRepo,
             producer = producer,
             objectMapper = objectMapper,
