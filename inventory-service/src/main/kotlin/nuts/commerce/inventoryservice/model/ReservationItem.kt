@@ -11,45 +11,37 @@ import java.util.UUID
         Index(name = "idx_reservation_items_inventory_id", columnList = "inventory_id")
     ]
 )
-class ReservationItem protected constructor() : BaseEntity() {
+class ReservationItem protected constructor(
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
-    lateinit var id: UUID
-        protected set
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false, updatable = false)
-    lateinit var reservation: Reservation
-        protected set
+    val id: UUID,
 
     @Column(name = "inventory_id", nullable = false, updatable = false)
-    lateinit var inventoryId: UUID
-        protected set
+    val inventoryId: UUID,
+    @Column(name = "qty", nullable = false, updatable = false)
+    val qty: Long,
 
-    @Column(name = "qty", nullable = false)
-    var qty: Long = 0
-        protected set
+    @Column(name = "reservation_id", nullable = false, updatable = false)
+    val reservationId: UUID
+
+) : BaseEntity() {
 
     companion object {
         fun create(
-            reservation: Reservation,
+            id: UUID = UUID.randomUUID(),
             inventoryId: UUID,
             qty: Long,
-            idGenerator: () -> UUID = { UUID.randomUUID() }
+            reservationId: UUID,
         ): ReservationItem {
             if (qty <= 0) throw IllegalArgumentException("qty must be > 0")
 
-            return ReservationItem().apply {
-                this.id = idGenerator()
-                this.reservation = reservation
-                this.inventoryId = inventoryId
-                this.qty = qty
-            }
+            return ReservationItem(
+                id = id,
+                inventoryId = inventoryId,
+                qty = qty,
+                reservationId = reservationId
+            )
         }
-    }
-
-    fun assignToReservation(reservation: Reservation) {
-        this.reservation = reservation
     }
 }

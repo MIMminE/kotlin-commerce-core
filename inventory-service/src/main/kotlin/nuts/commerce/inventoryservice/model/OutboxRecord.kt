@@ -4,10 +4,12 @@ import jakarta.persistence.*
 import nuts.commerce.inventoryservice.event.EventType
 import java.time.Instant
 import java.util.UUID
-import tools.jackson.databind.ObjectMapper
 
 @Entity
-@Table(name = "inventory_outbox_records")
+@Table(
+    name = "inventory_outbox_records",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["reservation_id", "idempotency_key"])]
+)
 class OutboxRecord protected constructor(
     @Id
     val outboxId: UUID,
@@ -15,8 +17,12 @@ class OutboxRecord protected constructor(
     @Column(name = "reservation_id", nullable = false, updatable = false)
     val reservationId: UUID,
 
+    @Column(name = "idempotency_key", nullable = false)
+    val idempotencyKey: UUID,
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, updatable = false)
-    val eventType: String,
+    val eventType: EventType,
 
     @Lob
     @Column(nullable = false)
@@ -26,65 +32,62 @@ class OutboxRecord protected constructor(
     @Column(nullable = false)
     var status: OutboxStatus,
 
-    @Column(nullable = false)
-    var attempts: Int,
+    @Column(name = "locked_by")
+    var lockedBy: String?,
 
-    @Column(nullable = true)
-    var nextAttemptAt: Instant?,
+    @Column(name = "locked_until")
+    var lockedUntil: Instant?,
+
+    @Column(name = "attempt_count", nullable = false)
+    var attemptCount: Int,
+
+    @Column(name = "next_attempt_at", nullable = false)
+    var nextAttemptAt: Instant,
 
     ) : BaseEntity() {
 
     companion object {
 
-        fun createWithPayload(
-            reservationId: UUID,
-            eventType: EventType,
-            payloadObj: Any,
-            objectMapper: ObjectMapper,
+        fun create(
             outboxId: UUID = UUID.randomUUID(),
-            attempts: Int = 0,
+            reservationId: UUID,
+            idempotencyKey: UUID,
+            eventType: EventType,
+            payload: String,
             status: OutboxStatus = OutboxStatus.PENDING,
-            nextAttemptAt: Instant? = null
+            lockedBy: String? = null,
+            lockedUntil: Instant? = null,
+            attemptCount: Int = 0,
+            nextAttemptAt: Instant = Instant.now(),
         ): OutboxRecord {
-            val payloadStr = objectMapper.writeValueAsString(payloadObj)
             return OutboxRecord(
                 outboxId = outboxId,
                 reservationId = reservationId,
-                eventType = eventType.name,
-                payload = payloadStr,
-                attempts = attempts,
+                idempotencyKey = idempotencyKey,
+                eventType = eventType,
+                payload = payload,
                 status = status,
+                lockedBy = lockedBy,
+                lockedUntil = lockedUntil,
+                attemptCount = attemptCount,
                 nextAttemptAt = nextAttemptAt
             )
         }
     }
 
-    fun startProcessing(now: Instant) {
-        require(status == OutboxStatus.PENDING || status == OutboxStatus.RETRY_SCHEDULED) {
-            "invalid transition $status -> PROCESSING"
-        }
-        status = OutboxStatus.PROCESSING
-        updatedAt = now
-    }
-
     fun markPublished(now: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> PUBLISHED" }
+        require(status == OutboxStatus.PENDING || status == OutboxStatus.RETRY_SCHEDULED) { "invalid transition $status -> PUBLISHED" }
         status = OutboxStatus.PUBLISHED
-        updatedAt = now
     }
 
     fun scheduleRetry(now: Instant, nextAttemptAt: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> RETRY_SCHEDULED" }
-        attempts += 1
+        require(status == OutboxStatus.PENDING) { "invalid transition $status -> RETRY_SCHEDULED" }
         status = OutboxStatus.RETRY_SCHEDULED
-        this.nextAttemptAt = nextAttemptAt
-        updatedAt = now
     }
 
     fun markFailed(now: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> FAILED" }
+        require(status == OutboxStatus.PENDING) { "invalid transition $status -> FAILED" }
         status = OutboxStatus.FAILED
-        updatedAt = now
     }
 }
 

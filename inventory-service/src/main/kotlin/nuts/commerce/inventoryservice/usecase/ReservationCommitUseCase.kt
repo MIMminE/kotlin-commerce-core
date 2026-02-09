@@ -9,7 +9,6 @@ import tools.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
-import kotlin.collections.mapOf
 
 @Component
 class ReservationCommitUseCase(
@@ -21,22 +20,31 @@ class ReservationCommitUseCase(
 
     @Transactional
     fun execute(command: ReservationCommitCommand): Result {
+
         val reservationId = command.reservationId
         val reservation = reservationRepository.findById(reservationId)
+            ?: throw IllegalArgumentException("Reservation not found: $reservationId")
 
         reservation.commit()
-        reservation.items.forEach { item ->
-            val inv = inventoryRepository.findById(item.inventoryId)
-            inv.processReserved(item.qty)
-            inventoryRepository.save(inv)
+        reservationRepository.save(reservation) // flush에 의해 트랜잭션에 반영되며 이때, 낙관적 락에 대한 예외가 발생할 수 있다.
+
+        val findReservationInfo = reservationRepository.findReservationInfo(reservationId)!!
+        findReservationInfo.items.forEach { item ->
+            val ok = inventoryRepository.commitReservedInventory(
+                inventoryId = item.inventoryId,
+                quantity = item.quantity
+            )
+            if (!ok) {
+                throw IllegalStateException("Failed to commit reserved inventory for inventory ID: ${item.inventoryId}")
+            }
         }
+        val payloadObj = mapOf("reservationInfo" to findReservationInfo)
 
-
-        val record = OutboxRecord.createWithPayload(
+        val record = OutboxRecord.create(
             reservationId = reservationId,
+            idempotencyKey = command.eventId,
             eventType = EventType.RESERVATION_COMMITTED,
-            payloadObj = "reservationId" to reservationId,
-            objectMapper = objectMapper
+            payload = objectMapper.writeValueAsString(payloadObj)
         )
         outboxRepository.save(record)
 
@@ -44,7 +52,6 @@ class ReservationCommitUseCase(
     }
 
     data class Result(val reservationId: UUID)
-
 }
 
-data class ReservationCommitCommand(val reservationId: UUID)
+data class ReservationCommitCommand(val eventId: UUID, val reservationId: UUID)

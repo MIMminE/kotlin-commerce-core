@@ -7,3 +7,26 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
+
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/appdb
+    username: app
+    password: app_password_change_me
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
+kafka:
+  listener:
+    enabled: false
+
+  producer:
+    enabled: false
+
+outbox:
+  listener:
+    enabled: false

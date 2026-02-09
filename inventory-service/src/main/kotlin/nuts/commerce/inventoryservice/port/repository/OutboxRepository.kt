@@ -3,10 +3,9 @@ package nuts.commerce.inventoryservice.port.repository
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import java.util.UUID
 
-interface OutboxRepository{
+interface OutboxRepository {
     fun save(record: OutboxRecord): OutboxRecord
-    fun getOutboxRecordsListByIds(ids: List<UUID>): List<OutboxRecord>
-    fun claimPendingOutboxRecords(limit: Int): List<UUID>
-    fun markOutboxRecordsAsProcessed(ids: List<UUID>)
-    fun markOutboxRecordsAsFailed(ids: List<UUID>)
+    fun findById(id: UUID): OutboxRecord?
+    fun claimBatchAndLock(batchSize: Int, lockedBy: String): List<UUID>
+
 }

@@ -20,21 +20,30 @@ class ReservationReleaseUseCase(
 
     @Transactional
     fun execute(command: ReservationReleaseCommand): Result {
+
         val reservationId = command.reservationId
         val reservation = reservationRepository.findById(reservationId)
+            ?: throw IllegalArgumentException("Reservation not found: $reservationId")
 
         reservation.release()
-        reservation.items.forEach { item ->
-            val inv = inventoryRepository.findById(item.inventoryId)
-            inv.unreserve(item.qty)
-            inventoryRepository.save(inv)
-        }
+        reservationRepository.save(reservation)
 
-        val outbox = OutboxRecord.createWithPayload(
+        val findReservationInfo = reservationRepository.findReservationInfo(reservationId)!!
+        findReservationInfo.items.forEach { item ->
+            val ok = inventoryRepository.releaseReservedInventory(
+                inventoryId = item.inventoryId,
+                quantity = item.quantity
+            )
+            if (!ok) {
+                throw IllegalStateException("Failed to release reserved inventory for inventory ID: ${item.inventoryId}")
+            }
+        }
+        val payloadObj = mapOf("reservationInfo" to findReservationInfo)
+        val outbox = OutboxRecord.create(
             reservationId = reservationId,
+            idempotencyKey = command.eventId,
             eventType = EventType.RESERVATION_RELEASED,
-            payloadObj = "reservationId" to reservationId,
-            objectMapper = objectMapper
+            payload = objectMapper.writeValueAsString(payloadObj)
         )
         outboxRepository.save(outbox)
 
@@ -42,10 +51,6 @@ class ReservationReleaseUseCase(
     }
 
     data class Result(val reservationId: UUID)
-
-    private data class ReservationReleasedPayload(val reservationId: UUID, val items: List<Item>) {
-        data class Item(val inventoryId: UUID, val qty: Long)
-    }
 }
 
-data class ReservationReleaseCommand(val reservationId: UUID)
+data class ReservationReleaseCommand(val eventId: UUID, val reservationId: UUID)

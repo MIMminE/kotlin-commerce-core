@@ -12,7 +12,7 @@ import java.util.UUID
 @Entity
 @Table(
     name = "inventories",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["product_id"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["product_id", "idempotency_key"])]
 )
 class Inventory protected constructor(
 
@@ -31,56 +31,13 @@ class Inventory protected constructor(
     @Column(nullable = false)
     var status: InventoryStatus,
 
+    @Column(nullable = false)
+    val idempotencyKey: UUID,
+
     @Version
     var version: Long? = null
+
 ) : BaseEntity() {
-
-    // compatibility: original 'quantity' returns available (unreserved) quantity
-    val quantity: Long
-        get() = availableQuantity
-
-    fun increaseQuantity(amount: Long) {
-        if (amount < 0) {
-            throw InventoryException.InvalidCommand("Amount to increase must be non-negative")
-        }
-        availableQuantity += amount
-    }
-
-    fun decreaseQuantity(amount: Long) {
-        if (amount < 0) {
-            throw InventoryException.InvalidCommand("Amount to decrease must be non-negative")
-        }
-        if (availableQuantity < amount) {
-            throw InventoryException.InsufficientInventory(
-                inventoryId = inventoryId,
-                requested = amount,
-                available = availableQuantity
-            )
-        }
-        availableQuantity -= amount
-    }
-
-    fun reserve(amount: Long) {
-        if (amount <= 0) throw InventoryException.InvalidCommand("reserve amount must be > 0")
-        if (availableQuantity < amount) {
-            throw InventoryException.InsufficientInventory(inventoryId = inventoryId, requested = amount, available = availableQuantity)
-        }
-        availableQuantity -= amount
-        reservedQuantity += amount
-    }
-
-    fun unreserve(amount: Long) {
-        if (amount <= 0) throw InventoryException.InvalidCommand("unreserve amount must be > 0")
-        if (reservedQuantity < amount) throw InventoryException.InvalidCommand("not enough reserved quantity to unreserve")
-        reservedQuantity -= amount
-        availableQuantity += amount
-    }
-
-    fun processReserved(amount: Long) {
-        if (amount <= 0) throw InventoryException.InvalidCommand("process amount must be > 0")
-        if (reservedQuantity < amount) throw InventoryException.InvalidCommand("not enough reserved quantity to process")
-        reservedQuantity -= amount
-    }
 
     fun unavailable() {
         if (status == InventoryStatus.UNAVAILABLE) {
@@ -118,6 +75,7 @@ class Inventory protected constructor(
     companion object {
         fun create(
             inventoryId: UUID = UUID.randomUUID(),
+            idempotencyKey: UUID,
             productId: UUID,
             availableQuantity: Long,
             reservationQuantity: Long = 0L,
@@ -125,6 +83,7 @@ class Inventory protected constructor(
         ): Inventory {
             return Inventory(
                 inventoryId = inventoryId,
+                idempotencyKey = idempotencyKey,
                 productId = productId,
                 availableQuantity = availableQuantity,
                 reservedQuantity = reservationQuantity,

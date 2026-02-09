@@ -6,7 +6,7 @@ import java.util.UUID
 @Entity
 @Table(
     name = "reservations",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["idempotency_key"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["order_id", "idempotency_key"])]
 )
 class Reservation protected constructor(
 
@@ -23,54 +23,49 @@ class Reservation protected constructor(
     @Column(nullable = false)
     var status: ReservationStatus,
 
-    ) : BaseEntity() {
+    @OneToMany(mappedBy = "reservationId", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var items: MutableList<ReservationItem>,
 
-    @OneToMany(mappedBy = "reservation", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var items: MutableList<ReservationItem> = mutableListOf()
-        protected set
+    @Version
+    var version: Long? = null
+
+) : BaseEntity() {
 
     companion object {
         fun create(
             reservationId: UUID = UUID.randomUUID(),
             orderId: UUID,
             idempotencyKey: UUID,
-            status: ReservationStatus = ReservationStatus.CREATED
+            status: ReservationStatus = ReservationStatus.CREATED,
+            items: List<ReservationItem> = mutableListOf()
         ): Reservation {
             return Reservation(
                 reservationId = reservationId,
                 orderId = orderId,
                 idempotencyKey = idempotencyKey,
-                status = status
+                status = status,
+                items = items.toMutableList()
             )
         }
     }
 
-    fun addItems(items: List<ReservationItem>) {
-        items.forEach {
-            it.assignToReservation(this)
-            this.items.add(it)
-        }
-    }
-
-    fun startProcessing() {
-        require(status == ReservationStatus.CREATED) { "invalid transition $status -> PROCESSING" }
-        status = ReservationStatus.PROCESSING
+    fun addItems(newItems: List<ReservationItem>) {
+        items.addAll(newItems)
     }
 
     fun commit() {
-        require(status == ReservationStatus.PROCESSING) { "invalid transition $status -> COMMITTED" }
+        require(status == ReservationStatus.CREATED) { "invalid transition $status -> COMMITTED" }
         status = ReservationStatus.COMMITTED
     }
 
     fun release() {
-        require(status == ReservationStatus.PROCESSING || status == ReservationStatus.COMMITTED) { "invalid transition $status -> RELEASED" }
+        require(status == ReservationStatus.CREATED || status == ReservationStatus.COMMITTED) { "invalid transition $status -> RELEASED" }
         status = ReservationStatus.RELEASED
     }
 }
 
 enum class ReservationStatus {
     CREATED,
-    PROCESSING,
     COMMITTED,
     RELEASED
 }

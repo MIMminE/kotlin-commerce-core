@@ -1,5 +1,7 @@
 package nuts.commerce.inventoryservice.usecase
 
+import jakarta.transaction.Transactional
+import nuts.commerce.inventoryservice.event.EventType
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.Reservation
 import nuts.commerce.inventoryservice.model.ReservationItem
@@ -10,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.util.*
+import nuts.commerce.inventoryservice.exception.InventoryException
 
 @Component
 class ReservationRequestUseCase(
@@ -18,76 +21,68 @@ class ReservationRequestUseCase(
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
 ) {
-
+    @Transactional
     fun execute(command: ReservationRequestCommand): Result {
-        val existing = tryFindByOrderIdOrNull(command.orderId)
-        if (existing != null && existing.idempotencyKey == command.idempotencyKey) {
-            return Result(existing.reservationId)
-        }
 
-        if (command.items.isEmpty()) throw IllegalArgumentException("items required")
-
-        command.items
-            .groupBy { it.inventoryId }
-            .forEach { (inventoryId, itemsForInventory) ->
-                val totalQty = itemsForInventory.sumOf { it.qty }
-                val inv = inventoryRepository.findById(inventoryId)
-                inv.reserve(totalQty)
-                inventoryRepository.save(inv)
+        val reservation =
+            try {
+                reservationRepository.save(
+                    Reservation.create(
+                        orderId = command.orderId,
+                        idempotencyKey = command.idempotencyKey
+                    )
+                )
+            } catch (ex: DataIntegrityViolationException) {
+                val existing =
+                    reservationRepository.findByOrderIdAndIdempotencyKey(command.orderId, command.idempotencyKey)
+                        ?: throw ex
+                return Result(existing.reservationId)
             }
 
-        val reservation = Reservation.create(
-            orderId = command.orderId,
-            idempotencyKey = command.idempotencyKey
-        )
+        val items = command.items.sortedBy { it.productId }
 
-        val reservationItems = command.items.map { itDto ->
-            ReservationItem.create(reservation = reservation, inventoryId = itDto.inventoryId, qty = itDto.qty)
+        items.forEach { item ->
+            val ok = inventoryRepository.reserveInventory(item.productId, item.qty)
+            if (!ok) {
+                throw InventoryException.InvalidCommand("Insufficient inventory for product ID: ${item.productId}")
+            }
+        }
+        val findProductInfo = inventoryRepository.findAllByProductIdIn(items.map { it.productId })
+        if (findProductInfo.size != items.size) throw InventoryException.InvalidCommand("Some product IDs are invalid.")
+
+        val productIdToInventoryId = findProductInfo.associate { it.productId to it.inventoryId }
+        val reservationItems = items.map {
+            ReservationItem.create(
+                reservationId = reservation.reservationId,
+                inventoryId = productIdToInventoryId[it.productId]!!,
+                qty = it.qty
+            )
         }
         reservation.addItems(reservationItems)
 
-        val savedReservation = try {
-            reservationRepository.save(reservation)
-        } catch (ex: DataIntegrityViolationException) {
-            val found = tryFindByOrderIdOrNull(command.orderId)
-                ?: throw ex
-            return Result(found.reservationId)
-        }
+        val payloadObj = mapOf(
+            "items" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "qty" to it.qty) }
+        )
 
-        val payloadObj = ReservationCreatedPayload(
-            reservationId = savedReservation.reservationId,
-            items = savedReservation.items.map { ReservationCreatedPayload.Item(it.inventoryId, it.qty) }
+        val outbox = OutboxRecord.create(
+            reservationId = reservation.reservationId,
+            idempotencyKey = command.idempotencyKey,
+            eventType = EventType.STOCK_UPDATE,
+            payload = objectMapper.writeValueAsString(payloadObj)
         )
-        val outbox = OutboxRecord.createWithPayload(
-            reservationId = savedReservation.reservationId,
-            eventType = RESERVATION_CREATED,
-            payloadObj = payloadObj,
-            objectMapper = objectMapper
-        )
+
         outboxRepository.save(outbox)
 
-        return Result(savedReservation.reservationId)
+        return Result(reservation.reservationId)
     }
-
-    private fun tryFindByOrderIdOrNull(orderId: UUID): Reservation? = try {
-        reservationRepository.findByOrderId(orderId)
-    } catch (e: NoSuchElementException) {
-        null
-    }
-
-
 
     data class Result(val reservationId: UUID)
-
-    private data class ReservationCreatedPayload(val reservationId: UUID, val items: List<Item>) {
-        data class Item(val inventoryId: UUID, val qty: Long)
-    }
 }
 
-    data class ReservationRequestCommand(
-        val orderId: UUID,
-        val idempotencyKey: UUID,
-        val items: List<Item>
-    ) {
-        data class Item(val productId: UUID, val qty: Long)
-    }
+data class ReservationRequestCommand(
+    val orderId: UUID,
+    val idempotencyKey: UUID,
+    val items: List<Item>
+) {
+    data class Item(val productId: UUID, val qty: Long)
+}
