@@ -1,6 +1,6 @@
 package nuts.commerce.paymentservice.adapter.message
 
-import nuts.commerce.paymentservice.model.event.OutgoingEvent
+import nuts.commerce.paymentservice.event.OutgoingEvent
 import nuts.commerce.paymentservice.port.message.PaymentEventProducer
 
 class KafkaPaymentEventProducer : PaymentEventProducer {

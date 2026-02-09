@@ -1,6 +1,6 @@
 package nuts.commerce.paymentservice.port.message
 
-import nuts.commerce.paymentservice.model.event.OutgoingEvent
+import nuts.commerce.paymentservice.event.OutgoingEvent
 
 
 interface PaymentEventProducer {

@@ -8,8 +8,9 @@ import java.util.*
 
 @Repository
 class JpaPaymentRepository(private val paymentJpa: PaymentJpa) : PaymentRepository {
+
     override fun save(payment: Payment): Payment {
-        return paymentJpa.save(payment)
+        return paymentJpa.saveAndFlush(payment)
     }
 
     override fun findById(paymentId: UUID): Payment? {

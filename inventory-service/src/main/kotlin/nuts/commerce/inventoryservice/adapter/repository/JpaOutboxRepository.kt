@@ -25,7 +25,7 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    override fun claimBatchAndLock(
+    override fun claimAndLockBatchIds(
         batchSize: Int,
         lockedBy: String
     ): List<UUID> {

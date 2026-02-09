@@ -6,5 +6,6 @@ import java.util.UUID
 interface PaymentRepository {
     fun save(payment: Payment): Payment
     fun findById(paymentId: UUID): Payment?
+    fun findPaymentIdForIdempotencyKey(orderId: UUID, idempotencyKey: UUID): UUID?
     fun findByOrderId(orderId: UUID): Payment?
 }

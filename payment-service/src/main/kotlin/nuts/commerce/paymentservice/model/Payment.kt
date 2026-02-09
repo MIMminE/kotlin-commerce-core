@@ -19,22 +19,27 @@ import java.util.UUID
 @Entity
 @Table(
     name = "payments",
-    indexes = [
-        Index(name = "idx_payments_order_id", columnList = "orderId")
-    ],
     uniqueConstraints = [
-        UniqueConstraint(name = "uc_payments_idempotency_key", columnNames = ["idempotencyKey"])
+        UniqueConstraint(name = "uc_payments_idempotency_key", columnNames = ["orderId", "idempotencyKey"])
     ]
 )
 class Payment protected constructor(
+
     @Id
     val paymentId: UUID,
 
     @Column(nullable = false, updatable = false)
     val orderId: UUID,
 
-    @Embedded
+    @Column(nullable = false, updatable = false)
+    val idempotencyKey: UUID,
+
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: PaymentStatus,
+
+    @Embedded
+    @Column(nullable = false, updatable = false)
     @AttributeOverrides(
         AttributeOverride(name = "amount", column = Column(name = "unit_price_amount", nullable = false)),
         AttributeOverride(
@@ -43,17 +48,6 @@ class Payment protected constructor(
         )
     )
     var money: Money,
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    var status: PaymentStatus,
-
-    @Column(name = "payment_method_type")
-    @Enumerated(EnumType.STRING)
-    var paymentMethodType: PaymentMethodType?,
-
-    @Column(nullable = false, updatable = false)
-    val idempotencyKey: UUID,
 
     @Version
     var version: Long? = null
@@ -64,19 +58,16 @@ class Payment protected constructor(
         fun create(
             paymentId: UUID = UUID.randomUUID(),
             orderId: UUID,
-            money: Money,
-            status: PaymentStatus = PaymentStatus.CREATED,
-            paymentMethodType: PaymentMethodType? = null,
             idempotencyKey: UUID,
+            status: PaymentStatus = PaymentStatus.CREATED,
+            money: Money,
         ): Payment {
             return Payment(
                 paymentId = paymentId,
                 orderId = orderId,
                 money = money,
                 status = status,
-                paymentMethodType = paymentMethodType,
                 idempotencyKey = idempotencyKey,
-                version = null
             )
         }
     }
@@ -116,12 +107,6 @@ class Payment protected constructor(
         status = PaymentStatus.FAILED
         updatedAt = now
     }
-
-    fun updatePaymentMethodType(type: PaymentMethodType?) {
-        this.paymentMethodType = type
-    }
 }
 
 enum class PaymentStatus { CREATED, PROCESSING, APPROVED, DECLINED, FAILED }
-
-enum class PaymentMethodType { CREDIT_CARD, PAYPAL, BANK_TRANSFER }

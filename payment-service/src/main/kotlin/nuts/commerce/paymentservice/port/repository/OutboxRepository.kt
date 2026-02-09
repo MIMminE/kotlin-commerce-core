@@ -5,8 +5,6 @@ import java.util.UUID
 
 interface OutboxRepository {
     fun save(record: OutboxRecord): OutboxRecord
-    fun claimPendingRecords(limit: Int): List<UUID>
-    fun getOutboxRecordsByIds(ids: List<UUID>): List<OutboxRecord>
-    fun markAsProcessed(id: UUID)
-    fun markAsFailed(id: UUID)
+    fun findById(id: UUID): OutboxRecord?
+    fun claimAndLockBatchIds(batchSize: Int, lockedBy: String): List<UUID>
 }

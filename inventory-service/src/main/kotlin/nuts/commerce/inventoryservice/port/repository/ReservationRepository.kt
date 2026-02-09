@@ -6,7 +6,7 @@ import java.util.UUID
 interface ReservationRepository {
     fun save(reservation: Reservation): Reservation
     fun findById(reservationId: UUID): Reservation?
-    fun findByOrderIdAndIdempotencyKey(orderId: UUID, idempotencyKey: UUID): Reservation?
+    fun findReservationIdForIdempotencyKey(orderId: UUID, idempotencyKey: UUID): Reservation? // TODO 수정 필요
     fun findReservationInfo(reservationId: UUID): ReservationInfo?
 }
 

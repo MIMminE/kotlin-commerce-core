@@ -18,7 +18,7 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
         return reservationJpa.findById(reservationId).orElse(null)
     }
 
-    override fun findByOrderIdAndIdempotencyKey(
+    override fun findReservationIdForIdempotencyKey(
         orderId: UUID,
         idempotencyKey: UUID
     ): Reservation? {

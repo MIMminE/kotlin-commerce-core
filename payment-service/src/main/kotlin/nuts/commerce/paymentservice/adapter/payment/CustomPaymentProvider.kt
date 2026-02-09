@@ -8,4 +8,12 @@ class CustomPaymentProvider : PaymentProvider {
         TODO("Not yet implemented")
     }
 
+    override fun commitPayment(providerPaymentId: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun releasePayment(providerPaymentId: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
 }

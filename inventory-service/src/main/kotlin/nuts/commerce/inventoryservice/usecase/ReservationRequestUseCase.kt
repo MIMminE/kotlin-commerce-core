@@ -34,7 +34,7 @@ class ReservationRequestUseCase(
                 )
             } catch (ex: DataIntegrityViolationException) {
                 val existing =
-                    reservationRepository.findByOrderIdAndIdempotencyKey(command.orderId, command.idempotencyKey)
+                    reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.idempotencyKey)
                         ?: throw ex
                 return Result(existing.reservationId)
             }

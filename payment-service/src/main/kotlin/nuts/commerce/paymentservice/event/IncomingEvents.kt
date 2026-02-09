@@ -1,27 +1,23 @@
-package nuts.commerce.paymentservice.model.event
+package nuts.commerce.paymentservice.event
 
 import java.time.Instant
 import java.util.UUID
 
-
-sealed interface OutgoingEvent {
+sealed interface IncomingEvent {
     val eventId: UUID
     val occurredAt: Instant
     val paymentId: UUID
     val orderId: UUID
     val idempotencyKey: UUID
 
-
-    data class PaymentSessionCreated(
+    data class PaymentRequested(
         override val eventId: UUID,
         override val occurredAt: Instant,
         override val paymentId: UUID,
         override val orderId: UUID,
         override val idempotencyKey: UUID,
-        val amount: Long,
-        val paymentSessionId: UUID
-    ) : OutgoingEvent
-
+        val amount: Long
+    ) : IncomingEvent
 
     data class PaymentConfirmed(
         override val eventId: UUID,
@@ -29,24 +25,21 @@ sealed interface OutgoingEvent {
         override val paymentId: UUID,
         override val orderId: UUID,
         override val idempotencyKey: UUID,
-        val amount: Long,
-        val confirmationId: UUID
-    ) : OutgoingEvent
+        val amount: Long
+    ) : IncomingEvent
 
-
-    data class PaymentFailed(
+    data class PaymentCanceled(
         override val eventId: UUID,
         override val occurredAt: Instant,
         override val paymentId: UUID,
         override val orderId: UUID,
         override val idempotencyKey: UUID,
-        val failureCode: String? = null,
         val reason: String? = null
-    ) : OutgoingEvent
+    ) : IncomingEvent
 }
 
-enum class OutgoingEventType {
-    PAYMENT_SESSION_CREATED,
+enum class IncomingEventType {
+    PAYMENT_REQUESTED,
     PAYMENT_CONFIRMED,
-    PAYMENT_FAILED
+    PAYMENT_CANCELED
 }

@@ -18,7 +18,7 @@ class OutboxPublishUseCase(
 ) {
     fun execute(){
 
-        val claimOutboxIds = outboxRepository.claimBatchAndLock(
+        val claimOutboxIds = outboxRepository.claimAndLockBatchIds(
             batchSize = batchSize,
             lockedBy = "Nuts-Worker"
         )
@@ -27,3 +27,12 @@ class OutboxPublishUseCase(
 
     }
 }
++-+
+
+
+
+
+
+
+
+
