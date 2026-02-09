@@ -47,7 +47,7 @@ class Payment protected constructor(
             column = Column(name = "unit_price_currency", nullable = false, length = 8)
         )
     )
-    var money: Money,
+    val money: Money,
 
     @Version
     var version: Long? = null

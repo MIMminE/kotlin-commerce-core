@@ -17,6 +17,13 @@ class JpaPaymentRepository(private val paymentJpa: PaymentJpa) : PaymentReposito
         return paymentJpa.findById(paymentId).orElse(null)
     }
 
+    override fun findPaymentIdForIdempotencyKey(
+        orderId: UUID,
+        idempotencyKey: UUID
+    ): UUID? {
+        TODO("Not yet implemented")
+    }
+
     override fun findByOrderId(orderId: UUID): Payment? {
         return paymentJpa.findByOrderId(orderId)
     }
