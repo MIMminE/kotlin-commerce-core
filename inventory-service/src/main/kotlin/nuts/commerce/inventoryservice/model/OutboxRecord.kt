@@ -20,7 +20,7 @@ class OutboxRecord protected constructor(
     @Column(name = "reservation_id", nullable = false, updatable = false)
     val reservationId: UUID,
 
-    @Column(name = "idempotency_key", nullable = false)
+    @Column(name = "idempotency_key", nullable = false, updatable = false)
     val idempotencyKey: UUID,
 
     @Enumerated(EnumType.STRING)
@@ -78,21 +78,6 @@ class OutboxRecord protected constructor(
                 nextAttemptAt = nextAttemptAt
             )
         }
-    }
-
-    fun markPublished(now: Instant) {
-        require(status == OutboxStatus.PENDING || status == OutboxStatus.RETRY_SCHEDULED) { "invalid transition $status -> PUBLISHED" }
-        status = OutboxStatus.PUBLISHED
-    }
-
-    fun scheduleRetry(now: Instant, nextAttemptAt: Instant) {
-        require(status == OutboxStatus.PENDING) { "invalid transition $status -> RETRY_SCHEDULED" }
-        status = OutboxStatus.RETRY_SCHEDULED
-    }
-
-    fun markFailed(now: Instant) {
-        require(status == OutboxStatus.PENDING) { "invalid transition $status -> FAILED" }
-        status = OutboxStatus.FAILED
     }
 }
 

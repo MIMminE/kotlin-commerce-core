@@ -12,10 +12,10 @@ sealed interface InventoryEvent {
 }
 
 data class ReservationCreationEvent(
-    override val eventId: UUID,
+    override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
-    override val reservationId: UUID = UUID.randomUUID(),
+    override val reservationId: UUID,
     override val eventType: EventType = EventType.RESERVATION_CREATION,
     val createdReservationItems: List<CreatedReservationItem>
 ) : InventoryEvent {
@@ -26,7 +26,7 @@ data class ReservationCreationEvent(
 }
 
 data class ReservationCommittedEvent(
-    override val eventId: UUID,
+    override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
@@ -40,7 +40,7 @@ data class ReservationCommittedEvent(
 }
 
 data class ReservationReleasedEvent(
-    override val eventId: UUID,
+    override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,

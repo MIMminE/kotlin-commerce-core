@@ -61,7 +61,7 @@ class ReservationRequestUseCase(
         reservation.addItems(reservationItems)
 
         val payloadObj = mapOf(
-            "items" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "qty" to it.qty) }
+            "items" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "quantity" to it.qty) }
         )
 
         val outbox = OutboxRecord.create(
