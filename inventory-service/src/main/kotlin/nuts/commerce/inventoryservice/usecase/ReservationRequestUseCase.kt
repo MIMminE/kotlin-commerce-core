@@ -1,7 +1,7 @@
 package nuts.commerce.inventoryservice.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.inventoryservice.event.EventType
+import nuts.commerce.inventoryservice.model.EventType
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.Reservation
 import nuts.commerce.inventoryservice.model.ReservationItem
@@ -29,12 +29,12 @@ class ReservationRequestUseCase(
                 reservationRepository.save(
                     Reservation.create(
                         orderId = command.orderId,
-                        idempotencyKey = command.idempotencyKey
+                        idempotencyKey = command.eventId
                     )
                 )
             } catch (ex: DataIntegrityViolationException) {
                 val existing =
-                    reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.idempotencyKey)
+                    reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
                         ?: throw ex
                 return Result(existing.reservationId)
             }
@@ -65,9 +65,10 @@ class ReservationRequestUseCase(
         )
 
         val outbox = OutboxRecord.create(
+            orderId = command.orderId,
             reservationId = reservation.reservationId,
-            idempotencyKey = command.idempotencyKey,
-            eventType = EventType.STOCK_UPDATE,
+            idempotencyKey = command.eventId,
+            eventType = EventType.RESERVATION_CREATION,
             payload = objectMapper.writeValueAsString(payloadObj)
         )
 
@@ -81,7 +82,7 @@ class ReservationRequestUseCase(
 
 data class ReservationRequestCommand(
     val orderId: UUID,
-    val idempotencyKey: UUID,
+    val eventId: UUID,
     val items: List<Item>
 ) {
     data class Item(val productId: UUID, val qty: Long)

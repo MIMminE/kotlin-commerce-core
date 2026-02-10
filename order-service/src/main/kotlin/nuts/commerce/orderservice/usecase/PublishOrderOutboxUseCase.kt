@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.usecase
 
-import nuts.commerce.orderservice.port.message.MessageProducer
+import nuts.commerce.orderservice.port.message.OrderEventProducer
 import nuts.commerce.orderservice.port.repository.OrderOutboxRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -11,7 +11,7 @@ import java.util.*
 @Service
 class PublishOrderOutboxUseCase(
     private val orderOutboxRepository: OrderOutboxRepository,
-    private val messageProducer: MessageProducer,
+    private val orderEventProducer: OrderEventProducer,
     private val transactionTemplate: TransactionTemplate,
     @Value($$"${order.outbox.batch-size}") private val batchSize: Int,
     @Value($$"${order.outbox.max-retries}") private val maxRetries: Int // 현재 미사용(추후 재시도 로직에 사용 예정)
@@ -27,8 +27,8 @@ class PublishOrderOutboxUseCase(
 
         orderOutboxRepository.findByIds(ids).forEach { outboxMessage ->
             runCatching {
-                messageProducer.produce(
-                    MessageProducer.ProduceMessage(
+                orderEventProducer.produce(
+                    OrderEventProducer.ProduceEvent(
                         eventId = outboxMessage.outboxId,
                         eventType = outboxMessage.eventType,
                         payload = outboxMessage.payload,

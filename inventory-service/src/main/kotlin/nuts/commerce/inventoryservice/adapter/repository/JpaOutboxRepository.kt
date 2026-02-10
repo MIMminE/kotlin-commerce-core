@@ -2,6 +2,7 @@ package nuts.commerce.inventoryservice.adapter.repository
 
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.OutboxStatus
+import nuts.commerce.inventoryservice.port.repository.ClaimOutboxResult
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -20,15 +21,11 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
         return outboxJpa.saveAndFlush(record)
     }
 
-    override fun findById(id: UUID): OutboxRecord? {
-        return outboxJpa.findById(id).orElse(null)
-    }
-
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun claimAndLockBatchIds(
         batchSize: Int,
         lockedBy: String
-    ): List<UUID> {
+    ): ClaimOutboxResult {
 
         val now = Instant.now()
         val leaseUntil = now.plusSeconds(60)
@@ -39,7 +36,10 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
             outboxStatus = OutboxStatus.PENDING
         )
 
-        if (candidates.isEmpty()) return emptyList()
+        if (candidates.isEmpty()) return ClaimOutboxResult(
+            size = 0,
+            claimOutboxInfo = emptyList()
+        )
 
         outboxJpa.claimBatch(
             ids = candidates,
@@ -50,11 +50,55 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
             leaseUntil = leaseUntil
         )
 
-        return outboxJpa.findClaimed(
+        val claimOutboxInfo = outboxJpa.findClaimed(
             workerId = lockedBy,
             outboxStatus = OutboxStatus.PROCESSING,
             leaseUntil = leaseUntil
         )
+            .map { record ->
+                ClaimOutboxResult.ClaimOutboxInfo(
+                    outboxId = record.outboxId,
+                    orderId = record.orderId,
+                    reservationId = record.reservationId,
+                    eventType = record.eventType,
+                    payload = record.payload
+                )
+            }
+
+        return ClaimOutboxResult(
+            size = claimOutboxInfo.size,
+            claimOutboxInfo = claimOutboxInfo
+        )
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    override fun markPublished(outboxId: UUID, lockedBy: String) {
+        val now = Instant.now()
+        val updatedRows = outboxJpa.markOutboxStatus(
+            outboxId = outboxId,
+            lockedBy = lockedBy,
+            now = now,
+            expectedStatus = OutboxStatus.PROCESSING,
+            newStatus = OutboxStatus.PUBLISHED
+        )
+        if (updatedRows == 0) {
+            throw IllegalStateException("Failed to mark outbox as published. outboxId=$outboxId, lockedBy=$lockedBy")
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    override fun markFailed(outboxId: UUID, lockedBy: String) {
+        val now = Instant.now()
+        val updatedRows = outboxJpa.markOutboxStatus(
+            outboxId = outboxId,
+            lockedBy = lockedBy,
+            now = now,
+            expectedStatus = OutboxStatus.PROCESSING,
+            newStatus = OutboxStatus.FAILED
+        )
+        if (updatedRows == 0) {
+            throw IllegalStateException("Failed to mark outbox as failed. outboxId=$outboxId, lockedBy=$lockedBy")
+        }
     }
 }
 
@@ -97,7 +141,7 @@ interface OutboxJpa : JpaRepository<OutboxRecord, UUID> {
 
     @Query(
         """
-        select o.outboxId
+        select o
           from OutboxRecord o
          where o.lockedBy = :workerId
            and o.status = :outboxStatus
@@ -108,5 +152,25 @@ interface OutboxJpa : JpaRepository<OutboxRecord, UUID> {
         @Param("workerId") workerId: String,
         @Param("outboxStatus") outboxStatus: OutboxStatus,
         @Param("leaseUntil") leaseUntil: Instant
-    ): List<UUID>
+    ): List<OutboxRecord>
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        """
+        update OutboxRecord o
+           set o.status = :newStatus,
+               o.lockedBy = null,
+               o.lockedUntil = null
+         where o.outboxId = :outboxId
+           and o.lockedBy = :lockedBy
+           and o.status = :expectedStatus
+        """
+    )
+    fun markOutboxStatus(
+        outboxId: UUID,
+        lockedBy: String,
+        now: Instant,
+        expectedStatus: OutboxStatus,
+        newStatus: OutboxStatus
+    ): Int
 }

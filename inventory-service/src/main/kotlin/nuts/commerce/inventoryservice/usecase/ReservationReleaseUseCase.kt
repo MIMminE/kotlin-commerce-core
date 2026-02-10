@@ -1,6 +1,6 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.event.EventType
+import nuts.commerce.inventoryservice.model.EventType
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
@@ -40,6 +40,7 @@ class ReservationReleaseUseCase(
         }
         val payloadObj = mapOf("reservationInfo" to findReservationInfo)
         val outbox = OutboxRecord.create(
+            orderId = command.orderId,
             reservationId = reservationId,
             idempotencyKey = command.eventId,
             eventType = EventType.RESERVATION_RELEASED,
@@ -53,4 +54,4 @@ class ReservationReleaseUseCase(
     data class Result(val reservationId: UUID)
 }
 
-data class ReservationReleaseCommand(val eventId: UUID, val reservationId: UUID)
+data class ReservationReleaseCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID)

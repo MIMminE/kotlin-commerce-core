@@ -1,7 +1,7 @@
-package nuts.commerce.inventoryservice.event
+package nuts.commerce.inventoryservice.model
 
 enum class EventType {
-    STOCK_UPDATE,
+    RESERVATION_CREATION,
     RESERVATION_COMMITTED,
     RESERVATION_RELEASED,
     RESERVE_INVENTORY_REQUEST,

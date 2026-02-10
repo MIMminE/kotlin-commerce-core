@@ -1,7 +1,7 @@
 package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.inventoryservice.event.EventType
+import nuts.commerce.inventoryservice.model.EventType
 import java.time.Instant
 import java.util.UUID
 
@@ -13,6 +13,9 @@ import java.util.UUID
 class OutboxRecord protected constructor(
     @Id
     val outboxId: UUID,
+
+    @Column(name = "order_id", nullable = false, updatable = false)
+    val orderId: UUID,
 
     @Column(name = "reservation_id", nullable = false, updatable = false)
     val reservationId: UUID,
@@ -50,6 +53,7 @@ class OutboxRecord protected constructor(
 
         fun create(
             outboxId: UUID = UUID.randomUUID(),
+            orderId: UUID,
             reservationId: UUID,
             idempotencyKey: UUID,
             eventType: EventType,
@@ -62,6 +66,7 @@ class OutboxRecord protected constructor(
         ): OutboxRecord {
             return OutboxRecord(
                 outboxId = outboxId,
+                orderId = orderId,
                 reservationId = reservationId,
                 idempotencyKey = idempotencyKey,
                 eventType = eventType,

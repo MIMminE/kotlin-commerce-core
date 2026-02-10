@@ -30,3 +30,11 @@ kafka:
 outbox:
   listener:
     enabled: false
+
+inventory:
+  outbox:
+    executor:
+      core-pool-size: 4
+      max-pool-size: 8
+      queue-capacity: 500
+      await-termination-seconds: 10
