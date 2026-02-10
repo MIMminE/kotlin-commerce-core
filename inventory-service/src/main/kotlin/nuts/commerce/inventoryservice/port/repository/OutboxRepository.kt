@@ -5,7 +5,7 @@ import nuts.commerce.inventoryservice.model.OutboxRecord
 import java.util.UUID
 
 interface OutboxRepository {
-    fun save(record: OutboxRecord): OutboxRecord
+    fun save(record: OutboxRecord): UUID
     fun claimAndLockBatchIds(batchSize: Int, lockedBy: String): ClaimOutboxResult
     fun markPublished(outboxId: UUID, lockedBy: String)
     fun markFailed(outboxId: UUID, lockedBy: String)

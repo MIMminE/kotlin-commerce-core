@@ -13,6 +13,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
 import nuts.commerce.paymentservice.exception.PaymentException
+import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import java.time.Instant
 import java.util.UUID
 
@@ -49,6 +50,9 @@ class Payment protected constructor(
     )
     val money: Money,
 
+    var paymentProvider: String?,
+    var providerPaymentId: UUID?,
+
     @Version
     var version: Long? = null
 
@@ -61,6 +65,8 @@ class Payment protected constructor(
             idempotencyKey: UUID,
             status: PaymentStatus = PaymentStatus.CREATED,
             money: Money,
+            paymentProvider: String? = null,
+            providerPaymentId: UUID? = null,
         ): Payment {
             return Payment(
                 paymentId = paymentId,
@@ -68,45 +74,41 @@ class Payment protected constructor(
                 money = money,
                 status = status,
                 idempotencyKey = idempotencyKey,
+                paymentProvider = paymentProvider,
+                providerPaymentId = providerPaymentId
             )
         }
     }
 
-    fun startProcessing(now: Instant) {
-        if (status != PaymentStatus.CREATED) {
-            throw PaymentException.InvalidTransition(
-                paymentId = paymentId,
-                from = status,
-                to = PaymentStatus.PROCESSING
-            )
+    fun approve(paymentProvider: String, providerPaymentId: UUID) {
+        if (this.status != PaymentStatus.CREATED) {
+            throw PaymentException.InvalidCommand("Only payments in CREATED status can be approved. Current status: ${this.status}")
         }
-        status = PaymentStatus.PROCESSING
-        updatedAt = now
+        this.status = PaymentStatus.APPROVED
+        this.paymentProvider = paymentProvider
+        this.providerPaymentId = providerPaymentId
     }
 
-    fun approve(now: Instant) {
-        if (status != PaymentStatus.PROCESSING) {
-            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.APPROVED)
+    fun fail(reason: String) {
+        if (this.status != PaymentStatus.CREATED) {
+            throw PaymentException.InvalidCommand("Only payments in CREATED status can be failed. Current status: ${this.status} reason: $reason")
         }
-        status = PaymentStatus.APPROVED
-        updatedAt = now
+        this.status = PaymentStatus.FAILED
     }
 
-    fun decline(now: Instant) {
-        if (status != PaymentStatus.PROCESSING) {
-            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.DECLINED)
+    fun commit() {
+        if (this.status != PaymentStatus.APPROVED) {
+            throw PaymentException.InvalidCommand("Only payments in APPROVED status can be committed. Current status: ${this.status}")
         }
-        status = PaymentStatus.DECLINED
-        updatedAt = now
+        this.status = PaymentStatus.COMMITED
     }
 
-    fun fail(now: Instant) {
-        if (status != PaymentStatus.PROCESSING && status != PaymentStatus.CREATED) {
-            throw PaymentException.InvalidTransition(paymentId = paymentId, from = status, to = PaymentStatus.FAILED)
+    fun cancel() {
+        if (this.status != PaymentStatus.APPROVED) {
+            throw PaymentException.InvalidCommand("Only payments in APPROVED status can be canceled. Current status: ${this.status}")
         }
-        status = PaymentStatus.FAILED
-        updatedAt = now
+        this.status = PaymentStatus.CANCELED
     }
 }
 
-enum class PaymentStatus { CREATED, PROCESSING, APPROVED, DECLINED, FAILED }
+enum class PaymentStatus { CREATED, APPROVED, COMMITED, FAILED, CANCELED }

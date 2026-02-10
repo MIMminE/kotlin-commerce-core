@@ -5,16 +5,26 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "payment_outbox_records")
+@Table(
+    name = "payment_outbox_records",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["payment_id", "idempotency_key"])]
+)
 class OutboxRecord protected constructor(
     @Id
     val outboxId: UUID,
 
     @Column(nullable = false, updatable = false)
-    val aggregateId: UUID,
+    val orderId: UUID,
 
+    @Column(nullable = false, updatable = false)
+    val paymentId: UUID,
+
+    @Column(nullable = false, updatable = false)
+    val idempotencyKey: UUID,
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val eventType: String,
+    val eventType: EventType,
 
     @Lob
     @Column(nullable = false)
@@ -24,63 +34,46 @@ class OutboxRecord protected constructor(
     @Column(nullable = false)
     var status: OutboxStatus,
 
+    var lockedBy: String?,
+
+    var lockedUntil: Instant?,
+
     @Column(nullable = false)
-    var attempts: Int,
+    var attemptCount: Int,
 
-    @Column(nullable = true)
-    var nextAttemptAt: Instant?,
+    @Column(nullable = false)
+    var nextAttemptAt: Instant,
 
-    @Version
-    var version: Long? = null
-) : BaseEntity() {
+    ) : BaseEntity() {
 
     companion object {
+
         fun create(
-            id: UUID = UUID.randomUUID(),
-            aggregateId: UUID,
-            eventType: String,
+            outboxId: UUID = UUID.randomUUID(),
+            orderId: UUID,
+            paymentId: UUID,
+            idempotencyKey: UUID,
+            eventType: EventType,
             payload: String,
-            attempts: Int = 0,
-            nextAttemptAt: Instant? = null
-        ): OutboxRecord {
-            return OutboxRecord(
-                outboxId = id,
-                aggregateId = aggregateId,
+            status: OutboxStatus = OutboxStatus.PENDING,
+            lockedBy: String? = null,
+            lockedUntil: Instant? = null,
+            attemptCount: Int = 0,
+            nextAttemptAt: Instant = Instant.now()
+        ): OutboxRecord =
+            OutboxRecord(
+                outboxId = outboxId,
+                orderId = orderId,
+                paymentId = paymentId,
+                idempotencyKey = idempotencyKey,
                 eventType = eventType,
                 payload = payload,
-                status = OutboxStatus.PENDING,
-                attempts = attempts,
+                status = status,
+                lockedBy = lockedBy,
+                lockedUntil = lockedUntil,
+                attemptCount = attemptCount,
                 nextAttemptAt = nextAttemptAt
             )
-        }
-    }
-
-    fun startProcessing(now: Instant) {
-        require(status == OutboxStatus.PENDING || status == OutboxStatus.RETRY_SCHEDULED) {
-            "invalid transition $status -> PROCESSING"
-        }
-        status = OutboxStatus.PROCESSING
-        updatedAt = now
-    }
-
-    fun markPublished(now: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> PUBLISHED" }
-        status = OutboxStatus.PUBLISHED
-        updatedAt = now
-    }
-
-    fun scheduleRetry(now: Instant, nextAttemptAt: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> RETRY_SCHEDULED" }
-        attempts += 1
-        status = OutboxStatus.RETRY_SCHEDULED
-        this.nextAttemptAt = nextAttemptAt
-        updatedAt = now
-    }
-
-    fun markFailed(now: Instant) {
-        require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> FAILED" }
-        status = OutboxStatus.FAILED
-        updatedAt = now
     }
 }
 

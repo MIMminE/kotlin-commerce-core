@@ -17,8 +17,8 @@ import java.util.UUID
 
 @Repository
 class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
-    override fun save(record: OutboxRecord): OutboxRecord {
-        return outboxJpa.saveAndFlush(record)
+    override fun save(record: OutboxRecord): UUID {
+        return outboxJpa.saveAndFlush(record).outboxId
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
