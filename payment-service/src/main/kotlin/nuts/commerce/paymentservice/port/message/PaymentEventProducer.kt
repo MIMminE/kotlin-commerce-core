@@ -37,18 +37,3 @@ data class PaymentEvent internal constructor(
             )
     }
 }
-
-
-sealed interface PaymentEvent2 {
-    val eventId: UUID
-    val outboxId: UUID
-    val orderId: UUID
-    val paymentId: UUID
-    val eventType: EventType
-
-}
-
-sealed interface ProduceResult {
-    data class Success(val eventId: UUID, val outboxId: UUID) : ProduceResult
-    data class Failure(val reason: String, val outboxId: UUID) : ProduceResult
-}

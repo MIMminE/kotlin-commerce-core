@@ -51,12 +51,10 @@ class PaymentRequestedUseCase(
         )
 
         paymentProvider.charge(chargeRequest)
-            .whenComplete { result, ex ->
-                if (ex != null) {
-                    when (result) {
-                        is ChargeResult.Success -> chargeRequestSuccessHandler(result, command.orderId, command.eventId)
-                        is ChargeResult.Failure -> chargeRequestFailureHandler(result, command.orderId, command.eventId)
-                    }
+            .whenComplete { result, _ ->
+                when (result) {
+                    is ChargeResult.Success -> chargeRequestSuccessHandler(result, command.orderId, command.eventId)
+                    is ChargeResult.Failure -> chargeRequestFailureHandler(result, command.orderId, command.eventId)
                 }
             }
         return Result(paymentId)

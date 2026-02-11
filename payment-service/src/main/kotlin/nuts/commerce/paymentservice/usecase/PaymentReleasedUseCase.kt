@@ -12,7 +12,7 @@ import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @Component
-class PaymentConfirmedUseCase(
+class PaymentReleasedUseCase(
     private val paymentRepository: PaymentRepository,
     private val outboxRepository: OutboxRepository,
     private val paymentProvider: PaymentProvider,
@@ -20,22 +20,22 @@ class PaymentConfirmedUseCase(
     private val objectMapper: ObjectMapper
 ) {
 
-    fun execute(command: PaymentConfirmCommand) {
+    fun execute(command: PaymentReleaseCommand) {
 
         val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(command.paymentId)
             ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${command.paymentId}")
 
-        paymentProvider.commitPayment(providerPaymentId, command.eventId) // 이벤트 아이디를 통한 멱등성 방어
+        paymentProvider.releasePayment(providerPaymentId, command.eventId) // 이벤트 아이디를 통한 멱등성 방어
             .whenComplete { result, _ ->
                 when (result) {
-                    is PaymentStatusUpdateResult.Success -> confirmRequestSuccessHandler(
+                    is PaymentStatusUpdateResult.Success -> releaseRequestSuccessHandler(
                         result,
                         command.orderId,
                         command.paymentId,
                         command.eventId
                     )
 
-                    is PaymentStatusUpdateResult.Failure -> confirmRequestFailureHandler(
+                    is PaymentStatusUpdateResult.Failure -> releaseRequestFailureHandler(
                         result,
                         command.orderId,
                         command.paymentId,
@@ -45,7 +45,7 @@ class PaymentConfirmedUseCase(
             }
     }
 
-    private fun confirmRequestSuccessHandler(
+    private fun releaseRequestSuccessHandler(
         result: PaymentStatusUpdateResult.Success,
         orderId: UUID,
         paymentId: UUID,
@@ -54,7 +54,7 @@ class PaymentConfirmedUseCase(
         txTemplate.execute {
 
             val payment = paymentRepository.findById(paymentId)!!
-            payment.commit()
+            payment.release()
 
             val payload = objectMapper.writeValueAsString(
                 mapOf(
@@ -69,7 +69,7 @@ class PaymentConfirmedUseCase(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRMED,
+                eventType = EventType.PAYMENT_RELEASED,
                 payload = payload
             )
 
@@ -77,7 +77,7 @@ class PaymentConfirmedUseCase(
         }
     }
 
-    private fun confirmRequestFailureHandler(
+    private fun releaseRequestFailureHandler(
         result: PaymentStatusUpdateResult.Failure,
         orderId: UUID,
         paymentId: UUID,
@@ -102,7 +102,7 @@ class PaymentConfirmedUseCase(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRMATION_FAILED,
+                eventType = EventType.PAYMENT_RELEASE_FAILED,
                 payload = payload
             )
 
@@ -111,4 +111,4 @@ class PaymentConfirmedUseCase(
     }
 }
 
-data class PaymentConfirmCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID)
+data class PaymentReleaseCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID)

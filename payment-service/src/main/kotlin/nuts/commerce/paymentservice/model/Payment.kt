@@ -8,13 +8,10 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
-import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.persistence.Version
 import nuts.commerce.paymentservice.exception.PaymentException
-import nuts.commerce.paymentservice.port.payment.PaymentProvider
-import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -103,12 +100,12 @@ class Payment protected constructor(
         this.status = PaymentStatus.COMMITED
     }
 
-    fun cancel() {
+    fun release() {
         if (this.status != PaymentStatus.APPROVED) {
             throw PaymentException.InvalidCommand("Only payments in APPROVED status can be canceled. Current status: ${this.status}")
         }
-        this.status = PaymentStatus.CANCELED
+        this.status = PaymentStatus.RELEASED
     }
 }
 
-enum class PaymentStatus { CREATED, APPROVED, COMMITED, FAILED, CANCELED }
+enum class PaymentStatus { CREATED, APPROVED, COMMITED, FAILED, RELEASED }

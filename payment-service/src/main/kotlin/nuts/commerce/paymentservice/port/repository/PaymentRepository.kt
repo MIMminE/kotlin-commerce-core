@@ -7,5 +7,7 @@ interface PaymentRepository {
     fun save(payment: Payment): UUID
     fun findById(paymentId: UUID): Payment?
     fun findPaymentIdForIdempotencyKey(orderId: UUID, idempotencyKey: UUID): UUID?
-    fun findByOrderId(orderId: UUID): Payment?
+
+
+    fun getProviderPaymentIdByPaymentId(paymentId: UUID): UUID?
 }

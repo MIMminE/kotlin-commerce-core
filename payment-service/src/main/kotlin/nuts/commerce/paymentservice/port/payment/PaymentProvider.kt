@@ -6,8 +6,8 @@ import java.util.concurrent.CompletableFuture
 interface PaymentProvider {
     val providerName: String
     fun charge(request: ChargeRequest): CompletableFuture<ChargeResult>
-    fun commitPayment(providerPaymentId: String): Boolean
-    fun releasePayment(providerPaymentId: String): Boolean
+    fun commitPayment(providerPaymentId: UUID, eventId: UUID): CompletableFuture<PaymentStatusUpdateResult>
+    fun releasePayment(providerPaymentId: UUID, eventId: UUID): CompletableFuture<PaymentStatusUpdateResult>
 }
 
 data class ChargeRequest(
@@ -20,4 +20,9 @@ data class ChargeRequest(
 sealed interface ChargeResult {
     data class Success(val providerPaymentId: UUID, val requestPaymentId: UUID) : ChargeResult
     data class Failure(val reason: String, val requestPaymentId: UUID) : ChargeResult
+}
+
+sealed interface PaymentStatusUpdateResult {
+    data class Success(val providerPaymentId: UUID) : PaymentStatusUpdateResult
+    data class Failure(val reason: String, val providerPaymentId: UUID) : PaymentStatusUpdateResult
 }

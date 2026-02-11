@@ -3,14 +3,14 @@ package nuts.commerce.paymentservice.adapter.repository
 import nuts.commerce.paymentservice.model.Payment
 import nuts.commerce.paymentservice.port.repository.PaymentRepository
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
 class JpaPaymentRepository(private val paymentJpa: PaymentJpa) : PaymentRepository {
-
-    override fun save(payment: Payment): Payment {
-        return paymentJpa.saveAndFlush(payment)
+    override fun save(payment: Payment): UUID {
+        return paymentJpa.saveAndFlush(payment).paymentId
     }
 
     override fun findById(paymentId: UUID): Payment? {
@@ -21,14 +21,17 @@ class JpaPaymentRepository(private val paymentJpa: PaymentJpa) : PaymentReposito
         orderId: UUID,
         idempotencyKey: UUID
     ): UUID? {
-        TODO("Not yet implemented")
+        return paymentJpa.findByOrderIdAndIdempotencyKey(orderId, idempotencyKey)?.paymentId
     }
 
-    override fun findByOrderId(orderId: UUID): Payment? {
-        return paymentJpa.findByOrderId(orderId)
+    override fun getProviderPaymentIdByPaymentId(paymentId: UUID): UUID? {
+        return paymentJpa.findProviderPaymentIdByPaymentId(paymentId)
     }
 }
 
 interface PaymentJpa : JpaRepository<Payment, UUID> {
-    fun findByOrderId(orderId: UUID): Payment?
+    fun findByOrderIdAndIdempotencyKey(orderId: UUID, idempotencyKey: UUID): Payment?
+
+    @Query("SELECT p.providerPaymentId FROM Payment p WHERE p.paymentId = :paymentId")
+    fun findProviderPaymentIdByPaymentId(paymentId: UUID): UUID?
 }
