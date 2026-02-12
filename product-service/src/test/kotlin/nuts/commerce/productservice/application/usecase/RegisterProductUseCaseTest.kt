@@ -28,7 +28,7 @@ class RegisterProductUseCaseTest {
         assertEquals("new", res.productName)
 
         // 저장소에서 조회 가능
-        val saved = productRepository.getActiveProduct(res.productId)
+        val saved = productRepository.getProduct(res.productId)
         assertEquals("new", saved.productName)
     }
 }

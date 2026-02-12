@@ -70,26 +70,17 @@ class ProductController(
         val res = deleteProductUseCase.execute(id)
         return ResponseEntity.ok(ActionResult(res.productId))
     }
-
-    @ExceptionHandler(ProductException.InvalidCommand::class)
-    fun handleNotFound(e: ProductException.InvalidCommand): ResponseEntity<String> {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.message)
-    }
-
-    @ExceptionHandler(ProductException.InvalidTransition::class)
-    fun handleBadRequest(e: ProductException.InvalidTransition): ResponseEntity<String> {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.message)
-    }
-
-    data class RegisterRequest(val productName: String, val price: Long, val currency: String)
-    data class RegisterResponse(val productId: UUID, val productName: String)
-    data class ProductSummaryResponse(val productId: UUID, val productName: String)
-    data class ProductDetailResponse(
-        val productId: UUID,
-        val productName: String,
-        val stock: Int,
-        val price: Long,
-        val currency: String
-    )
-    data class ActionResult(val productId: UUID)
 }
+
+data class RegisterRequest(val productName: String, val price: Long, val currency: String)
+data class RegisterResponse(val productId: UUID, val productName: String)
+data class ProductSummaryResponse(val productId: UUID, val productName: String)
+data class ProductDetailResponse(
+    val productId: UUID,
+    val productName: String,
+    val stock: Int,
+    val price: Long,
+    val currency: String
+)
+
+data class ActionResult(val productId: UUID)

@@ -26,7 +26,7 @@ class InMemoryProductRepository : ProductRepository {
         throw ProductException.InvalidCommand(e.message ?: "failed to list active products")
     }
 
-    override fun getActiveProduct(productId: UUID): Product {
+    override fun getProduct(productId: UUID): Product {
         try {
             return store[productId]?.takeIf { it.status == ProductStatus.ACTIVE }
                 ?: throw ProductException.InvalidCommand("Product not found or inactive: $productId")

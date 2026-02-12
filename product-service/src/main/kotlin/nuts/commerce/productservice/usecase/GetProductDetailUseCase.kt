@@ -13,7 +13,7 @@ class GetProductDetailUseCase(
 
     fun execute(productId: UUID): ProductDetail {
 
-        val product = productRepository.getActiveProduct(productId)
+        val product = productRepository.getProduct(productId)
         return ProductDetail(
             productId = product.productId,
             productName = product.productName,
