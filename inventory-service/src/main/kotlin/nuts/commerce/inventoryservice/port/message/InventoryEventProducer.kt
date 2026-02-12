@@ -1,6 +1,5 @@
 package nuts.commerce.inventoryservice.port.message
 
-import nuts.commerce.inventoryservice.model.EventType
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 

@@ -58,8 +58,6 @@ class PaymentReleasedUseCase(
 
             val payload = objectMapper.writeValueAsString(
                 mapOf(
-                    "paymentId" to paymentId,
-                    "orderId" to orderId,
                     "paymentProvider" to paymentProvider.providerName,
                     "providerPaymentId" to result.providerPaymentId
                 )
@@ -69,7 +67,7 @@ class PaymentReleasedUseCase(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_RELEASED,
+                eventType = EventType.PAYMENT_RELEASE_SUCCEEDED,
                 payload = payload
             )
 
@@ -90,8 +88,6 @@ class PaymentReleasedUseCase(
 
             val payload = objectMapper.writeValueAsString(
                 mapOf(
-                    "paymentId" to paymentId,
-                    "orderId" to orderId,
                     "paymentProvider" to paymentProvider.providerName,
                     "providerPaymentId" to result.providerPaymentId,
                     "failureReason" to result.reason

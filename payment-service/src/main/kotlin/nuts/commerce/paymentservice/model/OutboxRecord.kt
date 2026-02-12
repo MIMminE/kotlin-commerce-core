@@ -79,3 +79,10 @@ class OutboxRecord protected constructor(
 
 enum class OutboxStatus { PENDING, PROCESSING, PUBLISHED, FAILED, RETRY_SCHEDULED }
 
+data class OutboxInfo(
+    val outboxId: UUID,
+    val orderId: UUID,
+    val paymentId: UUID,
+    val eventType: EventType,
+    val payload: String
+)

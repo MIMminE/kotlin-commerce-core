@@ -58,8 +58,6 @@ class PaymentConfirmedUseCase(
 
             val payload = objectMapper.writeValueAsString(
                 mapOf(
-                    "paymentId" to paymentId,
-                    "orderId" to orderId,
                     "paymentProvider" to paymentProvider.providerName,
                     "providerPaymentId" to result.providerPaymentId
                 )
@@ -69,7 +67,7 @@ class PaymentConfirmedUseCase(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRMED,
+                eventType = EventType.PAYMENT_CONFIRM_SUCCEEDED,
                 payload = payload
             )
 
@@ -90,8 +88,6 @@ class PaymentConfirmedUseCase(
 
             val payload = objectMapper.writeValueAsString(
                 mapOf(
-                    "paymentId" to paymentId,
-                    "orderId" to orderId,
                     "paymentProvider" to paymentProvider.providerName,
                     "providerPaymentId" to result.providerPaymentId,
                     "failureReason" to result.reason
@@ -102,7 +98,7 @@ class PaymentConfirmedUseCase(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRMATION_FAILED,
+                eventType = EventType.PAYMENT_CONFIRM_FAILED,
                 payload = payload
             )
 

@@ -1,5 +1,6 @@
 package nuts.commerce.paymentservice.adapter.repository
 
+import nuts.commerce.paymentservice.model.OutboxInfo
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.model.OutboxStatus
 import nuts.commerce.paymentservice.port.repository.ClaimOutboxResult
@@ -58,7 +59,7 @@ class JpaOutboxRepository(
             leaseUntil = leaseUntil
         )
             .map { record ->
-                ClaimOutboxResult.ClaimOutboxInfo(
+                OutboxInfo(
                     outboxId = record.outboxId,
                     orderId = record.orderId,
                     paymentId = record.paymentId,

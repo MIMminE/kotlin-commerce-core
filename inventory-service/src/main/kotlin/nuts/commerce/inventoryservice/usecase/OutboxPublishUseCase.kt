@@ -37,8 +37,8 @@ class OutboxPublishUseCase(
             return
         }
 
-        claimedOutboxResults.claimOutboxInfo.forEach { record ->
-            val inventoryEvent = createInventoryEvent(record)
+        claimedOutboxResults.claimOutboxInfo.forEach { outboxInfo ->
+            val inventoryEvent = createInventoryEvent(outboxInfo)
 
             eventProducer.produce(inventoryEvent)
                 .whenCompleteAsync(
@@ -46,21 +46,21 @@ class OutboxPublishUseCase(
                         when {
                             ex != null -> {
                                 outboxRepository.markFailed(
-                                    outboxId = record.outboxId,
+                                    outboxId = outboxInfo.outboxId,
                                     lockedBy = "Nuts-Worker"
                                 )
                             }
 
                             result is ProduceResult.Success -> {
                                 outboxRepository.markPublished(
-                                    outboxId = record.outboxId,
+                                    outboxId = outboxInfo.outboxId,
                                     lockedBy = "Nuts-Worker"
                                 )
                             }
 
                             result is ProduceResult.Failure -> {
                                 outboxRepository.markFailed(
-                                    outboxId = record.outboxId,
+                                    outboxId = outboxInfo.outboxId,
                                     lockedBy = "Nuts-Worker"
                                 )
                             }
@@ -70,14 +70,14 @@ class OutboxPublishUseCase(
         }
     }
 
-    private fun createInventoryEvent(record: ClaimOutboxResult.ClaimOutboxInfo): InventoryEvent {
-        return when (record.eventType) {
+    private fun createInventoryEvent(outboxInfo: ClaimOutboxResult.ClaimOutboxInfo): InventoryEvent {
+        return when (outboxInfo.eventType) {
             RESERVATION_CREATION -> {
                 ReservationCreationEvent(
-                    outboxId = record.outboxId,
-                    orderId = record.orderId,
-                    reservationId = record.reservationId,
-                    createdReservationItems = objectMapper.readTree(record.payload).get("reservationInfo").map {
+                    outboxId = outboxInfo.outboxId,
+                    orderId = outboxInfo.orderId,
+                    reservationId = outboxInfo.reservationId,
+                    createdReservationItems = objectMapper.readTree(outboxInfo.payload).get("reservationInfo").map {
                         ReservationCreationEvent.CreatedReservationItem(
                             inventoryId = UUID.fromString(it.get("inventoryId").toString()),
                             quantity = it.get("quantity").asLong()
@@ -88,10 +88,10 @@ class OutboxPublishUseCase(
 
             RESERVATION_COMMITTED -> {
                 ReservationCommittedEvent(
-                    outboxId = record.outboxId,
-                    orderId = record.orderId,
-                    reservationId = record.reservationId,
-                    commitedReservationItems = objectMapper.readTree(record.payload).get("items").map {
+                    outboxId = outboxInfo.outboxId,
+                    orderId = outboxInfo.orderId,
+                    reservationId = outboxInfo.reservationId,
+                    commitedReservationItems = objectMapper.readTree(outboxInfo.payload).get("items").map {
                         ReservationCommittedEvent.CommitedReservationItem(
                             inventoryId = UUID.fromString(it.get("inventoryId").toString()),
                             quantity = it.get("quantity").asLong()
@@ -102,10 +102,10 @@ class OutboxPublishUseCase(
 
             RESERVATION_RELEASED -> {
                 ReservationReleasedEvent(
-                    outboxId = record.outboxId,
-                    orderId = record.orderId,
-                    reservationId = record.reservationId,
-                    releasedReservationItems = objectMapper.readTree(record.payload).get("reservationInfo").map {
+                    outboxId = outboxInfo.outboxId,
+                    orderId = outboxInfo.orderId,
+                    reservationId = outboxInfo.reservationId,
+                    releasedReservationItems = objectMapper.readTree(outboxInfo.payload).get("reservationInfo").map {
                         ReservationReleasedEvent.ReleasedReservationItem(
                             inventoryId = UUID.fromString(it.get("inventoryId").toString()),
                             quantity = it.get("quantity").asLong()
@@ -115,7 +115,7 @@ class OutboxPublishUseCase(
             }
 
             else -> {
-                throw IllegalArgumentException("Unsupported event type: ${record.eventType}")
+                throw IllegalArgumentException("Unsupported event type: ${outboxInfo.eventType}")
             }
         }
     }

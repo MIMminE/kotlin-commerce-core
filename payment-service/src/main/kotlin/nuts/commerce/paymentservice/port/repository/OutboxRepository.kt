@@ -1,6 +1,7 @@
 package nuts.commerce.paymentservice.port.repository
 
 import nuts.commerce.paymentservice.model.EventType
+import nuts.commerce.paymentservice.model.OutboxInfo
 import nuts.commerce.paymentservice.model.OutboxRecord
 import java.util.UUID
 
@@ -13,13 +14,5 @@ interface OutboxRepository {
 
 data class ClaimOutboxResult(
     val size: Int,
-    val claimOutboxInfo: List<ClaimOutboxInfo>
-) {
-    data class ClaimOutboxInfo(
-        val outboxId: UUID,
-        val orderId: UUID,
-        val paymentId: UUID,
-        val eventType: EventType,
-        val payload: String
-    )
-}
+    val claimOutboxInfo: List<OutboxInfo>
+)

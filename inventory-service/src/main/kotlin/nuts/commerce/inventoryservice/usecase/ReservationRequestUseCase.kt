@@ -12,7 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.util.*
-import nuts.commerce.inventoryservice.exception.InventoryException
+import nuts.commerce.inventoryser1vice.exception.InventoryException
 
 @Component
 class ReservationRequestUseCase(
