@@ -11,7 +11,7 @@ sealed interface PaymentEvent {
     val eventType: EventType
 }
 
-data class PaymentCreationEvent(
+data class PaymentCreationSucceededEvent(
     override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,

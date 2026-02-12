@@ -44,7 +44,7 @@ class ReservationCommitUseCase(
             orderId = command.orderId,
             reservationId = reservationId,
             idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_COMMITTED,
+            eventType = EventType.RESERVATION_CONFIRM_SUCCEEDED,
             payload = objectMapper.writeValueAsString(payloadObj)
         )
         outboxRepository.save(record)

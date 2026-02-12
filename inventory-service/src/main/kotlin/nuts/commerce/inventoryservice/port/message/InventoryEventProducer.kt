@@ -1,11 +1,12 @@
 package nuts.commerce.inventoryservice.port.message
 
+import nuts.commerce.inventoryservice.model.OutboxInfo
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 
 interface InventoryEventProducer {
-    fun produce(inventoryEvent: InventoryEvent): CompletableFuture<ProduceResult>
+    fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult>
 }
 
 sealed interface ProduceResult {

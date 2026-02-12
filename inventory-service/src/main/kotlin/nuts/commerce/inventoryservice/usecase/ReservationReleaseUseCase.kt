@@ -43,7 +43,7 @@ class ReservationReleaseUseCase(
             orderId = command.orderId,
             reservationId = reservationId,
             idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_RELEASED,
+            eventType = EventType.RESERVATION_RELEASE_SUCCEEDED,
             payload = objectMapper.writeValueAsString(payloadObj)
         )
         outboxRepository.save(outbox)

@@ -1,6 +1,7 @@
 package nuts.commerce.inventoryservice.usecase
 
 import jakarta.transaction.Transactional
+import nuts.commerce.inventoryservice.exception.InventoryException
 import nuts.commerce.inventoryservice.model.EventType
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.Reservation
@@ -12,7 +13,6 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import java.util.*
-import nuts.commerce.inventoryser1vice.exception.InventoryException
 
 @Component
 class ReservationRequestUseCase(
@@ -68,7 +68,7 @@ class ReservationRequestUseCase(
             orderId = command.orderId,
             reservationId = reservation.reservationId,
             idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_CREATION,
+            eventType = EventType.RESERVATION_CREATION_SUCCEEDED,
             payload = objectMapper.writeValueAsString(payloadObj)
         )
 

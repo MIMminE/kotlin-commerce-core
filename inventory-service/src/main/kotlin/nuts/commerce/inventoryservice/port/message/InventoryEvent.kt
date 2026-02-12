@@ -1,6 +1,7 @@
 package nuts.commerce.inventoryservice.port.message
 
 import nuts.commerce.inventoryservice.model.EventType
+import nuts.commerce.inventoryservice.model.ReservationItemInfo
 import java.util.UUID
 
 sealed interface InventoryEvent {
@@ -16,39 +17,64 @@ data class ReservationCreationEvent(
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_CREATION,
-    val createdReservationItems: List<CreatedReservationItem>
+    override val eventType: EventType = EventType.RESERVATION_CREATION_SUCCEEDED,
+    val payload: Payload
 ) : InventoryEvent {
-    data class CreatedReservationItem(
-        val inventoryId: UUID,
-        val quantity: Long
-    )
+    data class Payload(val reservationItems: List<ReservationItemInfo>)
 }
 
-data class ReservationCommittedEvent(
+data class ReservationCreationFailedEvent(
     override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_COMMITTED,
-    val commitedReservationItems: List<CommitedReservationItem>
+    override val eventType: EventType = EventType.RESERVATION_CREATION_FAILED,
+    val payload: Payload
 ) : InventoryEvent {
-    data class CommitedReservationItem(
-        val inventoryId: UUID,
-        val quantity: Long
-    )
+    data class Payload(val reason: String)
 }
 
-data class ReservationReleasedEvent(
+
+data class ReservationConfirmSucceededEvent(
     override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_RELEASED,
-    val releasedReservationItems: List<ReleasedReservationItem>
+    override val eventType: EventType = EventType.RESERVATION_CONFIRM_SUCCEEDED,
+    val payload: Payload
 ) : InventoryEvent {
-    data class ReleasedReservationItem(
-        val inventoryId: UUID,
-        val quantity: Long
-    )
+    data class Payload(val reservationItems: List<ReservationItemInfo>)
+}
+
+data class ReservationConfirmFailedEvent(
+    override val eventId: UUID = UUID.randomUUID(),
+    override val outboxId: UUID,
+    override val orderId: UUID,
+    override val reservationId: UUID,
+    override val eventType: EventType = EventType.RESERVATION_CONFIRM_FAILED,
+    val payload: Payload
+) : InventoryEvent {
+    data class Payload(val reason: String)
+}
+
+data class ReservationReleaseSucceededEvent(
+    override val eventId: UUID = UUID.randomUUID(),
+    override val outboxId: UUID,
+    override val orderId: UUID,
+    override val reservationId: UUID,
+    override val eventType: EventType = EventType.RESERVATION_RELEASE_SUCCEEDED,
+    val payload: Payload
+) : InventoryEvent {
+    data class Payload(val reservationItems: List<ReservationItemInfo>)
+}
+
+data class ReservationReleaseFailedEvent(
+    override val eventId: UUID = UUID.randomUUID(),
+    override val outboxId: UUID,
+    override val orderId: UUID,
+    override val reservationId: UUID,
+    override val eventType: EventType = EventType.RESERVATION_RELEASE_FAILED,
+    val payload: Payload
+) : InventoryEvent {
+    data class Payload(val reason: String)
 }

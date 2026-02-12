@@ -45,3 +45,8 @@ class ReservationItem protected constructor(
         }
     }
 }
+
+data class ReservationItemInfo(
+    val inventoryId: UUID,
+    val qty: Long
+)

@@ -1,22 +1,19 @@
 package nuts.commerce.paymentservice.usecase
 
 import nuts.commerce.paymentservice.port.message.PaymentEventProducer
+import nuts.commerce.paymentservice.port.message.ProduceResult
 import nuts.commerce.paymentservice.port.repository.OutboxRepository
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.Executor
 
 @Component
 class PublishOutboxUseCase(
     private val outboxRepository: OutboxRepository,
     private val paymentEventProducer: PaymentEventProducer,
-    private val objectMapper: ObjectMapper,
-    @Qualifier("outboxUpdateExecutor")
-    private val outboxUpdateExecutor: Executor,
-    @Value($$"${payment.outbox.batch-size:50}")
-    private val batchSize: Int
+    @Qualifier("outboxUpdateExecutor") private val outboxUpdateExecutor: Executor,
+    @Value($$"${payment.outbox.batch-size:50}") private val batchSize: Int
 ) {
 
     fun execute() {
@@ -41,15 +38,21 @@ class PublishOutboxUseCase(
                                 )
                             }
 
-                            result is nuts.commerce.paymentservice.port.message.ProduceResult.Success -> {
+                            result is ProduceResult.Success -> {
                                 outboxRepository.markPublished(
                                     outboxId = outboxInfo.outboxId,
                                     lockedBy = "Nuts-Worker"
                                 )
                             }
+
+                            result is ProduceResult.Failure -> {
+                                outboxRepository.markFailed(
+                                    outboxId = outboxInfo.outboxId,
+                                    lockedBy = "Nuts-Worker"
+                                )
+                            }
                         }
-                    },
-                    outboxUpdateExecutor
+                    }, outboxUpdateExecutor
                 )
         }
     }

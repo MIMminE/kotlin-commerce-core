@@ -1,5 +1,6 @@
 package nuts.commerce.inventoryservice.adapter.repository
 
+import nuts.commerce.inventoryservice.model.OutboxInfo
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.OutboxStatus
 import nuts.commerce.inventoryservice.port.repository.ClaimOutboxResult
@@ -56,7 +57,7 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
             leaseUntil = leaseUntil
         )
             .map { record ->
-                ClaimOutboxResult.ClaimOutboxInfo(
+                OutboxInfo(
                     outboxId = record.outboxId,
                     orderId = record.orderId,
                     reservationId = record.reservationId,
