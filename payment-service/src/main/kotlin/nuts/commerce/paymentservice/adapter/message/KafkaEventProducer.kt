@@ -18,10 +18,10 @@ import java.util.concurrent.CompletableFuture
     matchIfMissing = true
 )
 @Component
-class KafkaPaymentEventProducer(
+class KafkaEventProducer(
     private val eventMapperRegistry: EventMapperRegistry,
     private val kafkaTemplate: KafkaTemplate<String, PaymentEvent>,
-    @Value($$"${payment.kafka.topic:payment-events}")
+    @Value($$"${payment.kafka.producer.topic:payment-outbound}")
     private val paymentTopic: String
 ) : PaymentEventProducer {
 
