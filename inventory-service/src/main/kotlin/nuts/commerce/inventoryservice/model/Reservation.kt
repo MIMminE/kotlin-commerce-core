@@ -53,7 +53,7 @@ class Reservation protected constructor(
         items.addAll(newItems)
     }
 
-    fun commit() {
+    fun confirm() {
         require(status == ReservationStatus.CREATED) { "invalid transition $status -> COMMITTED" }
         status = ReservationStatus.COMMITTED
     }
@@ -62,10 +62,16 @@ class Reservation protected constructor(
         require(status == ReservationStatus.CREATED || status == ReservationStatus.COMMITTED) { "invalid transition $status -> RELEASED" }
         status = ReservationStatus.RELEASED
     }
+
+    fun fail(){
+        require(status == ReservationStatus.CREATED) { "invalid transition $status -> FAILED" }
+        status = ReservationStatus.FAILED
+    }
 }
 
 enum class ReservationStatus {
     CREATED,
     COMMITTED,
-    RELEASED
+    RELEASED,
+    FAILED
 }

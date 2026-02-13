@@ -36,32 +36,36 @@ class ReservationRequestUseCase(
                 val existing =
                     reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
                         ?: throw ex
+
                 return Result(existing.reservationId)
             }
 
-        val items = command.items.sortedBy { it.productId }
+        val reservationItems =
+            try {
+                getReserveItems(command, reservation)
+            } catch (ex: InventoryException.InvalidCommand) {
 
-        items.forEach { item ->
-            val ok = inventoryRepository.reserveInventory(item.productId, item.qty)
-            if (!ok) {
-                throw InventoryException.InvalidCommand("Insufficient inventory for product ID: ${item.productId}")
+                reservation.fail()
+                val reason = ex.message ?: "Reservation creation failed due to invalid command."
+                val payload = objectMapper.writeValueAsString(mapOf("reason" to reason))
+
+                val outbox = OutboxRecord.create(
+                    orderId = command.orderId,
+                    reservationId = reservation.reservationId,
+                    idempotencyKey = command.eventId,
+                    eventType = EventType.RESERVATION_CREATION_FAILED,
+                    payload = payload
+                )
+
+                outboxRepository.save(outbox)
+
+                return Result(reservation.reservationId)
             }
-        }
-        val findProductInfo = inventoryRepository.findAllByProductIdIn(items.map { it.productId })
-        if (findProductInfo.size != items.size) throw InventoryException.InvalidCommand("Some product IDs are invalid.")
 
-        val productIdToInventoryId = findProductInfo.associate { it.productId to it.inventoryId }
-        val reservationItems = items.map {
-            ReservationItem.create(
-                reservationId = reservation.reservationId,
-                inventoryId = productIdToInventoryId[it.productId]!!,
-                qty = it.qty
-            )
-        }
         reservation.addItems(reservationItems)
 
         val payloadObj = mapOf(
-            "items" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "quantity" to it.qty) }
+            "reservationItems" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "quantity" to it.qty) }
         )
 
         val outbox = OutboxRecord.create(
@@ -75,6 +79,34 @@ class ReservationRequestUseCase(
         outboxRepository.save(outbox)
 
         return Result(reservation.reservationId)
+    }
+
+    private fun getReserveItems(
+        command: ReservationRequestCommand,
+        reservation: Reservation
+    ): List<ReservationItem> {
+        val items = command.items.sortedBy { it.productId }
+
+        items.forEach { item ->
+            val ok = inventoryRepository.reserveInventory(item.productId, item.qty)
+            if (!ok) {
+                throw InventoryException.InvalidCommand("Insufficient inventory for product ID: ${item.productId}")
+            }
+        }
+        val findProductInfo = inventoryRepository.findAllByProductIdIn(items.map { it.productId })
+        if (findProductInfo.size != items.size) throw InventoryException.InvalidCommand("Some product IDs are invalid.")
+
+        val productIdToInventoryId = findProductInfo.associate { it.productId to it.inventoryId }
+
+
+        val reservationItems = items.map {
+            ReservationItem.create(
+                reservationId = reservation.reservationId,
+                inventoryId = productIdToInventoryId[it.productId]!!,
+                qty = it.qty
+            )
+        }
+        return reservationItems
     }
 
     data class Result(val reservationId: UUID)

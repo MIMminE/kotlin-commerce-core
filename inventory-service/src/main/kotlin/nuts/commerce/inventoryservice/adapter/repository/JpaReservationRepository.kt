@@ -21,8 +21,16 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
     override fun findReservationIdForIdempotencyKey(
         orderId: UUID,
         idempotencyKey: UUID
-    ): Reservation? {
-        return reservationJpa.findByOrderIdAndIdempotencyKey(orderId, idempotencyKey)
+    ): ReservationInfo? {
+        val reservation = reservationJpa.findByOrderIdAndIdempotencyKey(orderId, idempotencyKey) ?: return null
+        return ReservationInfo(
+            reservationId = reservation.reservationId,
+            items = reservation.items.map { item ->
+                ReservationInfo.Item(
+                    inventoryId = item.inventoryId,
+                    quantity = item.qty
+                )
+            })
     }
 
     override fun findReservationInfo(reservationId: UUID): ReservationInfo? {
@@ -41,6 +49,7 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
 }
 
 interface ReservationJpa : JpaRepository<Reservation, UUID> {
+
     fun findByOrderIdAndIdempotencyKey(orderId: UUID, idempotencyKey: UUID): Reservation?
 
 
