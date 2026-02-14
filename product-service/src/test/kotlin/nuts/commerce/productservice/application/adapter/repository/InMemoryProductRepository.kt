@@ -20,7 +20,7 @@ class InMemoryProductRepository : ProductRepository {
         }
     }
 
-    override fun getActiveProducts(): List<Product> = try {
+    override fun getAllProductInfo(): List<Product> = try {
         store.values.filter { it.status == ProductStatus.ACTIVE }
     } catch (e: Throwable) {
         throw ProductException.InvalidCommand(e.message ?: "failed to list active products")

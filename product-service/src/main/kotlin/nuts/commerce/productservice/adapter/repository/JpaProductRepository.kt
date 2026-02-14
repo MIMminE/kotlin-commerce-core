@@ -14,11 +14,11 @@ class JpaProductRepository(private val productJpa: ProductJpa) : ProductReposito
         TODO("Not yet implemented")
     }
 
-    override fun getActiveProducts(): List<ProductInfo> {
+    override fun getAllProductInfo(): List<ProductInfo> {
         TODO("Not yet implemented")
     }
 
-    override fun getProduct(productId: UUID): Product {
+    override fun getProduct(productId: UUID): Product? {
         TODO("Not yet implemented")
     }
 }

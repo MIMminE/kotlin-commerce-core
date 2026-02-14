@@ -1,24 +1,24 @@
 package nuts.commerce.productservice.usecase
 
+import nuts.commerce.productservice.port.cache.StockCachePort
 import nuts.commerce.productservice.port.repository.ProductRepository
-import nuts.commerce.productservice.port.cache.ProductStockCachePort
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
 class GetProductDetailUseCase(
     private val productRepository: ProductRepository,
-    private val productStockCachePort: ProductStockCachePort
+    private val stockChaPort: StockCachePort
 ) {
 
     fun execute(productId: UUID): ProductDetail {
 
-        val product = productRepository.getProduct(productId)
+        val product = productRepository.getProduct(productId) ?: throw IllegalArgumentException("Product not found")
         return ProductDetail(
             productId = product.productId,
             productName = product.productName,
             price = product.price.amount,
-            stock = productStockCachePort.getStock(productId).quantity,
+            stock = stockChaPort.getStock(productId),
             currency = product.price.currency
         )
     }

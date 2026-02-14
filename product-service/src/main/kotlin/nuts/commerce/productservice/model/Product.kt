@@ -25,47 +25,10 @@ class Product protected constructor(
     @Column(nullable = false)
     var price: Money,
 
-    @Enumerated(EnumType.STRING)
-    var status: ProductStatus,
-
-
     @Version
     var version: Long? = null
 
 ) : BaseEntity() {
-
-    fun activate() {
-        if (status != ProductStatus.INACTIVE) {
-            throw ProductException.InvalidTransition(
-                productId = productId,
-                from = status,
-                to = ProductStatus.ACTIVE
-            )
-        }
-        status = ProductStatus.ACTIVE
-    }
-
-    fun deactivate() {
-        if (status != ProductStatus.ACTIVE) {
-            throw ProductException.InvalidTransition(
-                productId = productId,
-                from = status,
-                to = ProductStatus.INACTIVE
-            )
-        }
-        status = ProductStatus.INACTIVE
-    }
-
-    fun delete() {
-        if (status == ProductStatus.DELETED) {
-            throw ProductException.InvalidTransition(
-                productId = productId,
-                from = status,
-                to = ProductStatus.DELETED
-            )
-        }
-        status = ProductStatus.DELETED
-    }
 
     fun updatePrice(newPrice: Money) {
         if (newPrice.amount < 0) {
@@ -87,21 +50,13 @@ class Product protected constructor(
             productName: String,
             idempotencyKey: UUID,
             price: Money,
-            status: ProductStatus = ProductStatus.ACTIVE,
         ): Product {
             return Product(
                 productId = productId,
                 productName = productName,
                 idempotencyKey = idempotencyKey,
                 price = price,
-                status = status,
             )
         }
     }
-}
-
-enum class ProductStatus {
-    ACTIVE,
-    INACTIVE,
-    DELETED
 }

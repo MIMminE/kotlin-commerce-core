@@ -6,9 +6,6 @@ import nuts.commerce.productservice.model.Money
 import nuts.commerce.productservice.model.Product
 import nuts.commerce.productservice.model.ProductStatus
 import nuts.commerce.productservice.application.adapter.cache.InMemoryProductStockCachePort
-import nuts.commerce.productservice.usecase.ActivateProductUseCase
-import nuts.commerce.productservice.usecase.DeactivateProductUseCase
-import nuts.commerce.productservice.usecase.DeleteProductUseCase
 import nuts.commerce.productservice.usecase.GetProductDetailUseCase
 import nuts.commerce.productservice.usecase.GetProductsUseCase
 import nuts.commerce.productservice.usecase.RegisterProductUseCase

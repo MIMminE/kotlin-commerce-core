@@ -1,6 +1,5 @@
 package nuts.commerce.inventoryservice.adapter.inbound
 
-import jakarta.annotation.PostConstruct
 import nuts.commerce.inventoryservice.usecase.OutboxPublishUseCase
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled

@@ -14,16 +14,18 @@ class RegisterProductUseCase(private val productRepository: ProductRepository) {
     fun execute(command: RegisterProductCommand): RegisteredProduct {
         val product = Product.create(
             productName = command.productName,
-            price = Money(command.price, command.currency)
+            price = Money(command.price, command.currency),
+            idempotencyKey = command.idempotencyKey
         )
-        val registeredProduct = productRepository.save(product)
+        val productId = productRepository.save(product)
         return RegisteredProduct(
-            productId = registeredProduct.productId,
-            productName = registeredProduct.productName
+            productId = productId,
+            productName = command.productName
         )
     }
 
     data class RegisterProductCommand(
+        val idempotencyKey: UUID,
         val productName: String,
         val price: Long,
         val currency: String

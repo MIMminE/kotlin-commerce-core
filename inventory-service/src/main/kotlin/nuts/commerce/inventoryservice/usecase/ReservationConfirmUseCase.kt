@@ -39,7 +39,7 @@ class ReservationConfirmUseCase(
                     idempotencyKey = command.eventId,
                     eventType = EventType.RESERVATION_CONFIRM_FAILED,
                     payload = objectMapper.writeValueAsString(
-                        mapOf("reason" to reason)
+                        mapOf("reason" to reason, "reservationItems" to )
                     )
                 )
                 outboxRepository.save(outbox)

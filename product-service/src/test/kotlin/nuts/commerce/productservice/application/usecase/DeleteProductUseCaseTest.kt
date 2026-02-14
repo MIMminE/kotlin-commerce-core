@@ -4,7 +4,6 @@ import nuts.commerce.productservice.application.adapter.repository.InMemoryProdu
 import nuts.commerce.productservice.model.Money
 import nuts.commerce.productservice.model.Product
 import nuts.commerce.productservice.model.ProductStatus
-import nuts.commerce.productservice.usecase.DeleteProductUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
