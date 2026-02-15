@@ -20,8 +20,9 @@ class SecurityConfig(
             .csrf { disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/products/**").permitAll()
-                    .anyRequest().authenticated()
+                auth.requestMatchers("/api/products/search/**").hasRole("USER")
+                auth.requestMatchers("/api/products").hasRole("ADMIN")
+                    .anyRequest().permitAll()
             }
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter::class.java)
     }

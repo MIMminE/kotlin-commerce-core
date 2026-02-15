@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class GetProductsUseCase(private val productRepository: ProductRepository) {
+class GetProductsUseCase(
+    private val productRepository: ProductRepository,
+) {
 
     fun execute(): List<ProductInfo> {
         return productRepository.getAllProductInfo()

@@ -4,3 +4,12 @@ spring:
       host: localhost
       port: 6379
       timeout: 60000
+
+product:
+  kafka:
+    listener:
+      enabled: true
+      topic: product-inbound-event
+
+#    producer:
+#      topic: product-outbound-event

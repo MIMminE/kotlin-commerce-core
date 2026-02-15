@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.adapter.controller
 
-import nuts.commerce.orderservice.usecase.Command
+import nuts.commerce.orderservice.usecase.CreateOrderCommand
 import nuts.commerce.orderservice.usecase.CreateOrderUseCase
 import nuts.commerce.orderservice.usecase.GetOrdersUseCase
 import nuts.commerce.orderservice.usecase.Item
@@ -18,14 +18,13 @@ class OrderController(
     private val createOrderUseCase: CreateOrderUseCase,
     private val getOrdersUseCase: GetOrdersUseCase
 ) {
-
     @PostMapping
     fun create(@RequestBody req: CreateOrderRequest): ResponseEntity<CreateOrderResponse> {
         // 클라이언트가 idempotencyKey를 제공해야 합니다. 없으면 InvalidCommand(400)를 반환합니다.
         val idempotencyKey = req.idempotencyKey
             ?: throw OrderException.InvalidCommand("idempotencyKey is required and must be provided by client")
 
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             idempotencyKey = idempotencyKey,
             userId = req.userId,
             items = req.items.map {
@@ -40,7 +39,7 @@ class OrderController(
             currency = req.currency
         )
 
-        val res = createOrderUseCase.create(command)
+        val res = createOrderUseCase.create(createOrderCommand)
         val location = URI.create("/api/orders/${res.orderId}")
         return ResponseEntity.created(location).body(CreateOrderResponse(res.orderId))
     }

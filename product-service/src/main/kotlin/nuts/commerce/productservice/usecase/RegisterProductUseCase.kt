@@ -24,15 +24,15 @@ class RegisterProductUseCase(private val productRepository: ProductRepository) {
         )
     }
 
-    data class RegisterProductCommand(
-        val idempotencyKey: UUID,
-        val productName: String,
-        val price: Long,
-        val currency: String
-    )
-
     data class RegisteredProduct(
         val productId: UUID,
         val productName: String
     )
 }
+
+data class RegisterProductCommand(
+    val idempotencyKey: UUID,
+    val productName: String,
+    val price: Long,
+    val currency: String
+)

@@ -1,7 +1,6 @@
 package nuts.commerce.inventoryservice.port.message
 
 import nuts.commerce.inventoryservice.model.EventType
-import nuts.commerce.inventoryservice.model.ReservationItemInfo
 import java.util.UUID
 
 sealed interface InventoryEvent {
@@ -34,46 +33,29 @@ data class ReservationCreationFailedEvent(
     data class Payload(val reason: String)
 }
 
-data class ReservationConfirmSucceededEvent(
+data class ReservationConfirmEvent(
     override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_CONFIRM_SUCCEEDED,
+    override val eventType: EventType = EventType.RESERVATION_CONFIRM,
     val payload: Payload
 ) : InventoryEvent {
     data class Payload(val reservationItems: List<ReservationItemInfo>)
 }
 
-data class ReservationConfirmFailedEvent(
+data class ReservationReleaseEvent(
     override val eventId: UUID = UUID.randomUUID(),
     override val outboxId: UUID,
     override val orderId: UUID,
     override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_CONFIRM_FAILED,
-    val payload: Payload
-) : InventoryEvent {
-    data class Payload(val reason: String, val reservationItems: List<ReservationItemInfo>)
-}
-
-data class ReservationReleaseSucceededEvent(
-    override val eventId: UUID = UUID.randomUUID(),
-    override val outboxId: UUID,
-    override val orderId: UUID,
-    override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_RELEASE_SUCCEEDED,
+    override val eventType: EventType = EventType.RESERVATION_RELEASE,
     val payload: Payload
 ) : InventoryEvent {
     data class Payload(val reservationItems: List<ReservationItemInfo>)
 }
 
-data class ReservationReleaseFailedEvent(
-    override val eventId: UUID = UUID.randomUUID(),
-    override val outboxId: UUID,
-    override val orderId: UUID,
-    override val reservationId: UUID,
-    override val eventType: EventType = EventType.RESERVATION_RELEASE_FAILED,
-    val payload: Payload
-) : InventoryEvent {
-    data class Payload(val reason: String, val reservationItems: List<ReservationItemInfo>)
-}
+data class ReservationItemInfo(
+    val inventoryId: UUID,
+    val qty: Long
+)

@@ -4,23 +4,23 @@ import nuts.commerce.inventoryservice.model.EventType
 import nuts.commerce.inventoryservice.model.OutboxInfo
 import nuts.commerce.inventoryservice.port.message.InventoryEvent
 import nuts.commerce.inventoryservice.port.message.InventoryEventMapper
-import nuts.commerce.inventoryservice.port.message.ReservationConfirmFailedEvent
+import nuts.commerce.inventoryservice.port.message.ReservationReleaseEvent
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 
 @Component
-class ReservationConfirmFailedEventMapper(private val objectMapper: ObjectMapper) : InventoryEventMapper {
+class ReservationReleaseEventMapper(private val objectMapper: ObjectMapper) : InventoryEventMapper {
     override val eventType: EventType
-        get() = EventType.RESERVATION_CONFIRM_FAILED
+        get() = EventType.RESERVATION_RELEASE
 
     override fun map(outboxInfo: OutboxInfo): InventoryEvent {
-        return ReservationConfirmFailedEvent(
+        return ReservationReleaseEvent(
             outboxId = outboxInfo.outboxId,
             orderId = outboxInfo.orderId,
             reservationId = outboxInfo.reservationId,
             payload = objectMapper.readValue(
                 outboxInfo.payload,
-                ReservationConfirmFailedEvent.Payload::class.java
+                ReservationReleaseEvent.Payload::class.java
             )
         )
     }

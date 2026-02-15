@@ -7,7 +7,7 @@ import nuts.commerce.orderservice.application.port.rest.InMemoryProductRestClien
 import nuts.commerce.orderservice.port.rest.ProductPriceSnapshot
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.support.TestTransactionManager
-import nuts.commerce.orderservice.usecase.Command
+import nuts.commerce.orderservice.usecase.CreateOrderCommand
 import nuts.commerce.orderservice.usecase.CreateOrderUseCase
 import nuts.commerce.orderservice.usecase.Item
 import nuts.commerce.orderservice.usecase.ReserveInventoryPayload
@@ -51,7 +51,7 @@ class CreateOrderUseCaseTest {
     fun `주문 생성 성공 - 주문과 아웃박스가 저장된다`() {
         // given
         val idemp = UUID.randomUUID()
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             userId = "user-1",
             items = listOf(
                 Item(
@@ -70,7 +70,7 @@ class CreateOrderUseCaseTest {
         productClient.snapshots = mapOf("p-1" to ProductPriceSnapshot("p-1", 1000L, "KRW"))
 
         // when
-        val result = useCase.create(command)
+        val result = useCase.create(createOrderCommand)
         val findOrder = orderRepository.findById(result.orderId)
         val orderOutBoxListByAggregateId = orderOutboxRepository.findByAggregateId(result.orderId)
 
@@ -83,7 +83,7 @@ class CreateOrderUseCaseTest {
     fun `아웃박스 이벤트 타입은 RESERVE_INVENTORY_REQUEST 이다`() {
         // given
         val idemp = UUID.randomUUID()
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             userId = "user-1",
             items = listOf(Item("p-1", 1, 1500L, "KRW")),
             totalAmount = 1500L,
@@ -94,7 +94,7 @@ class CreateOrderUseCaseTest {
         productClient.snapshots = mapOf("p-1" to ProductPriceSnapshot("p-1", 1500L, "KRW"))
 
         // when
-        val result = useCase.create(command)
+        val result = useCase.create(createOrderCommand)
 
         // then
         val outboxes = orderOutboxRepository.findByAggregateId(result.orderId)
@@ -106,7 +106,7 @@ class CreateOrderUseCaseTest {
     fun `아웃박스의 aggregateId는 생성된 주문 id와 같다`() {
         // given
         val idemp = UUID.randomUUID()
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             userId = "user-1",
             items = listOf(Item("p-1", 1, 1000L, "KRW")),
             totalAmount = 1000L,
@@ -117,7 +117,7 @@ class CreateOrderUseCaseTest {
         productClient.snapshots = mapOf("p-1" to ProductPriceSnapshot("p-1", 1000L, "KRW"))
 
         // when
-        val result = useCase.create(command)
+        val result = useCase.create(createOrderCommand)
 
         // then
         val outboxes = orderOutboxRepository.findByAggregateId(result.orderId)
@@ -129,7 +129,7 @@ class CreateOrderUseCaseTest {
     fun `아웃박스 payload는 저장된 주문을 반영한다`() {
         // given
         val idemp = UUID.randomUUID()
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             userId = "user-777",
             items = listOf(
                 Item("p-1", 3, 1000L, "KRW"),
@@ -146,7 +146,7 @@ class CreateOrderUseCaseTest {
         )
 
         // when
-        val result = useCase.create(command)
+        val result = useCase.create(createOrderCommand)
 
         // then
         val savedOrder = orderRepository.findById(result.orderId) ?: fail("저장된 Order가 없습니다.")
@@ -163,7 +163,7 @@ class CreateOrderUseCaseTest {
     fun `주문 아이템 매핑은 command와 일치한다`() {
         // given
         val idemp = UUID.randomUUID()
-        val command = Command(
+        val createOrderCommand = CreateOrderCommand(
             userId = "user-1",
             items = listOf(
                 Item("p-1", 2, 1200L, "KRW"),
@@ -180,14 +180,14 @@ class CreateOrderUseCaseTest {
         )
 
         // when
-        val result = useCase.create(command)
+        val result = useCase.create(createOrderCommand)
 
         // then
         val savedOrder = orderRepository.findById(result.orderId) ?: fail("저장된 Order가 없습니다.")
         val savedItems = savedOrder.items
-        assertEquals(command.items.size, savedItems.size)
+        assertEquals(createOrderCommand.items.size, savedItems.size)
 
-        command.items.zip(savedItems).forEach { (cmdItem, savedItem) ->
+        createOrderCommand.items.zip(savedItems).forEach { (cmdItem, savedItem) ->
             assertEquals(cmdItem.productId, savedItem.productId)
             assertEquals(cmdItem.qty, savedItem.qty)
             assertEquals(cmdItem.unitPriceAmount, savedItem.unitPrice.amount)

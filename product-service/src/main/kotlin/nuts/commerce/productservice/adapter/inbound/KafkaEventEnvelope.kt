@@ -12,16 +12,15 @@ data class KafkaEventEnvelope(
 
 enum class ListenEventType {
     RESERVATION_CREATION_SUCCEEDED,
-    RESERVATION_CONFIRM_FAILED,
-    RESERVATION_RELEASE_SUCCEEDED
+    RESERVATION_RELEASE
 }
 
-data class CreationSucceededPayload(
-    val reservationId: UUID,
+data class ReservationItemPayload(
     val reservationItems: List<ReservationItem>
 ) {
     data class ReservationItem(
         val productId: UUID,
-        val qty: Long
+        val expectQuantity: Long,
+        val updateQuantity: Long
     )
 }

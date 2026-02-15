@@ -27,29 +27,28 @@ class CreateOrderUseCase(
     private val objectMapper: ObjectMapper,
     private val txTemplate: TransactionTemplate,
 ) {
+    fun create(createOrderCommand: CreateOrderCommand): Result {
 
-    fun create(command: Command): Result {
-
-        checkExistingOrder(command.userId, command.idempotencyKey)?.let { return Result(it.id) }
+        checkExistingOrder(createOrderCommand.userId, createOrderCommand.idempotencyKey)?.let { return Result(it.id) }
 
         // 상품 스냅샷 조회
-        val productIds = command.items.map { it.productId }.distinct()
+        val productIds = createOrderCommand.items.map { it.productId }.distinct()
         val snapshotById = fetchSnapshots(productIds)
 
         // 주문 아이템 생성 (트랜잭션 외)
         val orderId = UUID.randomUUID()
-        val orderItems = buildOrderItems(command, orderId, snapshotById)
+        val orderItems = buildOrderItems(createOrderCommand, orderId, snapshotById)
 
         // ReserveInventory 페이로드 생성
         val aggregatePayload = buildReservePayload(orderId, orderItems, snapshotById)
 
         // 트랜잭션 내 주문 저장 및 outbox 발행
-        val saved = saveOrderAndPublishOutbox(orderItems, command, orderId, aggregatePayload)
+        val saved = saveOrderAndPublishOutbox(orderItems, createOrderCommand, orderId, aggregatePayload)
 
         // 트랜잭션 내 후처리: saga 생성, 주문 상태 변경
         postCreateTransactions(saved)
 
-        return Result(saved.id)
+        return Result()
     }
 
     private fun checkExistingOrder(userId: String, idempotencyKey: UUID) =
@@ -65,10 +64,10 @@ class CreateOrderUseCase(
     }
 
     private fun buildOrderItems(
-        command: Command,
+        createOrderCommand: CreateOrderCommand,
         orderId: UUID,
         snapshotById: Map<String, ProductPriceSnapshot>
-    ): List<OrderItem> = command.items.map {
+    ): List<OrderItem> = createOrderCommand.items.map {
         val snap = snapshotById[it.productId]
             ?: throw OrderException.InvalidCommand("product not found: ${it.productId}")
         OrderItem.create(
@@ -95,26 +94,26 @@ class CreateOrderUseCase(
 
     private fun saveOrderAndPublishOutbox(
         orderItems: List<OrderItem>,
-        command: Command,
+        createOrderCommand: CreateOrderCommand,
         orderId: UUID,
         aggregatePayload: String
     ): Order {
         return txTemplate.execute {
-            orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
+            orderRepository.findByUserIdAndIdempotencyKey(createOrderCommand.userId, createOrderCommand.idempotencyKey)
                 ?.let { return@execute it }
 
             val order = Order.create(
-                userId = command.userId,
+                userId = createOrderCommand.userId,
                 items = orderItems,
-                total = Money(command.totalAmount, command.currency),
+                total = Money(createOrderCommand.totalAmount, createOrderCommand.currency),
                 idGenerator = { orderId },
-                idempotencyKey = command.idempotencyKey
+                idempotencyKey = createOrderCommand.idempotencyKey
             )
 
             val savedLocal = try {
                 orderRepository.save(order)
             } catch (_: DataIntegrityViolationException) {
-                return@execute orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)!!
+                return@execute orderRepository.findByUserIdAndIdempotencyKey(createOrderCommand.userId, createOrderCommand.idempotencyKey)!!
             }
 
             val outboxEvent = OutboxRecord.create(
@@ -143,7 +142,7 @@ class CreateOrderUseCase(
 }
 
 
-data class Command(
+data class CreateOrderCommand(
     val idempotencyKey: UUID,
     val userId: String,
     val items: List<Item>,

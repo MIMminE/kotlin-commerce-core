@@ -87,7 +87,11 @@ class ReservationRequestUseCase(
     ): List<ReservationItem> {
         val items = command.items.sortedBy { it.productId }
 
+
         items.forEach { item ->
+            val currentQuantity = inventoryRepository.getQuantityByProductId(item.productId)
+                ?: throw InventoryException.InvalidCommand("Invalid product ID: ${item.productId}")
+
             val ok = inventoryRepository.reserveInventory(item.productId, item.qty)
             if (!ok) {
                 throw InventoryException.InvalidCommand("Insufficient inventory for product ID: ${item.productId}")
@@ -97,7 +101,6 @@ class ReservationRequestUseCase(
         if (findProductInfo.size != items.size) throw InventoryException.InvalidCommand("Some product IDs are invalid.")
 
         val productIdToInventoryId = findProductInfo.associate { it.productId to it.inventoryId }
-
 
         val reservationItems = items.map {
             ReservationItem.create(

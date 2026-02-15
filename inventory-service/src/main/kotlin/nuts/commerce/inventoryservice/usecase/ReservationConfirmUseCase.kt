@@ -26,36 +26,18 @@ class ReservationConfirmUseCase(
         val reservationId = command.reservationId
 
         val reservation = getReservation(reservationId)
-        val findReservationInfo =
-            try {
-                getReservationInfo(reservationId)
-            } catch (e: Exception) {
-                reservation.fail()
-                reservationRepository.save(reservation)
-                val reason = e.message ?: "Unknown error during reservation confirmation"
-                val outbox = OutboxRecord.create(
-                    orderId = command.orderId,
-                    reservationId = reservationId,
-                    idempotencyKey = command.eventId,
-                    eventType = EventType.RESERVATION_CONFIRM_FAILED,
-                    payload = objectMapper.writeValueAsString(
-                        mapOf("reason" to reason, "reservationItems" to )
-                    )
-                )
-                outboxRepository.save(outbox)
-                return Result(reservationId)
-            }
+        val findReservationInfo = getReservationInfo(reservationId)
 
         reservation.confirm()
         reservationRepository.save(reservation) // flush에 의해 트랜잭션에 반영되며 이때, 낙관적 락에 대한 예외가 발생할 수 있다.
 
-        val payloadObj = mapOf("reservationInfo" to findReservationInfo)
+        val payloadObj = mapOf("reservationItems" to findReservationInfo)
 
         val record = OutboxRecord.create(
             orderId = command.orderId,
             reservationId = reservationId,
             idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_CONFIRM_SUCCEEDED,
+            eventType = EventType.RESERVATION_CONFIRM,
             payload = objectMapper.writeValueAsString(payloadObj)
         )
         outboxRepository.save(record)

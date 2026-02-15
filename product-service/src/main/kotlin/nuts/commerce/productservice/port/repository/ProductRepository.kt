@@ -7,11 +7,11 @@ import java.util.UUID
 interface ProductRepository {
     fun save(product: Product): UUID
     fun getAllProductInfo(): List<ProductInfo>
-    fun getProduct(productId: UUID): Product?
+    fun getProduct(productId: UUID): ProductInfo?
 }
 
 data class ProductInfo(
     val productId: UUID,
-    val productName: UUID,
+    val productName: String,
     val price: Money,
 )

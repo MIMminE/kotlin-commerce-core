@@ -5,23 +5,16 @@ import nuts.commerce.inventoryservice.port.message.InventoryEvent
 import nuts.commerce.inventoryservice.port.message.InventoryEventProducer
 import nuts.commerce.inventoryservice.port.message.ProduceResult
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
 
-@ConditionalOnProperty(
-    prefix = "inventory.kafka.producer",
-    name = ["enabled"],
-    havingValue = "true",
-    matchIfMissing = true
-)
 @Component
-class KafkaEventProducer(
+class KafkaInventoryEventProducer(
     private val eventMapperRegistry: EventMapperRegistry,
     private val kafkaTemplate: KafkaTemplate<String, InventoryEvent>,
     @Value($$"${inventory.kafka.producer.topic:inventory-outbound}")
-    private val inventoryTopic: String
+    private val inventoryTopic: String,
 ) : InventoryEventProducer {
 
     override fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult> {

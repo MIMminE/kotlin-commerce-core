@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 
 @ConditionalOnProperty(
-    prefix = "inventory.outbox.listener",
+    prefix = "inventory.kafka.listener",
     name = ["enabled"],
     havingValue = "true",
     matchIfMissing = true
