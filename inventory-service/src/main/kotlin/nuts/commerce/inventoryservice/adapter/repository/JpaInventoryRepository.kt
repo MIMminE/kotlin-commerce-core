@@ -17,14 +17,6 @@ class JpaInventoryRepository(private val inventoryJpa: InventoryJpa) : Inventory
         return inventoryJpa.saveAndFlush(inventory).inventoryId
     }
 
-    override fun findAllByProductIdIn(productIds: List<UUID>): List<InventoryInfo> {
-        return inventoryJpa.findAllByProductIdIn(productIds)
-    }
-
-    override fun findById(inventoryId: UUID): InventoryInfo? {
-        return inventoryJpa.findInventoryInfoById(inventoryId)
-    }
-
     override fun reserveInventory(productId: UUID, quantity: Long): Boolean {
         return inventoryJpa.reserveInventory(productId, quantity) == 1
     }

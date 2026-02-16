@@ -5,18 +5,17 @@ import java.util.UUID
 
 interface ReservationRepository {
     fun save(reservation: Reservation): Reservation
-    fun findById(reservationId: UUID): Reservation?
+    fun findById(reservationId: UUID): ReservationInfo?
     fun findReservationIdForIdempotencyKey(orderId: UUID, idempotencyKey: UUID): ReservationInfo?
     fun findReservationInfo(reservationId: UUID): ReservationInfo?
 }
 
 data class ReservationInfo(
     val reservationId: UUID,
-    val items: List<Item>
-) {
+    val reservationItemInfos: List<ReservationItemInfo>
+)
 
-    data class Item(
-        val inventoryId: UUID,
-        val quantity: Long
-    )
-}
+data class ReservationItemInfo(
+    val inventoryId: UUID,
+    val quantity: Long
+)

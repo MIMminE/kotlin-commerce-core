@@ -1,13 +1,16 @@
 package nuts.commerce.inventoryservice.usecase
 
 import jakarta.transaction.Transactional
-import nuts.commerce.inventoryservice.exception.InventoryException
-import nuts.commerce.inventoryservice.model.EventType
+import nuts.commerce.inventoryservice.event.InboundEventType
+import nuts.commerce.inventoryservice.event.OutboundEventType
+import nuts.commerce.inventoryservice.event.ReservationCreationSuccessPayload
+import nuts.commerce.inventoryservice.event.ReservationInboundEvent
+import nuts.commerce.inventoryservice.event.ReservationRequestPayload
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.Reservation
-import nuts.commerce.inventoryservice.model.ReservationItem
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
+import nuts.commerce.inventoryservice.port.repository.ReservationInfo
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
@@ -22,98 +25,58 @@ class ReservationRequestUseCase(
     private val objectMapper: ObjectMapper
 ) {
     @Transactional
-    fun execute(command: ReservationRequestCommand): Result {
+    fun execute(command: ReservationRequestCommand): ReservationRequestResult {
 
-        val reservation =
-            try {
-                reservationRepository.save(
-                    Reservation.create(
-                        orderId = command.orderId,
-                        idempotencyKey = command.eventId
-                    )
-                )
-            } catch (ex: DataIntegrityViolationException) {
-                val existing =
-                    reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
-                        ?: throw ex
+        val createResult = createReservation(command)
 
-                return Result(existing.reservationId)
-            }
+        if (createResult.isNewlyCreated) {
+            val payload = ReservationCreationSuccessPayload(
+                reservationItemInfoList =
+            )
 
-        val reservationItems =
-            try {
-                getReserveItems(command, reservation)
-            } catch (ex: InventoryException.InvalidCommand) {
+            val outbox = OutboxRecord.create(
+                orderId = command.orderId,
+                reservationId = reservation.reservationId,
+                idempotencyKey = command.eventId,
+                eventType = OutboundEventType.RESERVATION_CREATION_SUCCEEDED,
+                payload = objectMapper.writeValueAsString(payload)
+            )
 
-                reservation.fail()
-                val reason = ex.message ?: "Reservation creation failed due to invalid command."
-                val payload = objectMapper.writeValueAsString(mapOf("reason" to reason))
+            outboxRepository.save(outbox)
 
-                val outbox = OutboxRecord.create(
-                    orderId = command.orderId,
-                    reservationId = reservation.reservationId,
-                    idempotencyKey = command.eventId,
-                    eventType = EventType.RESERVATION_CREATION_FAILED,
-                    payload = payload
-                )
 
-                outboxRepository.save(outbox)
+        }
 
-                return Result(reservation.reservationId)
-            }
-
-        reservation.addItems(reservationItems)
-
-        val payloadObj = mapOf(
-            "reservationItems" to reservationItems.map { mapOf("inventoryId" to it.inventoryId, "quantity" to it.qty) }
-        )
-
-        val outbox = OutboxRecord.create(
-            orderId = command.orderId,
-            reservationId = reservation.reservationId,
-            idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_CREATION_SUCCEEDED,
-            payload = objectMapper.writeValueAsString(payloadObj)
-        )
-
-        outboxRepository.save(outbox)
-
-        return Result(reservation.reservationId)
     }
 
-    private fun getReserveItems(
-        command: ReservationRequestCommand,
-        reservation: Reservation
-    ): List<ReservationItem> {
-        val items = command.items.sortedBy { it.productId }
 
+    private fun createReservation(command: ReservationRequestCommand): CreateReservationResult {
+        val reservation = try {
+            reservationRepository.save(
+                Reservation.create(
+                    orderId = command.orderId,
+                    idempotencyKey = command.eventId
+                )
+            )
+        } catch (ex: DataIntegrityViolationException) {
+            val existing =
+                reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
+                    ?: throw ex
 
-        items.forEach { item ->
-            val currentQuantity = inventoryRepository.getQuantityByProductId(item.productId)
-                ?: throw InventoryException.InvalidCommand("Invalid product ID: ${item.productId}")
-
-            val ok = inventoryRepository.reserveInventory(item.productId, item.qty)
-            if (!ok) {
-                throw InventoryException.InvalidCommand("Insufficient inventory for product ID: ${item.productId}")
-            }
-        }
-        val findProductInfo = inventoryRepository.findAllByProductIdIn(items.map { it.productId })
-        if (findProductInfo.size != items.size) throw InventoryException.InvalidCommand("Some product IDs are invalid.")
-
-        val productIdToInventoryId = findProductInfo.associate { it.productId to it.inventoryId }
-
-        val reservationItems = items.map {
-            ReservationItem.create(
-                reservationId = reservation.reservationId,
-                inventoryId = productIdToInventoryId[it.productId]!!,
-                qty = it.qty
+            return CreateReservationResult(
+                reservation = existing,
+                isNewlyCreated = false
             )
         }
-        return reservationItems
     }
-
-    data class Result(val reservationId: UUID)
 }
+
+
+data class ReservationRequestResult(val reservationId: UUID)
+data class CreateReservationResult(
+    val reservationInfo: ReservationInfo,
+    val isNewlyCreated: Boolean
+)
 
 data class ReservationRequestCommand(
     val orderId: UUID,
@@ -121,4 +84,18 @@ data class ReservationRequestCommand(
     val items: List<Item>
 ) {
     data class Item(val productId: UUID, val qty: Long)
+
+    companion object {
+        fun from(inboundEvent: ReservationInboundEvent): ReservationRequestCommand {
+            require(inboundEvent.eventType == InboundEventType.RESERVATION_REQUEST)
+            require(inboundEvent.payload is ReservationRequestPayload)
+
+            val payload = inboundEvent.payload
+            return ReservationRequestCommand(
+                orderId = inboundEvent.orderId,
+                eventId = inboundEvent.eventId,
+                items = payload.requestItem.map { Item(it.productId, it.qty) }
+            )
+        }
+    }
 }

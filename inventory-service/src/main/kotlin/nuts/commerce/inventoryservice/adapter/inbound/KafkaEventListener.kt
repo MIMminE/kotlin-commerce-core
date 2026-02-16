@@ -1,6 +1,8 @@
 package nuts.commerce.inventoryservice.adapter.inbound
 
 import jakarta.annotation.PostConstruct
+import nuts.commerce.inventoryservice.event.InboundEventType
+import nuts.commerce.inventoryservice.event.ReservationInboundEvent
 import nuts.commerce.inventoryservice.usecase.ReservationConfirmCommand
 import nuts.commerce.inventoryservice.usecase.ReservationConfirmUseCase
 import nuts.commerce.inventoryservice.usecase.ReservationReleaseCommand
@@ -36,50 +38,29 @@ class KafkaEventListener(
         log.info("KafkaEventListener initialized")
     }
 
-    @KafkaListener(topics = ["\${inventory.inbound.topic}"])
+    @KafkaListener(topics = [$$"${inventory.inbound.topic}"])
     fun onMessage(
-        @Payload envelope: KafkaEventEnvelope,
+        @Payload inboundEvent: ReservationInboundEvent,
         @Header(KafkaHeaders.RECEIVED_KEY) key: String
     ) {
-        when (envelope.eventType) {
-            ListenEventType.RESERVATION_REQUEST -> handleReservationRequest(envelope)
-            ListenEventType.RESERVATION_CONFIRM -> handleReservationConfirm(envelope)
-            ListenEventType.RESERVATION_RELEASE -> handleReservationRelease(envelope)
-        }
-    }
-
-    private fun handleReservationRequest(envelope: KafkaEventEnvelope) {
-        val payload = objectMapper.treeToValue(envelope.payload, RequestPayload::class.java)
-        val command = ReservationRequestCommand(
-            eventId = envelope.eventId,
-            orderId = envelope.orderId,
-            items = payload.items.map { item ->
-                ReservationRequestCommand.Item(
-                    productId = item.productId,
-                    qty = item.qty
+        when (inboundEvent.eventType) {
+            InboundEventType.RESERVATION_REQUEST -> reservationRequestUseCase.execute(
+                ReservationRequestCommand.from(
+                    inboundEvent
                 )
-            }
-        )
-        reservationRequestUseCase.execute(command)
-    }
+            )
 
-    private fun handleReservationConfirm(envelope: KafkaEventEnvelope) {
-        val payload = objectMapper.treeToValue(envelope.payload, CommitPayload::class.java)
-        val command = ReservationConfirmCommand(
-            eventId = envelope.eventId,
-            orderId = envelope.orderId,
-            reservationId = payload.reservationId
-        )
-        reservationConfirmUseCase.execute(command)
-    }
+            InboundEventType.RESERVATION_CONFIRM -> reservationConfirmUseCase.execute(
+                ReservationConfirmCommand.from(
+                    inboundEvent
+                )
+            )
 
-    private fun handleReservationRelease(envelope: KafkaEventEnvelope) {
-        val payload = objectMapper.treeToValue(envelope.payload, ReleasePayload::class.java)
-        val command = ReservationReleaseCommand(
-            eventId = envelope.eventId,
-            orderId = envelope.orderId,
-            reservationId = payload.reservationId
-        )
-        reservationReleaseUseCase.execute(command)
+            InboundEventType.RESERVATION_RELEASE -> reservationReleaseUseCase.execute(
+                ReservationReleaseCommand.from(
+                    inboundEvent
+                )
+            )
+        }
     }
 }

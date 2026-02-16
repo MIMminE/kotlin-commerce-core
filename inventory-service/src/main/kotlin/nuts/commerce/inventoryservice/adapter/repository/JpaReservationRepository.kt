@@ -25,8 +25,8 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
         val reservation = reservationJpa.findByOrderIdAndIdempotencyKey(orderId, idempotencyKey) ?: return null
         return ReservationInfo(
             reservationId = reservation.reservationId,
-            items = reservation.items.map { item ->
-                ReservationInfo.Item(
+            reservationItemInfos = reservation.items.map { item ->
+                ReservationInfo.ReservationItemInfo(
                     inventoryId = item.inventoryId,
                     quantity = item.qty
                 )
@@ -37,8 +37,8 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
         return reservationJpa.fetchJoinedById(reservationId)?.let { reservation ->
             return ReservationInfo(
                 reservationId = reservation.reservationId,
-                items = reservation.items.map { item ->
-                    ReservationInfo.Item(
+                reservationItemInfos = reservation.items.map { item ->
+                    ReservationInfo.ReservationItemInfo(
                         inventoryId = item.inventoryId,
                         quantity = item.qty
                     )

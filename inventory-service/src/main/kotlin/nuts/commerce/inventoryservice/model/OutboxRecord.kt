@@ -1,9 +1,9 @@
 package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.inventoryservice.model.EventType
 import java.time.Instant
 import java.util.UUID
+import java.util.function.Function
 
 @Entity
 @Table(
@@ -58,7 +58,7 @@ class OutboxRecord protected constructor(
             idempotencyKey: UUID,
             eventType: EventType,
             payload: String,
-            status: OutboxStatus = OutboxStatus.PENDING,
+            status: OutboxStatus  = OutboxStatus.PENDING,
             lockedBy: String? = null,
             lockedUntil: Instant? = null,
             attemptCount: Int = 0,

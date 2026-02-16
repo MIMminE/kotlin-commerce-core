@@ -1,9 +1,7 @@
 package nuts.commerce.inventoryservice.adapter.message
 
-import nuts.commerce.inventoryservice.model.EventType
 import nuts.commerce.inventoryservice.model.OutboxInfo
 import nuts.commerce.inventoryservice.port.message.InventoryEvent
-import nuts.commerce.inventoryservice.port.message.InventoryEventMapper
 import org.springframework.stereotype.Component
 
 @Component

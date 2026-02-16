@@ -1,6 +1,10 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.model.EventType
+import nuts.commerce.inventoryservice.event.InboundEventType
+import nuts.commerce.inventoryservice.event.ReservationConfirmSuccessPayload
+import nuts.commerce.inventoryservice.event.ReservationInboundEvent
+import nuts.commerce.inventoryservice.event.ReservationItemInfo
+import nuts.commerce.inventoryservice.event.ReservationReleasePayload
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
@@ -31,8 +35,16 @@ class ReservationReleaseUseCase(
         reservation.release()
         reservationRepository.save(reservation)
 
-
+        ReservationConfirmSuccessPayload(
+            reservationItemInfoList = findReservationInfo.reservationItemInfos.map {
+                ReservationItemInfo(
+                    inventoryId = it.inventoryId,
+                    qty = it.quantity
+                )
+            }
+        )
         val payloadObj = mapOf("reservationItems" to findReservationInfo)
+
         val outbox = OutboxRecord.create(
             orderId = command.orderId,
             reservationId = reservationId,
@@ -47,7 +59,7 @@ class ReservationReleaseUseCase(
 
     private fun getReservationInfo(reservationId: UUID): ReservationInfo {
         val findReservationInfo = reservationRepository.findReservationInfo(reservationId)!!
-        findReservationInfo.items.forEach { item ->
+        findReservationInfo.reservationItemInfos.forEach { item ->
             val ok = inventoryRepository.releaseReservedInventory(
                 inventoryId = item.inventoryId,
                 quantity = item.quantity
@@ -65,4 +77,18 @@ class ReservationReleaseUseCase(
     data class Result(val reservationId: UUID)
 }
 
-data class ReservationReleaseCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID)
+data class ReservationReleaseCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID) {
+    companion object {
+        fun from(inboundEvent: ReservationInboundEvent): ReservationReleaseCommand {
+            require(inboundEvent.eventType == InboundEventType.RESERVATION_RELEASE)
+            require(inboundEvent.payload is ReservationReleasePayload)
+
+            val payload = inboundEvent.payload
+            return ReservationReleaseCommand(
+                orderId = inboundEvent.orderId,
+                eventId = inboundEvent.eventId,
+                reservationId = payload.reservationId
+            )
+        }
+    }
+}

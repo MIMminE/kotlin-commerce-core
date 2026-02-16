@@ -5,9 +5,7 @@ import java.util.UUID
 
 interface InventoryRepository {
     fun save(inventory: Inventory): UUID
-    fun findAllByProductIdIn(productIds: List<UUID>): List<InventoryInfo>
-    fun findById(inventoryId: UUID): InventoryInfo?
-    fun getQuantityByProductId(productId: UUID): Long?
+    fun findIdByProductId(productId: UUID) : UUID
     fun reserveInventory(productId: UUID, quantity: Long): Boolean
     fun commitReservedInventory(inventoryId: UUID, quantity: Long): Boolean
     fun releaseReservedInventory(inventoryId: UUID, quantity: Long): Boolean

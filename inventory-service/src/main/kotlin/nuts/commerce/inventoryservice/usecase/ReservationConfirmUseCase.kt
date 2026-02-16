@@ -1,6 +1,10 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.model.EventType
+import nuts.commerce.inventoryservice.event.InboundEventType
+import nuts.commerce.inventoryservice.event.OutboundEventType
+import nuts.commerce.inventoryservice.event.ReservationConfirmPayload
+import nuts.commerce.inventoryservice.event.ReservationConfirmSuccessPayload
+import nuts.commerce.inventoryservice.event.ReservationInboundEvent
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
@@ -31,14 +35,16 @@ class ReservationConfirmUseCase(
         reservation.confirm()
         reservationRepository.save(reservation) // flush에 의해 트랜잭션에 반영되며 이때, 낙관적 락에 대한 예외가 발생할 수 있다.
 
-        val payloadObj = mapOf("reservationItems" to findReservationInfo)
+        val payload = ReservationConfirmSuccessPayload(
+            reservationItemInfoList = findReservationInfo.reservationItemInfos
+        )
 
         val record = OutboxRecord.create(
             orderId = command.orderId,
             reservationId = reservationId,
             idempotencyKey = command.eventId,
-            eventType = EventType.RESERVATION_CONFIRM,
-            payload = objectMapper.writeValueAsString(payloadObj)
+            eventType = OutboundEventType.RESERVATION_CONFIRM,
+            payload = objectMapper.writeValueAsString(payload)
         )
         outboxRepository.save(record)
 
@@ -47,7 +53,7 @@ class ReservationConfirmUseCase(
 
     private fun getReservationInfo(reservationId: UUID): ReservationInfo {
         val findReservationInfo = reservationRepository.findReservationInfo(reservationId)!!
-        findReservationInfo.items.forEach { item ->
+        findReservationInfo.reservationItemInfos.forEach { item ->
             val ok = inventoryRepository.commitReservedInventory(
                 inventoryId = item.inventoryId,
                 quantity = item.quantity
@@ -65,4 +71,18 @@ class ReservationConfirmUseCase(
     data class Result(val reservationId: UUID)
 }
 
-data class ReservationConfirmCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID)
+data class ReservationConfirmCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID) {
+    companion object {
+        fun from(inboundEvent: ReservationInboundEvent): ReservationConfirmCommand {
+            require(inboundEvent.eventType == InboundEventType.RESERVATION_CONFIRM)
+            require(inboundEvent.payload is ReservationConfirmPayload)
+
+            val payload = inboundEvent.payload
+            return ReservationConfirmCommand(
+                orderId = inboundEvent.orderId,
+                eventId = inboundEvent.eventId,
+                reservationId = payload.reservationId
+            )
+        }
+    }
+}
