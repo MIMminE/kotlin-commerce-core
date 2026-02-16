@@ -1,9 +1,11 @@
 package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
+import nuts.commerce.inventoryservice.event.OutboundEventType
 import java.time.Instant
 import java.util.UUID
 import java.util.function.Function
+import javax.swing.event.DocumentEvent
 
 @Entity
 @Table(
@@ -17,15 +19,15 @@ class OutboxRecord protected constructor(
     @Column(name = "order_id", nullable = false, updatable = false)
     val orderId: UUID,
 
-    @Column(name = "reservation_id", nullable = false, updatable = false)
-    val reservationId: UUID,
+    @Column(name = "reservation_id", updatable = false)
+    val reservationId: UUID?,
 
     @Column(name = "idempotency_key", nullable = false, updatable = false)
     val idempotencyKey: UUID,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, updatable = false)
-    val eventType: EventType,
+    val eventType: OutboundEventType,
 
     @Lob
     @Column(nullable = false)
@@ -54,9 +56,9 @@ class OutboxRecord protected constructor(
         fun create(
             outboxId: UUID = UUID.randomUUID(),
             orderId: UUID,
-            reservationId: UUID,
+            reservationId: UUID?,
             idempotencyKey: UUID,
-            eventType: EventType,
+            eventType: OutboundEventType,
             payload: String,
             status: OutboxStatus  = OutboxStatus.PENDING,
             lockedBy: String? = null,
@@ -85,7 +87,7 @@ enum class OutboxStatus { PENDING, PROCESSING, PUBLISHED, FAILED, RETRY_SCHEDULE
 data class OutboxInfo(
     val outboxId: UUID,
     val orderId: UUID,
-    val reservationId: UUID,
-    val eventType: EventType,
+    val reservationId: UUID?,
+    val eventType: OutboundEventType,
     val payload: String
 )

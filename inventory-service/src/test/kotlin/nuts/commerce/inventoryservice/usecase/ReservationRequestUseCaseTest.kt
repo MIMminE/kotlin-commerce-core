@@ -1,9 +1,7 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.adapter.repository.JpaInventoryRepository
 import nuts.commerce.inventoryservice.adapter.repository.JpaReservationRepository
 import nuts.commerce.inventoryservice.model.Inventory
-import nuts.commerce.inventoryservice.model.InventoryStatus
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -17,7 +15,7 @@ import java.util.UUID
 
 @SpringBootTest
 class ReservationRequestUseCaseTest @Autowired constructor(
-    private val reservationRequestUseCase: ReservationRequestUseCase,
+    private val reservationCreateUseCase: ReservationCreateUseCase,
     private val inventoryRepository: InventoryRepository,
     private val reservationRepository: JpaReservationRepository,
     private val txManager: PlatformTransactionManager
@@ -33,11 +31,11 @@ class ReservationRequestUseCaseTest @Autowired constructor(
         val inv = Inventory.create(idempotencyKey = UUID.randomUUID(), productId = productId, availableQuantity = 100L)
         inventoryRepository.save(inv)
 
-        val items = listOf(ReservationRequestCommand.Item(productId = productId, qty = 2L))
-        val cmd = ReservationRequestCommand(orderId = orderId, idempotencyKey = idempotencyKey, items = items)
+        val items = listOf(ReservationCreateCommand.Item(productId = productId, qty = 2L))
+        val cmd = ReservationCreateCommand(orderId = orderId, idempotencyKey = idempotencyKey, items = items)
 
-        val r1 = reservationRequestUseCase.execute(cmd)
-        val r2 = reservationRequestUseCase.execute(cmd)
+        val r1 = reservationCreateUseCase.execute(cmd)
+        val r2 = reservationCreateUseCase.execute(cmd)
 
         assertEquals(r1.reservationId, r2.reservationId)
     }

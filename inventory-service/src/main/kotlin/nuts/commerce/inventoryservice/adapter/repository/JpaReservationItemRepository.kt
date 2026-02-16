@@ -1,6 +1,5 @@
 package nuts.commerce.inventoryservice.adapter.repository
 
-import nuts.commerce.inventoryservice.model.Reservation
 import nuts.commerce.inventoryservice.model.ReservationItem
 import nuts.commerce.inventoryservice.port.repository.ReservationItemRepository
 import org.springframework.data.jpa.repository.JpaRepository

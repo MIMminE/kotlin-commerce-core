@@ -7,8 +7,8 @@ import nuts.commerce.inventoryservice.usecase.ReservationConfirmCommand
 import nuts.commerce.inventoryservice.usecase.ReservationConfirmUseCase
 import nuts.commerce.inventoryservice.usecase.ReservationReleaseCommand
 import nuts.commerce.inventoryservice.usecase.ReservationReleaseUseCase
-import nuts.commerce.inventoryservice.usecase.ReservationRequestCommand
-import nuts.commerce.inventoryservice.usecase.ReservationRequestUseCase
+import nuts.commerce.inventoryservice.usecase.ReservationCreateCommand
+import nuts.commerce.inventoryservice.usecase.ReservationCreateUseCase
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
@@ -26,7 +26,7 @@ import tools.jackson.databind.ObjectMapper
 )
 @Component
 class KafkaEventListener(
-    private val reservationRequestUseCase: ReservationRequestUseCase,
+    private val reservationCreateUseCase: ReservationCreateUseCase,
     private val reservationConfirmUseCase: ReservationConfirmUseCase,
     private val reservationReleaseUseCase: ReservationReleaseUseCase,
     private val objectMapper: ObjectMapper
@@ -44,8 +44,8 @@ class KafkaEventListener(
         @Header(KafkaHeaders.RECEIVED_KEY) key: String
     ) {
         when (inboundEvent.eventType) {
-            InboundEventType.RESERVATION_REQUEST -> reservationRequestUseCase.execute(
-                ReservationRequestCommand.from(
+            InboundEventType.RESERVATION_REQUEST -> reservationCreateUseCase.execute(
+                ReservationCreateCommand.from(
                     inboundEvent
                 )
             )

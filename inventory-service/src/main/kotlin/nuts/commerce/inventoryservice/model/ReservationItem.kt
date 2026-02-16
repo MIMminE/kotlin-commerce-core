@@ -17,30 +17,28 @@ class ReservationItem protected constructor(
     @Column(name = "id", nullable = false, updatable = false)
     val id: UUID,
 
-    @Column(name = "inventory_id", nullable = false, updatable = false)
-    val inventoryId: UUID,
+    @Column(name = "product_id", nullable = false, updatable = false)
+    val productId: UUID,
+
     @Column(name = "qty", nullable = false, updatable = false)
     val qty: Long,
 
     @Column(name = "reservation_id", nullable = false, updatable = false)
-    val reservationId: UUID
-
+    var reservationId: UUID? = null
 ) : BaseEntity() {
 
     companion object {
         fun create(
             id: UUID = UUID.randomUUID(),
-            inventoryId: UUID,
+            productId: UUID,
             qty: Long,
-            reservationId: UUID,
         ): ReservationItem {
             if (qty <= 0) throw IllegalArgumentException("qty must be > 0")
 
             return ReservationItem(
                 id = id,
-                inventoryId = inventoryId,
-                qty = qty,
-                reservationId = reservationId
+                productId = productId,
+                qty = qty
             )
         }
     }

@@ -21,7 +21,7 @@ class JpaInventoryRepository(private val inventoryJpa: InventoryJpa) : Inventory
         return inventoryJpa.reserveInventory(productId, quantity) == 1
     }
 
-    override fun commitReservedInventory(inventoryId: UUID, quantity: Long): Boolean {
+    override fun confirmReservedInventory(inventoryId: UUID, quantity: Long): Boolean {
         return inventoryJpa.commitReservedInventory(inventoryId, quantity) == 1
     }
 

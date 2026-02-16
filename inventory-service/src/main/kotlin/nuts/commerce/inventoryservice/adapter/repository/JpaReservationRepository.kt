@@ -2,6 +2,7 @@ package nuts.commerce.inventoryservice.adapter.repository
 
 import nuts.commerce.inventoryservice.model.Reservation
 import nuts.commerce.inventoryservice.port.repository.ReservationInfo
+import nuts.commerce.inventoryservice.port.repository.ReservationItemInfo
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -26,8 +27,8 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
         return ReservationInfo(
             reservationId = reservation.reservationId,
             reservationItemInfos = reservation.items.map { item ->
-                ReservationInfo.ReservationItemInfo(
-                    inventoryId = item.inventoryId,
+                ReservationItemInfo(
+                    productId = item.productId,
                     quantity = item.qty
                 )
             })
@@ -38,8 +39,8 @@ class JpaReservationRepository(private val reservationJpa: ReservationJpa) : Res
             return ReservationInfo(
                 reservationId = reservation.reservationId,
                 reservationItemInfos = reservation.items.map { item ->
-                    ReservationInfo.ReservationItemInfo(
-                        inventoryId = item.inventoryId,
+                    ReservationItemInfo(
+                        productId = item.productId,
                         quantity = item.qty
                     )
                 }

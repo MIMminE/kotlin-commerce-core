@@ -1,20 +1,25 @@
 package nuts.commerce.inventoryservice.event
 
-import nuts.commerce.inventoryservice.port.repository.ReservationInfo
 import java.util.UUID
 
 class ReservationOutboundEvent(
-    val eventId: UUID,
+    val eventId: UUID = UUID.randomUUID(),
+    val outboxId: UUID,
     val orderId: UUID,
-    val reservationId: UUID,
+    val reservationId: UUID?,
     val eventType: OutboundEventType,
     val payload: OutboundPayload
-)
+) {
+    data class ReservationItem(
+        val productId: UUID,
+        val qty: Long
+    )
+}
 
 sealed interface OutboundPayload
 
 class ReservationCreationSuccessPayload(
-    val reservationItemInfoList: List<ReservationInfo.ReservationItemInfo>,
+    val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>,
 ) : OutboundPayload
 
 class ReservationCreationFailPayload(
@@ -22,13 +27,12 @@ class ReservationCreationFailPayload(
 ) : OutboundPayload
 
 class ReservationConfirmSuccessPayload(
-    val reservationItemInfoList: List<ReservationInfo.ReservationItemInfo>
+    val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>
 ) : OutboundPayload
 
 class ReservationReleaseSuccessPayload(
-    val reservationItemInfoList: List<ReservationInfo.ReservationItemInfo>
+    val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>
 ) : OutboundPayload
-
 
 enum class OutboundEventType {
     RESERVATION_CREATION_SUCCEEDED,
