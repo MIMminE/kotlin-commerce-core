@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
     username: app
-    password: app_password_change_me
+    password: app_password
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,9 +22,6 @@ spring:
 
 kafka:
   listener:
-    enabled: false
-
-  producer:
     enabled: false
 
 outbox:
