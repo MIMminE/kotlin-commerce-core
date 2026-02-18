@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
     havingValue = "true",
     matchIfMissing = true
 )
-class OrderOutboxPublisherScheduler(
+class OutboxPublisher(
     private val publishOrderOutboxUseCase: PublishOrderOutboxUseCase
 ) {
 

@@ -25,7 +25,7 @@ class AsyncConfig(
         }
 }
 
-@ConfigurationProperties(prefix = "payment.outbox.executor")
+@ConfigurationProperties(prefix = "payment.outbox.publisher.executor")
 data class OutboxExecutorProperties(
     var corePoolSize: Int = 4,
     var maxPoolSize: Int = 8,

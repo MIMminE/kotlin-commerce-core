@@ -1,6 +1,7 @@
 package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.*
+import nuts.commerce.paymentservice.event.OutboundEventType
 import java.time.Instant
 import java.util.UUID
 
@@ -24,7 +25,7 @@ class OutboxRecord protected constructor(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val eventType: EventType,
+    val eventType: OutboundEventType,
 
     @Lob
     @Column(nullable = false)
@@ -53,7 +54,7 @@ class OutboxRecord protected constructor(
             orderId: UUID,
             paymentId: UUID,
             idempotencyKey: UUID,
-            eventType: EventType,
+            eventType: OutboundEventType,
             payload: String,
             status: OutboxStatus = OutboxStatus.PENDING,
             lockedBy: String? = null,
@@ -83,6 +84,6 @@ data class OutboxInfo(
     val outboxId: UUID,
     val orderId: UUID,
     val paymentId: UUID,
-    val eventType: EventType,
+    val eventType: OutboundEventType,
     val payload: String
 )

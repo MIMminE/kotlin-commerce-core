@@ -1,45 +1,81 @@
 package nuts.commerce.paymentservice.adapter.message
 
+import nuts.commerce.paymentservice.event.OutboundEventType
+import nuts.commerce.paymentservice.event.OutboundPayload
+import nuts.commerce.paymentservice.event.PaymentCreationSuccessPayload
+import nuts.commerce.paymentservice.event.PaymentOutboundEvent
 import nuts.commerce.paymentservice.model.OutboxInfo
-import nuts.commerce.paymentservice.port.message.PaymentEvent
 import nuts.commerce.paymentservice.port.message.PaymentEventProducer
 import nuts.commerce.paymentservice.port.message.ProduceResult
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
+import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.CompletableFuture
 
-
-@ConditionalOnProperty(
-    prefix = "payment.kafka.producer",
-    name = ["enabled"],
-    havingValue = "true",
-    matchIfMissing = true
-)
 @Component
 class KafkaEventProducer(
-    private val eventMapperRegistry: EventMapperRegistry,
-    private val kafkaTemplate: KafkaTemplate<String, PaymentEvent>,
-    @Value($$"${payment.kafka.producer.topic:payment-outbound}")
-    private val paymentTopic: String
+    private val kafkaTemplate: KafkaTemplate<String, PaymentOutboundEvent>,
+    @Value($$"${payment.kafka.outbound.topic:payment-outbound}")
+    private val paymentTopic: String,
+    private val objectMapper: ObjectMapper
 ) : PaymentEventProducer {
 
     override fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult> {
-        val event = eventMapperRegistry.map(outboxInfo)
+
+        val event = when (outboxInfo.eventType) {
+            OutboundEventType.PAYMENT_CREATION_SUCCEEDED -> createPaymentOutboundEvent(
+                outboxInfo,
+                PaymentCreationSuccessPayload::class.java
+            )
+
+            OutboundEventType.PAYMENT_CREATION_FAILED -> createPaymentOutboundEvent(
+                outboxInfo,
+                PaymentCreationSuccessPayload::class.java
+            )
+
+            OutboundEventType.PAYMENT_CONFIRM -> createPaymentOutboundEvent(
+                outboxInfo,
+                PaymentCreationSuccessPayload::class.java
+            )
+
+            OutboundEventType.PAYMENT_RELEASE -> createPaymentOutboundEvent(
+                outboxInfo,
+                PaymentCreationSuccessPayload::class.java
+            )
+        }
+
         return kafkaTemplate.send(paymentTopic, event)
             .handle { _, ex ->
                 return@handle when (ex) {
                     null -> ProduceResult.Success(
                         eventId = event.eventId,
-                        outboxId = outboxInfo.outboxId
+                        outboxId = event.outboxId
                     )
 
                     else -> ProduceResult.Failure(
                         reason = ex.message ?: "Unknown error",
-                        outboxId = outboxInfo.outboxId
+                        outboxId = event.outboxId
                     )
                 }
             }
+    }
+
+    private fun createPaymentOutboundEvent(
+        outboxInfo: OutboxInfo,
+        clazz: Class<out OutboundPayload>
+    ): PaymentOutboundEvent {
+
+        return PaymentOutboundEvent(
+            orderId = outboxInfo.orderId,
+            outboxId = outboxInfo.outboxId,
+            paymentId = outboxInfo.paymentId,
+            eventType = outboxInfo.eventType,
+            payload = objectMapper.readValue(
+                outboxInfo.payload,
+                clazz
+            )
+        )
     }
 }

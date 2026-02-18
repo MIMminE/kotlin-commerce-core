@@ -7,13 +7,12 @@ import nuts.commerce.inventoryservice.event.ReservationCreationFailPayload
 import nuts.commerce.inventoryservice.event.ReservationCreationSuccessPayload
 import nuts.commerce.inventoryservice.event.ReservationInboundEvent
 import nuts.commerce.inventoryservice.event.ReservationOutboundEvent
-import nuts.commerce.inventoryservice.event.ReservationRequestPayload
+import nuts.commerce.inventoryservice.event.ReservationCreatePayload
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.model.Reservation
 import nuts.commerce.inventoryservice.model.ReservationItem
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
-import nuts.commerce.inventoryservice.port.repository.ReservationInfo
 import nuts.commerce.inventoryservice.port.repository.ReservationRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
@@ -28,7 +27,7 @@ class ReservationCreateUseCase(
     private val objectMapper: ObjectMapper
 ) {
     @Transactional
-    fun execute(command: ReservationCreateCommand): ReservationRequestResult {
+    fun execute(command: ReservationCreateCommand): ReservationCreateResult {
         // 재고 예약을 걸면서 예약 아이템 생성하는 메서드 생성
         val reservationItems = createReservationItemsWithReserve(command.items)
 
@@ -58,14 +57,14 @@ class ReservationCreateUseCase(
                 payload = objectMapper.writeValueAsString(payload)
             )
             outboxRepository.save(outboxRecord)
-            return ReservationRequestResult(savedReservation.reservationId)
+            return ReservationCreateResult(savedReservation.reservationId)
 
         } catch (ex: DataIntegrityViolationException) {
             val reservationInfo =
                 reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
                     ?: throw IllegalStateException("Reservation not found for idempotency key: ${command.eventId}")
 
-            return ReservationRequestResult(reservationInfo.reservationId)
+            return ReservationCreateResult(reservationInfo.reservationId)
         } catch (ex: Exception) {
             val payload = ReservationCreationFailPayload(
                 reason = ex.message ?: "Unknown error occurred during reservation creation"
@@ -78,7 +77,7 @@ class ReservationCreateUseCase(
                 payload = objectMapper.writeValueAsString(payload)
             )
             outboxRepository.save(outboxRecord)
-            return ReservationRequestResult(reservation.reservationId)
+            return ReservationCreateResult(reservation.reservationId)
         }
     }
 
@@ -96,8 +95,6 @@ class ReservationCreateUseCase(
     }
 }
 
-data class ReservationRequestResult(val reservationId: UUID)
-
 data class ReservationCreateCommand(
     val orderId: UUID,
     val eventId: UUID,
@@ -107,8 +104,8 @@ data class ReservationCreateCommand(
 
     companion object {
         fun from(inboundEvent: ReservationInboundEvent): ReservationCreateCommand {
-            require(inboundEvent.eventType == InboundEventType.RESERVATION_REQUEST)
-            require(inboundEvent.payload is ReservationRequestPayload)
+            require(inboundEvent.eventType == InboundEventType.RESERVATION_CREATE)
+            require(inboundEvent.payload is ReservationCreatePayload)
 
             val payload = inboundEvent.payload
             return ReservationCreateCommand(
@@ -119,3 +116,5 @@ data class ReservationCreateCommand(
         }
     }
 }
+
+data class ReservationCreateResult(val reservationId: UUID)

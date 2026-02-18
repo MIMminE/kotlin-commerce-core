@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 @Component
-class PaymentResultKafkaListener(
+class KafkaEventListener(
     private val onPaymentApprovedUseCase: OnPaymentApprovedUseCase,
     private val onPaymentFailedUseCase: OnPaymentFailedUseCase
 ) {

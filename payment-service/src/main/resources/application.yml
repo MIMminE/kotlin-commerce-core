@@ -19,16 +19,15 @@ spring:
     hibernate:
       ddl-auto: update
 
-
-inventory:
+payment:
   kafka:
     inbound:
       listener:
         enabled: true
-      topic: inventory-inbound
-      group-id: inventory-service-group
+      topic: payment-inbound
+      group-id: payment-service-group
     outbound:
-      topic: inventory-outbound
+      topic: payment-outbound
 
   outbox:
     publisher:

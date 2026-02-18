@@ -11,7 +11,7 @@ data class ReservationInboundEvent(
 
 sealed interface InboundPayload
 
-data class ReservationRequestPayload(
+data class ReservationCreatePayload(
     val requestItem: List<InboundReservationItem>
 ) : InboundPayload
 
@@ -26,7 +26,7 @@ data class ReservationReleasePayload(
 data class InboundReservationItem(val productId: UUID, val qty: Long)
 
 enum class InboundEventType {
-    RESERVATION_REQUEST,
+    RESERVATION_CREATE,
     RESERVATION_CONFIRM,
     RESERVATION_RELEASE
 }

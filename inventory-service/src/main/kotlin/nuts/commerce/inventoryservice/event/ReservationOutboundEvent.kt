@@ -2,7 +2,7 @@ package nuts.commerce.inventoryservice.event
 
 import java.util.UUID
 
-class ReservationOutboundEvent(
+data class ReservationOutboundEvent(
     val eventId: UUID = UUID.randomUUID(),
     val outboxId: UUID,
     val orderId: UUID,

@@ -1,9 +1,7 @@
 package nuts.commerce.productservice.usecase
 
 import nuts.commerce.productservice.port.cache.StockCachePort
-import nuts.commerce.productservice.port.repository.ProductRepository
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component

@@ -1,7 +1,7 @@
 package nuts.commerce.paymentservice.adapter.payment
 
-import nuts.commerce.paymentservice.port.payment.ChargeRequest
-import nuts.commerce.paymentservice.port.payment.ChargeResult
+import nuts.commerce.paymentservice.port.payment.CreatePaymentRequest
+import nuts.commerce.paymentservice.port.payment.CreatePaymentResult
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import nuts.commerce.paymentservice.port.payment.PaymentStatusUpdateResult
 import org.springframework.stereotype.Component
@@ -11,9 +11,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class InMemoryPaymentProvider : PaymentProvider{
-
     override val providerName: String
-        get() = "in-memory"
+        get() = "InMemoryPaymentProvider"
 
     private enum class State { CHARGED, COMMITTED, RELEASED }
 
@@ -22,16 +21,14 @@ class InMemoryPaymentProvider : PaymentProvider{
         val processedEventIds: MutableSet<UUID>
     )
 
-    // providerPaymentId(프로바이더 결제 ID) -> PaymentRecord(결제 레코드 매핑)
     private val records = ConcurrentHashMap<UUID, PaymentRecord>()
 
-    override fun charge(request: ChargeRequest): CompletableFuture<ChargeResult> {
+    override fun createPayment(request: CreatePaymentRequest): CompletableFuture<CreatePaymentResult> {
         val providerPaymentId = UUID.randomUUID()
-        // 이 providerPaymentId에 대한 새로운 레코드 생성
         val record = PaymentRecord(state = State.CHARGED, processedEventIds = ConcurrentHashMap.newKeySet())
         records[providerPaymentId] = record
 
-        val result = ChargeResult.Success(providerPaymentId = providerPaymentId, requestPaymentId = request.paymentId)
+        val result = CreatePaymentResult.Success(providerPaymentId = providerPaymentId, requestPaymentId = request.paymentId)
         return CompletableFuture.completedFuture(result)
     }
 
@@ -40,37 +37,30 @@ class InMemoryPaymentProvider : PaymentProvider{
         eventId: UUID
     ): CompletableFuture<PaymentStatusUpdateResult> {
         val record = records[providerPaymentId]
-            ?: return CompletableFuture.completedFuture(
-                PaymentStatusUpdateResult.Failure("providerPaymentId not found", providerPaymentId)
-            )
+            ?: return CompletableFuture.failedFuture(IllegalArgumentException("providerPaymentId not found: $providerPaymentId"))
 
         synchronized(record) {
-            // eventId(이벤트 ID) 기준 멱등성 처리
+            // 이미 처리된 이벤트면 성공으로 응답(멱등성)
             if (record.processedEventIds.contains(eventId)) {
                 return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
             }
 
             when (record.state) {
-                State.COMMITTED -> {
-                    record.processedEventIds.add(eventId)
-                    return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
-                }
-                State.RELEASED -> {
-                    // 이미 release(환불/취소)된 경우 commit 불가
-                    record.processedEventIds.add(eventId)
-                    return CompletableFuture.completedFuture(
-                        PaymentStatusUpdateResult.Failure("already released", providerPaymentId)
-                    )
-                }
                 State.CHARGED -> {
                     record.state = State.COMMITTED
                     record.processedEventIds.add(eventId)
                     return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
                 }
+                State.COMMITTED -> {
+                    // 이미 커밋된 상태, 이벤트 ID 저장 후 성공
+                    record.processedEventIds.add(eventId)
+                    return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
+                }
+                State.RELEASED -> {
+                    return CompletableFuture.failedFuture(IllegalStateException("cannot commit: already released: $providerPaymentId"))
+                }
             }
         }
-        // 도달되지 않는 코드(안전성을 위해 기본 실패 반환)
-        return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Failure("unknown error", providerPaymentId))
     }
 
     override fun releasePayment(
@@ -78,35 +68,27 @@ class InMemoryPaymentProvider : PaymentProvider{
         eventId: UUID
     ): CompletableFuture<PaymentStatusUpdateResult> {
         val record = records[providerPaymentId]
-            ?: return CompletableFuture.completedFuture(
-                PaymentStatusUpdateResult.Failure("providerPaymentId not found", providerPaymentId)
-            )
+            ?: return CompletableFuture.failedFuture(IllegalArgumentException("providerPaymentId not found: $providerPaymentId"))
 
         synchronized(record) {
-            // eventId(이벤트 ID) 기준 멱등성 처리
             if (record.processedEventIds.contains(eventId)) {
                 return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
             }
 
             when (record.state) {
-                State.RELEASED -> {
-                    record.processedEventIds.add(eventId)
-                    return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
-                }
-                State.COMMITTED -> {
-                    // 이미 commit된 경우 release 불가
-                    record.processedEventIds.add(eventId)
-                    return CompletableFuture.completedFuture(
-                        PaymentStatusUpdateResult.Failure("already committed", providerPaymentId)
-                    )
-                }
                 State.CHARGED -> {
                     record.state = State.RELEASED
                     record.processedEventIds.add(eventId)
                     return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
                 }
+                State.RELEASED -> {
+                    record.processedEventIds.add(eventId)
+                    return CompletableFuture.completedFuture(PaymentStatusUpdateResult.Success(providerPaymentId))
+                }
+                State.COMMITTED -> {
+                    return CompletableFuture.failedFuture(IllegalStateException("cannot release: already committed: $providerPaymentId"))
+                }
             }
         }
-        // 도달되지 않는 코드(안전성을 위해 기본 실패 반환)
     }
 }

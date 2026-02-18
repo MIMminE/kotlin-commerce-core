@@ -3,6 +3,7 @@ package nuts.commerce.orderservice.model
 import jakarta.persistence.*
 import nuts.commerce.orderservice.exception.OrderException
 import java.util.*
+import kotlin.collections.fold
 
 @Entity
 @Table(
@@ -55,12 +56,13 @@ class Order protected constructor(
             items: List<OrderItem>,
             status: OrderStatus = OrderStatus.CREATED,
         ): Order {
+
             return Order(
                 orderId = orderId,
                 idempotencyKey = idempotencyKey,
                 userId = userId,
                 items = items.toMutableList(),
-                totalPrice = totalPrice, // TODO 계산 필요
+                totalPrice = totalPrice,
                 status = status
             )
         }

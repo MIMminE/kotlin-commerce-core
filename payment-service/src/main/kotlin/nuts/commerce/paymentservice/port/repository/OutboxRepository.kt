@@ -1,6 +1,5 @@
 package nuts.commerce.paymentservice.port.repository
 
-import nuts.commerce.paymentservice.model.EventType
 import nuts.commerce.paymentservice.model.OutboxInfo
 import nuts.commerce.paymentservice.model.OutboxRecord
 import java.util.UUID

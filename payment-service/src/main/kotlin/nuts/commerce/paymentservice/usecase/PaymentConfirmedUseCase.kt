@@ -1,6 +1,10 @@
 package nuts.commerce.paymentservice.usecase
 
-import nuts.commerce.paymentservice.model.EventType
+import nuts.commerce.paymentservice.event.InboundEventType
+import nuts.commerce.paymentservice.event.OutboundEventType
+import nuts.commerce.paymentservice.event.PaymentConfirmPayload
+import nuts.commerce.paymentservice.event.PaymentConfirmSuccessPayload
+import nuts.commerce.paymentservice.event.PaymentInboundEvent
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import nuts.commerce.paymentservice.port.payment.PaymentStatusUpdateResult
@@ -19,8 +23,7 @@ class PaymentConfirmedUseCase(
     private val txTemplate: TransactionTemplate,
     private val objectMapper: ObjectMapper
 ) {
-
-    fun execute(command: PaymentConfirmCommand) {
+    fun execute(command: PaymentConfirmCommand): PaymentConfirmResult {
 
         val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(command.paymentId)
             ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${command.paymentId}")
@@ -34,15 +37,9 @@ class PaymentConfirmedUseCase(
                         command.paymentId,
                         command.eventId
                     )
-
-                    is PaymentStatusUpdateResult.Failure -> confirmRequestFailureHandler(
-                        result,
-                        command.orderId,
-                        command.paymentId,
-                        command.eventId
-                    )
                 }
             }
+        return PaymentConfirmResult(providerPaymentId)
     }
 
     private fun confirmRequestSuccessHandler(
@@ -56,50 +53,17 @@ class PaymentConfirmedUseCase(
             val payment = paymentRepository.findById(paymentId)!!
             payment.commit()
 
-            val payload = objectMapper.writeValueAsString(
-                mapOf(
-                    "paymentProvider" to paymentProvider.providerName,
-                    "providerPaymentId" to result.providerPaymentId
-                )
+            val payload = PaymentConfirmSuccessPayload(
+                paymentProvider = paymentProvider.providerName,
+                providerPaymentId = result.providerPaymentId
             )
 
             val outboxRecord = OutboxRecord.create(
                 orderId = orderId,
                 paymentId = paymentId,
                 idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRM_SUCCEEDED,
-                payload = payload
-            )
-
-            outboxRepository.save(outboxRecord)
-        }
-    }
-
-    private fun confirmRequestFailureHandler(
-        result: PaymentStatusUpdateResult.Failure,
-        orderId: UUID,
-        paymentId: UUID,
-        eventId: UUID
-    ) {
-        txTemplate.execute {
-
-            val payment = paymentRepository.findById(paymentId)!!
-            payment.fail(result.reason)
-
-            val payload = objectMapper.writeValueAsString(
-                mapOf(
-                    "paymentProvider" to paymentProvider.providerName,
-                    "providerPaymentId" to result.providerPaymentId,
-                    "failureReason" to result.reason
-                )
-            )
-
-            val outboxRecord = OutboxRecord.create(
-                orderId = orderId,
-                paymentId = paymentId,
-                idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_CONFIRM_FAILED,
-                payload = payload
+                eventType = OutboundEventType.PAYMENT_CONFIRM,
+                payload = objectMapper.writeValueAsString(payload)
             )
 
             outboxRepository.save(outboxRecord)
@@ -107,4 +71,20 @@ class PaymentConfirmedUseCase(
     }
 }
 
-data class PaymentConfirmCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID)
+data class PaymentConfirmCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID) {
+    companion object {
+        fun from(inboundEvent: PaymentInboundEvent): PaymentConfirmCommand {
+            require(inboundEvent.eventType == InboundEventType.PAYMENT_CONFIRM)
+            require(inboundEvent.payload is PaymentConfirmPayload)
+
+            val payload = inboundEvent.payload
+            return PaymentConfirmCommand(
+                orderId = inboundEvent.orderId,
+                paymentId = payload.paymentId,
+                eventId = inboundEvent.eventId
+            )
+        }
+    }
+}
+
+data class PaymentConfirmResult(val providerPaymentId: UUID)

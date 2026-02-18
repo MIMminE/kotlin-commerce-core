@@ -25,7 +25,7 @@ class ReservationConfirmUseCase(
 ) {
 
     @Transactional
-    fun execute(command: ReservationConfirmCommand): ReservationReleaseResult {
+    fun execute(command: ReservationConfirmCommand): ReservationConfirmResult {
 
         val reservation = reservationRepository.findById(command.reservationId)
             ?: throw IllegalStateException("Reservation not found for ID: ${command.reservationId}")
@@ -61,18 +61,19 @@ class ReservationConfirmUseCase(
             )
 
             outboxRepository.save(outboxRecord)
-            return ReservationReleaseResult(command.reservationId)
+            return ReservationConfirmResult(command.reservationId)
 
         } catch (ex: DataIntegrityViolationException) {
             reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
                 ?: throw IllegalStateException("Reservation not found for idempotency key: ${command.eventId}")
-            return ReservationReleaseResult(command.reservationId)
+            return ReservationConfirmResult(command.reservationId)
         }
     }
 }
 
-data class ReservationConfirmResult(val reservationId: UUID)
+
 data class ReservationConfirmCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID) {
+
     companion object {
         fun from(inboundEvent: ReservationInboundEvent): ReservationConfirmCommand {
             require(inboundEvent.eventType == InboundEventType.RESERVATION_CONFIRM)
@@ -87,3 +88,5 @@ data class ReservationConfirmCommand(val orderId: UUID, val eventId: UUID, val r
         }
     }
 }
+
+data class ReservationConfirmResult(val reservationId: UUID)

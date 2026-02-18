@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 
 @ConditionalOnProperty(
-    prefix = "inventory.kafka.listener",
+    prefix = "inventory.kafka.inbound.listener",
     name = ["enabled"],
     havingValue = "true",
     matchIfMissing = true
@@ -28,8 +28,7 @@ import tools.jackson.databind.ObjectMapper
 class KafkaEventListener(
     private val reservationCreateUseCase: ReservationCreateUseCase,
     private val reservationConfirmUseCase: ReservationConfirmUseCase,
-    private val reservationReleaseUseCase: ReservationReleaseUseCase,
-    private val objectMapper: ObjectMapper
+    private val reservationReleaseUseCase: ReservationReleaseUseCase
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -38,13 +37,15 @@ class KafkaEventListener(
         log.info("KafkaEventListener initialized")
     }
 
-    @KafkaListener(topics = [$$"${inventory.inbound.topic}"])
+    @KafkaListener(
+        topics = [$$"${inventory.kafka.inbound.topic}"],
+        groupId = $$"${inventory.kafka.inbound.group-id}",
+    )
     fun onMessage(
-        @Payload inboundEvent: ReservationInboundEvent,
-        @Header(KafkaHeaders.RECEIVED_KEY) key: String
+        @Payload inboundEvent: ReservationInboundEvent
     ) {
         when (inboundEvent.eventType) {
-            InboundEventType.RESERVATION_REQUEST -> reservationCreateUseCase.execute(
+            InboundEventType.RESERVATION_CREATE -> reservationCreateUseCase.execute(
                 ReservationCreateCommand.from(
                     inboundEvent
                 )

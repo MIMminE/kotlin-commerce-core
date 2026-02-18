@@ -1,6 +1,10 @@
 package nuts.commerce.paymentservice.usecase
 
-import nuts.commerce.paymentservice.model.EventType
+import nuts.commerce.paymentservice.event.InboundEventType
+import nuts.commerce.paymentservice.event.OutboundEventType
+import nuts.commerce.paymentservice.event.PaymentInboundEvent
+import nuts.commerce.paymentservice.event.PaymentReleasePayload
+import nuts.commerce.paymentservice.event.PaymentReleaseSuccessPayload
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import nuts.commerce.paymentservice.port.payment.PaymentStatusUpdateResult
@@ -20,7 +24,7 @@ class PaymentReleasedUseCase(
     private val objectMapper: ObjectMapper
 ) {
 
-    fun execute(command: PaymentReleaseCommand) {
+    fun execute(command: PaymentReleaseCommand): PaymentReleaseResult {
 
         val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(command.paymentId)
             ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${command.paymentId}")
@@ -34,15 +38,9 @@ class PaymentReleasedUseCase(
                         command.paymentId,
                         command.eventId
                     )
-
-                    is PaymentStatusUpdateResult.Failure -> releaseRequestFailureHandler(
-                        result,
-                        command.orderId,
-                        command.paymentId,
-                        command.eventId
-                    )
                 }
             }
+        return PaymentReleaseResult(providerPaymentId)
     }
 
     private fun releaseRequestSuccessHandler(
@@ -56,55 +54,38 @@ class PaymentReleasedUseCase(
             val payment = paymentRepository.findById(paymentId)!!
             payment.release()
 
-            val payload = objectMapper.writeValueAsString(
-                mapOf(
-                    "paymentProvider" to paymentProvider.providerName,
-                    "providerPaymentId" to result.providerPaymentId
+            PaymentReleaseSuccessPayload(
+                paymentProvider = paymentProvider.providerName,
+                providerPaymentId = result.providerPaymentId
+            ).let {
+                val outboxRecord = OutboxRecord.create(
+                    orderId = orderId,
+                    paymentId = paymentId,
+                    idempotencyKey = eventId,
+                    eventType = OutboundEventType.PAYMENT_RELEASE,
+                    payload = objectMapper.writeValueAsString(it)
                 )
-            )
 
-            val outboxRecord = OutboxRecord.create(
-                orderId = orderId,
-                paymentId = paymentId,
-                idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_RELEASE_SUCCEEDED,
-                payload = payload
-            )
-
-            outboxRepository.save(outboxRecord)
-        }
-    }
-
-    private fun releaseRequestFailureHandler(
-        result: PaymentStatusUpdateResult.Failure,
-        orderId: UUID,
-        paymentId: UUID,
-        eventId: UUID
-    ) {
-        txTemplate.execute {
-
-            val payment = paymentRepository.findById(paymentId)!!
-            payment.fail(result.reason)
-
-            val payload = objectMapper.writeValueAsString(
-                mapOf(
-                    "paymentProvider" to paymentProvider.providerName,
-                    "providerPaymentId" to result.providerPaymentId,
-                    "failureReason" to result.reason
-                )
-            )
-
-            val outboxRecord = OutboxRecord.create(
-                orderId = orderId,
-                paymentId = paymentId,
-                idempotencyKey = eventId,
-                eventType = EventType.PAYMENT_RELEASE_FAILED,
-                payload = payload
-            )
-
-            outboxRepository.save(outboxRecord)
+                outboxRepository.save(outboxRecord)
+            }
         }
     }
 }
 
-data class PaymentReleaseCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID)
+data class PaymentReleaseCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID) {
+    companion object {
+        fun from(inboundEvent: PaymentInboundEvent): PaymentReleaseCommand {
+            require(inboundEvent.eventType == InboundEventType.PAYMENT_RELEASE)
+            require(inboundEvent.payload is PaymentReleasePayload)
+
+            val payload = inboundEvent.payload
+            return PaymentReleaseCommand(
+                orderId = inboundEvent.orderId,
+                paymentId = payload.paymentId,
+                eventId = inboundEvent.eventId
+            )
+        }
+    }
+}
+
+data class PaymentReleaseResult(val providerPaymentId: UUID)

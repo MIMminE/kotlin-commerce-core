@@ -7,8 +7,7 @@ import java.util.UUID
 @Table(
     name = "reservation_items",
     indexes = [
-        Index(name = "idx_reservation_items_reservation_id", columnList = "reservation_id"),
-        Index(name = "idx_reservation_items_inventory_id", columnList = "inventory_id")
+        Index(name = "idx_reservation_items_reservation_id", columnList = "reservation_id")
     ]
 )
 class ReservationItem protected constructor(

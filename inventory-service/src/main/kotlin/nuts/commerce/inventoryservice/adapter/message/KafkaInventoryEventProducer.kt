@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture
 @Component
 class KafkaInventoryEventProducer(
     private val kafkaTemplate: KafkaTemplate<String, ReservationOutboundEvent>,
-    @Value($$"${inventory.kafka.producer.topic:inventory-outbound}")
+    @Value($$"${inventory.kafka.outbound.topic:inventory-outbound}")
     private val inventoryTopic: String,
     private val objectMapper: ObjectMapper
 ) : InventoryEventProducer {
