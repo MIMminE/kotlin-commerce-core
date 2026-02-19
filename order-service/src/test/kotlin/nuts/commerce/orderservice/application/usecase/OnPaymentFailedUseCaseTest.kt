@@ -2,12 +2,11 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
-import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.InMemorySageRepository
 import nuts.commerce.orderservice.model.Money
 import nuts.commerce.orderservice.model.Order
 import nuts.commerce.orderservice.model.OrderItem
-import nuts.commerce.orderservice.usecase.OnPaymentFailedUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -19,16 +18,16 @@ import tools.jackson.databind.ObjectMapper
 class OnPaymentFailedUseCaseTest {
 
     private lateinit var orderRepository: InMemoryOrderRepository
-    private lateinit var orderSagaRepository: InMemoryOrderSagaRepository
-    private lateinit var orderOutboxRepository: InMemoryOrderOutboxRepository
+    private lateinit var orderSagaRepository: InMemorySageRepository
+    private lateinit var orderOutboxRepository: InMemoryOutboxRepository
     private lateinit var objectMapper: ObjectMapper
     private lateinit var useCase: OnPaymentFailedUseCase
 
     @BeforeEach
     fun setup() {
         orderRepository = InMemoryOrderRepository()
-        orderSagaRepository = InMemoryOrderSagaRepository()
-        orderOutboxRepository = InMemoryOrderOutboxRepository()
+        orderSagaRepository = InMemorySageRepository()
+        orderOutboxRepository = InMemoryOutboxRepository()
         objectMapper = ObjectMapper()
         useCase = OnPaymentFailedUseCase(orderRepository, orderSagaRepository, orderOutboxRepository, objectMapper)
 

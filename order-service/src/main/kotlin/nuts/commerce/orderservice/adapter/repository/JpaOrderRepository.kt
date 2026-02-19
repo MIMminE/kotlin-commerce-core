@@ -2,16 +2,19 @@ package nuts.commerce.orderservice.adapter.repository
 
 import nuts.commerce.orderservice.port.repository.OrderRepository
 import nuts.commerce.orderservice.model.Order
+import nuts.commerce.orderservice.model.OrderStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
 class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
     override fun save(order: Order): Order {
-        return orderJpa.save(order)
+        return orderJpa.saveAndFlush(order)
     }
 
     override fun findById(id: UUID): Order? {
@@ -26,7 +29,7 @@ class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
         userId: String,
         pageable: Pageable
     ): Page<Order> {
-        TODO("Not yet implemented")
+        return orderJpa.findAllByUserId(userId, pageable)
     }
 
     override fun findByUserIdAndIdempotencyKey(
@@ -34,8 +37,31 @@ class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
         idempotencyKey: UUID
     ): Order? =
         orderJpa.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+
+    override fun updateStatus(
+        orderId: UUID,
+        expectStatus: OrderStatus,
+        newStatus: OrderStatus
+    ) {
+        val n = orderJpa.updateStatus(orderId, expectStatus, newStatus)
+        if (n == 0) {
+            throw IllegalStateException("Order not updated for orderId: $orderId, expect: $expectStatus, new: $newStatus")
+        }
+    }
 }
 
 interface OrderJpa : JpaRepository<Order, UUID> {
     fun findByUserIdAndIdempotencyKey(userId: String, idempotencyKey: UUID): Order?
+    fun findAllByUserId(userId: String, pageable: Pageable): Page<Order>
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        """
+        UPDATE Order o
+           SET o.status = :newStatus
+         WHERE o.orderId = :orderId
+           AND o.status = :expectStatus
+        """
+    )
+    fun updateStatus(orderId: UUID, expectStatus: OrderStatus, newStatus: OrderStatus): Int
 }

@@ -10,7 +10,7 @@ import javax.swing.event.DocumentEvent
 @Entity
 @Table(
     name = "inventory_outbox_records",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["reservation_id", "idempotency_key"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["orderId", "idempotency_key"])]
 )
 class OutboxRecord protected constructor(
     @Id

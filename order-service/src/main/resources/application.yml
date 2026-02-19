@@ -1,27 +1,35 @@
-order:
-  outbox:
-    events:
-      kafka:
-        topic: order-events
-    publish:
-      enabled: true
-      fixed-delay-ms: 1000
-    batch-size: 100
-    max-retries: 5
-
-payment:
-  result:
-    topic: payment-results
-
 spring:
   kafka:
-    bootstrap-servers: "localhost:9092"
+    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/appdb
+    username: app
+    password: app_password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
-    properties:
-      hibernate.jdbc.batch_size: 50
-      hibernate.order_updates: true
-      hibernate.order_inserts: true
+    hibernate:
+      ddl-auto: update
+
+order:
+  kafka:
+    inbound:
+      listener:
+        enabled: true
+      topic: order-inbound
+      group-id: order-service-group
+    outbound:
+      topic: order-outbound
+
+rest:
+  product-snapshot:
+    url: http://localhost:8080/api/products/snapshots
+    api-key: dev-api-key-1017

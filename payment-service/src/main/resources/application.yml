@@ -38,3 +38,6 @@ payment:
         max-pool-size: 8
         queue-capacity: 500
         await-termination-seconds: 10
+
+server:
+  port: 8082

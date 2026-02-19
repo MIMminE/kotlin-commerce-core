@@ -1,31 +1,50 @@
 package nuts.commerce.orderservice.adapter.inbound
 
-import nuts.commerce.orderservice.usecase.OnPaymentApprovedUseCase
-import nuts.commerce.orderservice.usecase.OnPaymentFailedUseCase
-import org.apache.kafka.clients.consumer.ConsumerRecord
+import nuts.commerce.orderservice.event.InboundEventType.*
+import nuts.commerce.orderservice.event.OrderInboundEvent
+import nuts.commerce.orderservice.handle.PaymentConfirmHandler
+import nuts.commerce.orderservice.handle.PaymentCreateFailHandler
+import nuts.commerce.orderservice.handle.PaymentCreateSuccessHandler
+import nuts.commerce.orderservice.handle.PaymentReleaseHandler
+import nuts.commerce.orderservice.handle.ReservationCreateSuccessHandler
+import nuts.commerce.orderservice.handle.ReservationConfirmEventHandler
+import nuts.commerce.orderservice.handle.ReservationCreateFailHandler
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
-import java.nio.charset.StandardCharsets
-import java.util.UUID
 
+@ConditionalOnProperty(
+    prefix = "order.kafka.inbound.listener",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = true
+)
 @Component
 class KafkaEventListener(
-    private val onPaymentApprovedUseCase: OnPaymentApprovedUseCase,
-    private val onPaymentFailedUseCase: OnPaymentFailedUseCase
+    private val reservationCreateSuccessHandler: ReservationCreateSuccessHandler,
+    private val reservationCreateFailHandler: ReservationCreateFailHandler,
+    private val reservationConfirmEventHandler: ReservationConfirmEventHandler,
+    private val paymentCreateSuccessHandler: PaymentCreateSuccessHandler,
+    private val paymentCreateFailHandler: PaymentCreateFailHandler,
+    private val paymentConfirmHandler: PaymentConfirmHandler,
+    private val paymentReleaseHandler: PaymentReleaseHandler
 ) {
-    @KafkaListener(topics = ["\${payment.result.topic}"])
-    fun onMessage(record: ConsumerRecord<String, String>) {
-        val eventId = record.headerUuid("eventId")
-        val eventType = record.headerString("eventType")
-        val aggregateId = record.headerUuid("aggregateId") // 여기서는 orderId로 사용
-        val payload = record.value()
+    @KafkaListener(
+        topics = [$$"${order.kafka.inbound.topic}"],
+        groupId = $$"${order.kafka.inbound.group-id}",
+    )
+    fun onMessage(
+        @Payload inboundEvent: OrderInboundEvent
+    ) {
+        when (inboundEvent.eventType) {
+            RESERVATION_CREATION_SUCCEEDED -> reservationCreateSuccessHandler.execute(inboundEvent)
+            RESERVATION_CREATION_FAILED -> reservationCreateFailHandler.handle(inboundEvent)
+            RESERVATION_CONFIRM -> reservationConfirmEventHandler.handle(inboundEvent)
+            PAYMENT_CREATION_SUCCEEDED -> paymentCreateSuccessHandler.handle(inboundEvent)
+            PAYMENT_CREATION_FAILED -> paymentCreateFailHandler.handle(inboundEvent)
+            PAYMENT_CONFIRM -> paymentConfirmHandler.handle(inboundEvent)
+            PAYMENT_RELEASE -> paymentReleaseHandler.handle(inboundEvent)
+        }
     }
-
-    private fun ConsumerRecord<String, String>.headerString(name: String): String =
-        headers().lastHeader(name)?.value()
-            ?.toString(StandardCharsets.UTF_8)
-            ?: throw IllegalArgumentException("Missing kafka header: $name")
-
-    private fun ConsumerRecord<String, String>.headerUuid(name: String): UUID =
-        UUID.fromString(headerString(name))
 }

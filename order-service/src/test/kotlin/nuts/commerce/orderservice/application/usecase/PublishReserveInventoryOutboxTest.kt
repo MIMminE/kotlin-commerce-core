@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.message.InMemoryOrderEventProducer
-import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOutboxRepository
 import nuts.commerce.orderservice.model.OutboxEventType
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.model.OutboxStatus
@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 @Suppress("NonAsciiCharacters")
 class PublishReserveInventoryOutboxTest {
 
-    private lateinit var outboxRepository: InMemoryOrderOutboxRepository
+    private lateinit var outboxRepository: InMemoryOutboxRepository
     private lateinit var messageProducer: InMemoryOrderEventProducer
     private lateinit var txManager: PlatformTransactionManager
     private lateinit var txTemplate: TransactionTemplate
@@ -30,7 +30,7 @@ class PublishReserveInventoryOutboxTest {
 
     @BeforeEach
     fun setUp() {
-        outboxRepository = InMemoryOrderOutboxRepository()
+        outboxRepository = InMemoryOutboxRepository()
         messageProducer = InMemoryOrderEventProducer()
         txManager = object : PlatformTransactionManager {
             override fun getTransaction(definition: TransactionDefinition?): TransactionStatus =
@@ -42,7 +42,7 @@ class PublishReserveInventoryOutboxTest {
         txTemplate = TransactionTemplate(txManager)
         objectMapper = ObjectMapper()
         useCase = PublishOrderOutboxUseCase(
-            orderOutboxRepository = outboxRepository,
+            outboxRepository = outboxRepository,
             orderEventProducer = messageProducer,
             transactionTemplate = txTemplate,
             batchSize = 10,
@@ -58,7 +58,7 @@ class PublishReserveInventoryOutboxTest {
         val agg = UUID.randomUUID()
         val payloadObj = mapOf("orderId" to agg.toString(), "items" to listOf(mapOf("productId" to "p-1", "qty" to 2)))
         val payload = objectMapper.writeValueAsString(payloadObj)
-        val rec = OutboxRecord.create(id = id, aggregateId = agg, eventType = et, payload = payload)
+        val rec = OutboxRecord.create(outboxId = id, aggregateId = agg, eventType = et, payload = payload)
         outboxRepository.save(rec)
 
         useCase.publishPendingOutboxMessages()
@@ -79,7 +79,7 @@ class PublishReserveInventoryOutboxTest {
         val agg = UUID.randomUUID()
         val payloadObj = mapOf("orderId" to agg.toString(), "amount" to 1500L, "currency" to "KRW")
         val payload = objectMapper.writeValueAsString(payloadObj)
-        val rec = OutboxRecord.create(id = id, aggregateId = agg, eventType = et, payload = payload)
+        val rec = OutboxRecord.create(outboxId = id, aggregateId = agg, eventType = et, payload = payload)
         outboxRepository.save(rec)
 
         useCase.publishPendingOutboxMessages()
@@ -100,7 +100,7 @@ class PublishReserveInventoryOutboxTest {
         val agg = UUID.randomUUID()
         val payloadObj = mapOf("reservationId" to UUID.randomUUID().toString())
         val payload = objectMapper.writeValueAsString(payloadObj)
-        val rec = OutboxRecord.create(id = id, aggregateId = agg, eventType = et, payload = payload)
+        val rec = OutboxRecord.create(outboxId = id, aggregateId = agg, eventType = et, payload = payload)
         outboxRepository.save(rec)
 
         useCase.publishPendingOutboxMessages()
@@ -121,7 +121,7 @@ class PublishReserveInventoryOutboxTest {
         val agg = UUID.randomUUID()
         val payloadObj = mapOf("orderId" to agg.toString(), "reason" to "payment_failed")
         val payload = objectMapper.writeValueAsString(payloadObj)
-        val rec = OutboxRecord.create(id = id, aggregateId = agg, eventType = et, payload = payload)
+        val rec = OutboxRecord.create(outboxId = id, aggregateId = agg, eventType = et, payload = payload)
         outboxRepository.save(rec)
 
         useCase.publishPendingOutboxMessages()

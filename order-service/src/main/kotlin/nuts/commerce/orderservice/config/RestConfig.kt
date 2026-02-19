@@ -11,7 +11,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory
 class RestConfig {
     @Bean
     fun restTemplate(
-        @Value("\${order-service.product.base-url:http://localhost:8081}") baseUrl: String
+        @Value($$"${order-service.product.base-url:http://localhost:8081}") baseUrl: String
     ): RestTemplate {
         val factory = SimpleClientHttpRequestFactory().apply {
             setConnectTimeout(2000)

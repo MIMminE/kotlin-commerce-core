@@ -2,14 +2,14 @@ package nuts.commerce.orderservice.application.port.repository
 
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.model.OutboxStatus
-import nuts.commerce.orderservice.port.repository.OrderOutboxRepository
+import nuts.commerce.orderservice.port.repository.OutboxRepository
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryOrderOutboxRepository(
+class InMemoryOutboxRepository(
     private val nowProvider: () -> Instant = { Instant.now() },
-) : OrderOutboxRepository {
+) : OutboxRepository {
 
     private val store: MutableMap<UUID, OutboxRecord> = ConcurrentHashMap()
 
@@ -27,7 +27,7 @@ class InMemoryOrderOutboxRepository(
         ids.mapNotNull(store::get)
 
     override fun findByAggregateId(aggregateId: UUID): List<OutboxRecord> =
-        store.values.filter { it.aggregateId == aggregateId }
+        store.values.filter { it.orderId == aggregateId }
 
     override fun claimReadyToPublishIds(limit: Int): List<UUID> {
         val now = nowProvider()

@@ -1,14 +1,13 @@
 package nuts.commerce.orderservice.application.usecase
 
 import nuts.commerce.orderservice.application.port.repository.InMemoryOrderRepository
-import nuts.commerce.orderservice.application.port.repository.InMemoryOrderOutboxRepository
-import nuts.commerce.orderservice.application.port.repository.InMemoryOrderSagaRepository
+import nuts.commerce.orderservice.application.port.repository.InMemoryOutboxRepository
+import nuts.commerce.orderservice.application.port.repository.InMemorySageRepository
 import nuts.commerce.orderservice.model.Money
 import nuts.commerce.orderservice.model.Order
 import nuts.commerce.orderservice.model.OrderItem
 import nuts.commerce.orderservice.exception.OrderException
 import nuts.commerce.orderservice.model.OrderSaga
-import nuts.commerce.orderservice.usecase.OnPaymentApprovedUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.ObjectMapper
@@ -21,8 +20,8 @@ import kotlin.test.fail
 class OnPaymentApprovedUseCaseTest {
 
     private val orderRepository = InMemoryOrderRepository()
-    private val orderOutboxRepo = InMemoryOrderOutboxRepository()
-    private val orderSagaRepo = InMemoryOrderSagaRepository()
+    private val orderOutboxRepo = InMemoryOutboxRepository()
+    private val orderSagaRepo = InMemorySageRepository()
     private val useCase = OnPaymentApprovedUseCase(orderRepository, orderSagaRepo, orderOutboxRepo, ObjectMapper())
 
     @BeforeEach

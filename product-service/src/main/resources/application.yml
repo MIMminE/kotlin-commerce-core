@@ -29,3 +29,5 @@ product:
         enabled: true
       topic: product-inbound
       group-id: product-service-group
+server:
+  port: 8080

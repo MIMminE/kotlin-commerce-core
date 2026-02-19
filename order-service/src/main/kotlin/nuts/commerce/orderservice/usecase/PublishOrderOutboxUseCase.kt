@@ -1,62 +1,64 @@
 package nuts.commerce.orderservice.usecase
 
 import nuts.commerce.orderservice.port.message.OrderEventProducer
-import nuts.commerce.orderservice.port.repository.OrderOutboxRepository
+import nuts.commerce.orderservice.port.message.ProduceResult
+import nuts.commerce.orderservice.port.repository.OutboxRepository
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.Executor
 
-@Service
+@Component
 class PublishOrderOutboxUseCase(
-    private val orderOutboxRepository: OrderOutboxRepository,
-    private val orderEventProducer: OrderEventProducer,
-    private val transactionTemplate: TransactionTemplate,
-    @Value($$"${order.outbox.batch-size}") private val batchSize: Int,
-    @Value($$"${order.outbox.max-retries}") private val maxRetries: Int // 현재 미사용(추후 재시도 로직에 사용 예정)
+    private val outboxRepository: OutboxRepository,
+    private val eventProducer: OrderEventProducer,
+    @Qualifier("outboxUpdateExecutor") private val outboxUpdateExecutor: Executor,
+    @Value($$"${order.outbox.batch-size:50}") private val batchSize: Int,
 ) {
 
     fun publishPendingOutboxMessages() {
-        val now = Instant.now()
-        val ids = transactional { orderOutboxRepository.claimReadyToPublishIds(limit = batchSize) }
+        val claimedOutboxResults = outboxRepository.claimAndLockBatchIds(
+            batchSize = batchSize,
+            lockedBy = "Nuts-Worker"
+        )
 
-        if (ids.isEmpty()) return
+        if (claimedOutboxResults.size == 0) {
+            return
+        }
 
-        val publishedIds = mutableListOf<UUID>()
+        claimedOutboxResults.claimOutboxInfo.forEach { outboxInfo ->
+            eventProducer.produce(outboxInfo)
+                .whenCompleteAsync(
+                    { result, ex ->
+                        when {
+                            ex != null -> {
+                                outboxRepository.markFailed(
+                                    outboxId = outboxInfo.outboxId,
+                                    lockedBy = "Nuts-Worker"
+                                )
+                            }
 
-        orderOutboxRepository.findByIds(ids).forEach { outboxMessage ->
-            runCatching {
-                orderEventProducer.produce(
-                    OrderEventProducer.ProduceEvent(
-                        eventId = outboxMessage.outboxId,
-                        eventType = outboxMessage.eventType,
-                        payload = outboxMessage.payload,
-                        aggregateId = outboxMessage.aggregateId
-                    )
+                            result is ProduceResult.Success -> {
+                                outboxRepository.markPublished(
+                                    outboxId = outboxInfo.outboxId,
+                                    lockedBy = "Nuts-Worker"
+                                )
+                            }
+
+                            result is ProduceResult.Failure -> {
+                                outboxRepository.markFailed(
+                                    outboxId = outboxInfo.outboxId,
+                                    lockedBy = "Nuts-Worker"
+                                )
+                            }
+                        }
+                    }, outboxUpdateExecutor
                 )
-            }.onSuccess {
-                publishedIds += outboxMessage.outboxId
-            }.onFailure { ex ->
-                val cause = ex.cause ?: ex
-                val error = cause.message ?: (cause::class.qualifiedName ?: "unknown")
+        }
 
-                transactional {
-                    val managed = orderOutboxRepository.findById(outboxMessage.outboxId) ?: return@transactional
-                    managed.markFailed(
-                        error = error,
-                        now = now,
-                    )
-                }
-            }
-        }
-        if (publishedIds.isEmpty()) return
-        transactional {
-            val eventList = orderOutboxRepository.findByIds(publishedIds)
-            eventList.forEach { it.markPublished(now) }
-        }
     }
-
-    private fun <T> transactional(block: () -> T): T =
-        transactionTemplate.execute { block() }!!
 }

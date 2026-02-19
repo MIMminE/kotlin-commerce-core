@@ -48,25 +48,40 @@ class Order protected constructor(
 
 ) : BaseEntity() {
 
+    fun addItems(newItems: List<OrderItem>) {
+        if (status != OrderStatus.CREATED) {
+            throw OrderException.InvalidTransition(
+                orderId = orderId,
+                from = status,
+                to = OrderStatus.CREATED
+            )
+        }
+        items.addAll(newItems)
+    }
+
     companion object {
         fun create(
             orderId: UUID = UUID.randomUUID(),
             idempotencyKey: UUID,
             userId: String,
-            items: List<OrderItem>,
+            items: List<OrderItem> = emptyList(),
             status: OrderStatus = OrderStatus.CREATED,
         ): Order {
+
+            val totalPrice = items.sumOf { it.unitPrice.amount * it.qty }
+            val totalPriceMoney =
+                Money(amount = totalPrice, currency = items.firstOrNull()?.unitPrice?.currency ?: "KRW")
 
             return Order(
                 orderId = orderId,
                 idempotencyKey = idempotencyKey,
                 userId = userId,
                 items = items.toMutableList(),
-                totalPrice = totalPrice,
+                totalPrice = totalPriceMoney,
                 status = status
             )
         }
     }
 }
 
-enum class OrderStatus { CREATED, PAYING, PAID, PAYMENT_FAILED, CANCELED }
+enum class OrderStatus { CREATED, FAIL, PAYING, PAID, PAYMENT_FAILED, COMPLETED }

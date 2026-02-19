@@ -1,34 +1,15 @@
 package nuts.commerce.orderservice.port.message
 
-import nuts.commerce.orderservice.event.EventType
+import nuts.commerce.orderservice.model.OutboxInfo
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
+
 
 interface OrderEventProducer {
-    fun produce(orderEvent: OrderEvent)
+    fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult>
 }
 
-@ConsistentCopyVisibility
-data class OrderEvent internal constructor(
-    val eventId: UUID,
-    val outboxId: UUID,
-    val orderId: UUID,
-    val eventType: EventType,
-    val payload: String
-) {
-    companion object {
-        fun create(
-            orderId: UUID,
-            outboxId: UUID,
-            eventType: EventType,
-            payload: String,
-            eventId: UUID = UUID.randomUUID(),
-        ): OrderEvent =
-            OrderEvent(
-                eventId = eventId,
-                outboxId = outboxId,
-                orderId = orderId,
-                eventType = eventType,
-                payload = payload
-            )
-    }
+sealed interface ProduceResult {
+    data class Success(val eventId: UUID, val outboxId: UUID) : ProduceResult
+    data class Failure(val reason: String, val outboxId: UUID) : ProduceResult
 }

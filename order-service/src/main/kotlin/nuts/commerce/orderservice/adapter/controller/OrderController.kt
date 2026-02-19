@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.adapter.controller
 
-import nuts.commerce.orderservice.usecase.CreateOrderCommand
-import nuts.commerce.orderservice.usecase.CreateOrderUseCase
+import nuts.commerce.orderservice.usecase.OrderCreateCommand
+import nuts.commerce.orderservice.usecase.OrderCreateUseCase
 import nuts.commerce.orderservice.usecase.GetOrdersUseCase
 import nuts.commerce.orderservice.usecase.Item
 import nuts.commerce.orderservice.exception.OrderException
@@ -15,21 +15,20 @@ import java.util.*
 @RestController
 @RequestMapping("/api/orders")
 class OrderController(
-    private val createOrderUseCase: CreateOrderUseCase,
+    private val orderCreateUseCase: OrderCreateUseCase,
     private val getOrdersUseCase: GetOrdersUseCase
 ) {
     @PostMapping
     fun create(@RequestBody req: CreateOrderRequest): ResponseEntity<CreateOrderResponse> {
-        // 클라이언트가 idempotencyKey를 제공해야 합니다. 없으면 InvalidCommand(400)를 반환합니다.
         val idempotencyKey = req.idempotencyKey
             ?: throw OrderException.InvalidCommand("idempotencyKey is required and must be provided by client")
 
-        val createOrderCommand = CreateOrderCommand(
+        val orderCreateCommand = OrderCreateCommand(
             idempotencyKey = idempotencyKey,
             userId = req.userId,
             items = req.items.map {
                 Item(
-                    it.productId,
+                    UUID.fromString(it.productId),
                     it.qty,
                     it.unitPriceAmount,
                     it.unitPriceCurrency
@@ -39,7 +38,7 @@ class OrderController(
             currency = req.currency
         )
 
-        val res = createOrderUseCase.create(createOrderCommand)
+        val res = orderCreateUseCase.create(orderCreateCommand)
         val location = URI.create("/api/orders/${res.orderId}")
         return ResponseEntity.created(location).body(CreateOrderResponse(res.orderId))
     }
@@ -53,7 +52,8 @@ class OrderController(
         val pageable = PageRequest.of(page, size)
         val pageRes = getOrdersUseCase.get(userId, pageable)
         val summaries =
-            pageRes.content.map { OrderSummary(it.id, it.userId, it.status.name, it.total.amount, it.total.currency) }
+            // Order 엔티티의 필드명에 맞춰 매핑(orderId, totalPrice)
+            pageRes.content.map { OrderSummary(it.orderId, it.userId, it.status.name, it.totalPrice.amount, it.totalPrice.currency) }
         val resultPage = PageImpl(summaries, pageable, pageRes.totalElements)
         return ResponseEntity.ok(resultPage)
     }
@@ -70,7 +70,7 @@ data class CreateOrderRequest(
 
 data class ItemRequest(
     val productId: String,
-    val qty: Int,
+    val qty: Long,
     val unitPriceAmount: Long,
     val unitPriceCurrency: String
 )

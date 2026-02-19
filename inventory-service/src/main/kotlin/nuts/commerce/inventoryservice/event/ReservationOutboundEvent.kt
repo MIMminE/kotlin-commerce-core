@@ -6,7 +6,6 @@ data class ReservationOutboundEvent(
     val eventId: UUID = UUID.randomUUID(),
     val outboxId: UUID,
     val orderId: UUID,
-    val reservationId: UUID?,
     val eventType: OutboundEventType,
     val payload: OutboundPayload
 ) {
@@ -19,6 +18,7 @@ data class ReservationOutboundEvent(
 sealed interface OutboundPayload
 
 class ReservationCreationSuccessPayload(
+    val reservationId: UUID,
     val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>,
 ) : OutboundPayload
 
@@ -27,6 +27,7 @@ class ReservationCreationFailPayload(
 ) : OutboundPayload
 
 class ReservationConfirmSuccessPayload(
+    val reservationId: UUID,
     val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>
 ) : OutboundPayload
 

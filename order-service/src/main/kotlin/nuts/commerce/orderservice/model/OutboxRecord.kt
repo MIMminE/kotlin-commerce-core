@@ -1,21 +1,29 @@
 package nuts.commerce.orderservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.orderservice.event.EventType
+import nuts.commerce.orderservice.event.OutboundEventType
 import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "order_outbox_events")
+@Table(
+    name = "order_outbox_records",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["orderId", "idempotency_key"])]
+
+)
 class OutboxRecord protected constructor(
     @Id
     val outboxId: UUID,
 
     @Column(nullable = false, updatable = false)
-    val aggregateId: UUID,
+    val orderId: UUID,
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, updatable = false)
-    val eventType: String,
+    val eventType: OutboundEventType,
+
+    @Column(name = "idempotency_key", nullable = false, updatable = false)
+    val idempotencyKey: UUID,
 
     @Lob
     @Column(nullable = false)
@@ -25,34 +33,36 @@ class OutboxRecord protected constructor(
     @Column(nullable = false)
     var status: OutboxStatus,
 
-    @Column(nullable = false)
-    var attempts: Int,
+    @Column(name = "locked_by")
+    var lockedBy: String?,
 
-    @Column(nullable = true)
-    var nextAttemptAt: Instant?,
+    @Column(name = "locked_until")
+    var lockedUntil: Instant?,
 
-    @Version
-    var version: Long? = null
+    @Column(name = "attempt_count", nullable = false)
+    var attemptCount: Int,
+
+    @Column(name = "next_attempt_at", nullable = false)
+    var nextAttemptAt: Instant
+
 ) : BaseEntity() {
 
     companion object {
         fun create(
-            id: UUID = UUID.randomUUID(),
-            aggregateId: UUID,
-            eventType: EventType,
+            outboxId: UUID = UUID.randomUUID(),
+            orderId: UUID,
+            eventType: OutboundEventType,
+            idempotencyKey: UUID,
             payload: String,
-            attempts: Int = 0,
             status: OutboxStatus = OutboxStatus.PENDING,
-            nextAttemptAt: Instant? = null
         ): OutboxRecord {
             return OutboxRecord(
-                outboxId = id,
-                aggregateId = aggregateId,
-                eventType = eventType.name,
+                outboxId = outboxId,
+                orderId = orderId,
+                idempotencyKey = idempotencyKey,
+                eventType = eventType,
                 payload = payload,
                 status = status,
-                attempts = attempts,
-                nextAttemptAt = nextAttemptAt
             )
         }
     }
@@ -68,15 +78,12 @@ class OutboxRecord protected constructor(
     fun markPublished(now: Instant) {
         require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> PUBLISHED" }
         status = OutboxStatus.PUBLISHED
-        nextAttemptAt = null
         updatedAt = now
     }
 
     fun scheduleRetry(now: Instant, nextAttemptAt: Instant, error: String? = null) {
         require(status == OutboxStatus.PROCESSING) { "invalid transition $status -> RETRY_SCHEDULED" }
-        attempts += 1
         status = OutboxStatus.RETRY_SCHEDULED
-        this.nextAttemptAt = nextAttemptAt
         updatedAt = now
     }
 
@@ -87,6 +94,7 @@ class OutboxRecord protected constructor(
     }
 
 }
+
 enum class OutboxStatus {
     PENDING,
     PROCESSING,
@@ -94,3 +102,10 @@ enum class OutboxStatus {
     FAILED,
     RETRY_SCHEDULED
 }
+
+data class OutboxInfo(
+    val outboxId: UUID,
+    val orderId: UUID,
+    val eventType: OutboundEventType,
+    val payload: String
+)

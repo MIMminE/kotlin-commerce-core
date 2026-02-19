@@ -24,11 +24,11 @@ class OrderItem protected constructor() : BaseEntity() {
         protected set
 
     @Column(name = "product_id", nullable = false, length = 64)
-    lateinit var productId: String
+    lateinit var productId: UUID
         protected set
 
     @Column(name = "qty", nullable = false)
-    var qty: Int = 0
+    var qty: Long = 0
         protected set
 
     @Embedded
@@ -44,25 +44,21 @@ class OrderItem protected constructor() : BaseEntity() {
 
     companion object {
         fun create(
-            productId: String,
-            orderId: UUID,
-            qty: Int,
+            productId: UUID,
+            qty: Long,
             unitPrice: Money,
             idGenerator: () -> UUID = { UUID.randomUUID() }
         ): OrderItem {
-            if (productId.isBlank()) throw OrderException.InvalidCommand("productId is required")
             if (qty <= 0) throw OrderException.InvalidCommand("qty must be > 0")
             if (unitPrice.amount < 0) throw OrderException.InvalidCommand("unitPrice.amount must be >= 0")
             if (unitPrice.currency.isBlank()) throw OrderException.InvalidCommand("unitPrice.currency is required")
 
             return OrderItem().apply {
                 this.id = idGenerator()
-                this.orderId = orderId
                 this.productId = productId
                 this.qty = qty
                 this.unitPrice = unitPrice
             }
         }
-
     }
 }
