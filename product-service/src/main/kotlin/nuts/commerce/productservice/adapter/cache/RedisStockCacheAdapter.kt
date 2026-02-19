@@ -15,21 +15,15 @@ class RedisStockCacheAdapter(
             ?: throw IllegalStateException("Stock not found in cache for productId: $productId")
     }
 
-    override fun saveStock(productId: UUID, expectStock: Long, updateStock: Long) {
-        redisTemplate.execute { connection ->
-            connection.watch(productId.toString().toByteArray())
-            val currentStock = redisTemplate.opsForValue().get(productId)
+    override fun saveStock(productId: UUID, stock: Long) {
+        redisTemplate.opsForValue().set(productId, stock)
+    }
 
-            if (currentStock == null) {
-                redisTemplate.opsForValue().set(productId, updateStock)
-            } else {
-                if (currentStock != expectStock) {
-                    throw IllegalStateException("Expected stock does not match current stock for productId: $productId")
-                }
-                connection.multi()
-                redisTemplate.opsForValue().set(productId, updateStock)
-                connection.exec()
-            }
+    override fun updateStock(productId: UUID, updateStock: Long) {
+        val existed = redisTemplate.hasKey(productId) == true
+        if (!existed) {
+            throw IllegalStateException("Stock not found in cache for productId: $productId")
         }
+        redisTemplate.opsForValue().set(productId, updateStock)
     }
 }

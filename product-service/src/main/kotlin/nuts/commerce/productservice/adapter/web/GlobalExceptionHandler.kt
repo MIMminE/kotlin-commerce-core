@@ -17,12 +17,6 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(msg)
     }
 
-    @ExceptionHandler(ProductException.InvalidTransition::class)
-    fun handleInvalidTransition(e: ProductException.InvalidTransition): ResponseEntity<String> {
-        val msg = e.message ?: "Invalid transition"
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(msg)
-    }
-
     @ExceptionHandler(OptimisticLockingFailureException::class, OptimisticLockException::class)
     fun handleOptimisticLock(e: Exception): ResponseEntity<String> {
         val msg = e.message ?: "Conflict due to optimistic locking"

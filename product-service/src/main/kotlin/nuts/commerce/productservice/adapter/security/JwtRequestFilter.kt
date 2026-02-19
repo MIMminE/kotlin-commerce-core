@@ -26,7 +26,7 @@ class JwtRequestFilter(
             val jwtToken = authorizationHeader.substring(7)
 
             if (jwtComponent.validateToken(jwtToken)) {
-                val username = jwtComponent.getUsernameFromToken(jwtToken)
+                val username = jwtComponent.getUsernameFromToken(jwtToken)!!
                 val roles = jwtComponent.getRoleFromToken(jwtToken)
 
                 val authentication = UsernamePasswordAuthenticationToken(

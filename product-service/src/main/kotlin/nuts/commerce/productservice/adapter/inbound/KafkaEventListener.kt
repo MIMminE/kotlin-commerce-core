@@ -6,7 +6,6 @@ import nuts.commerce.productservice.event.InboundEventType
 import nuts.commerce.productservice.event.ProductInboundEvent
 import nuts.commerce.productservice.usecase.ReservationCreationSucceededHandler
 import nuts.commerce.productservice.usecase.ReservationReleaseHandler
-import nuts.commerce.productservice.usecase.StockUpdateUseCase
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.messaging.handler.annotation.Payload
@@ -31,9 +30,9 @@ class KafkaEventListener(
     fun onMessage(
         @Payload inboundEvent: ProductInboundEvent
     ) {
-        when(inboundEvent.eventType){
-            InboundEventType.RESERVATION_CREATION_SUCCEEDED -> TODO()
-            InboundEventType.RESERVATION_RELEASE -> TODO()
+        when (inboundEvent.eventType) {
+            InboundEventType.RESERVATION_CREATION_SUCCEEDED -> reservationCreationSucceededHandler.handle(inboundEvent)
+            InboundEventType.RESERVATION_RELEASE -> reservationReleaseHandler.handle(inboundEvent)
         }
     }
 }

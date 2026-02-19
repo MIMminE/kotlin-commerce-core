@@ -6,24 +6,24 @@ import nuts.commerce.productservice.event.ProductInboundEvent
 import nuts.commerce.productservice.event.ReservationCreationSuccessPayload
 import nuts.commerce.productservice.model.StockUpdateInboxRecord
 import nuts.commerce.productservice.port.cache.StockCachePort
+import nuts.commerce.productservice.port.repository.StockUpdateInboxRepository
 import org.springframework.stereotype.Component
-import org.springframework.transaction.TransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.ObjectMapper
 
 @Component
 class ReservationCreationSucceededHandler(
     private val stockCachePort: StockCachePort,
-    private val stockUpdateInboxJpa: StockUpdateInboxJpa,
-    private val txManager: TransactionManager,
+    private val stockUpdateInboxRepository: StockUpdateInboxRepository,
+    private val txTemplate: TransactionTemplate,
     private val objectMapper: ObjectMapper
 ) {
 
-    fun handle(productInboundEvent: ProductInboundEvent){
+    fun handle(productInboundEvent: ProductInboundEvent) {
         require(productInboundEvent.eventType == InboundEventType.RESERVATION_CREATION_SUCCEEDED)
         require(productInboundEvent.payload is ReservationCreationSuccessPayload)
 
         val payload = productInboundEvent.payload
-        val reservationItemInfoList = payload.reservationItemInfoList
 
         val inboxRecord = StockUpdateInboxRecord.create(
             orderId = productInboundEvent.orderId,
@@ -32,13 +32,12 @@ class ReservationCreationSucceededHandler(
             payload = objectMapper.writeValueAsString(payload)
         )
 
-        stockUpdateInboxJpa.save(inboxRecord)
-
-
-
-        reservationItemInfoList.forEach {
-            stockCachePort.saveStock(it.productId, it.qty, -it.qty)
+        txTemplate.execute {
+            stockUpdateInboxRepository.save(inboxRecord)
         }
 
+        payload.reservationItemInfoList.forEach {
+            stockCachePort.updateStock(it.productId, -it.qty)
+        }
     }
 }
