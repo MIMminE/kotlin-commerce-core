@@ -29,5 +29,22 @@ product:
         enabled: true
       topic: product-inbound
       group-id: product-service-group
+
+security:
+  api:
+    - key: prod-api-key-1234
+      role: PROD
+      principal: prod-client
+
+    - key: dev-api-key-5678
+      role: DEV
+      principal: dev-client
+
 server:
   port: 8080
+
+
+
+logging:
+  level:
+    org.springframework.security: info
