@@ -1,6 +1,11 @@
-package nuts.commerce.inventoryservice.usecase
+package nuts.commerce.inventoryservice.event.inbound.handler
 
-import nuts.commerce.inventoryservice.event.*
+import nuts.commerce.inventoryservice.event.inbound.InboundEventType
+import nuts.commerce.inventoryservice.event.inbound.ReservationInboundEvent
+import nuts.commerce.inventoryservice.event.inbound.ReservationReleasePayload
+import nuts.commerce.inventoryservice.event.outbound.OutboundEventType
+import nuts.commerce.inventoryservice.event.outbound.ReservationOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ReservationReleaseSuccessPayload
 import nuts.commerce.inventoryservice.model.OutboxRecord
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import nuts.commerce.inventoryservice.port.repository.OutboxRepository
@@ -9,26 +14,30 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.ObjectMapper
-import java.util.*
 
 @Component
-class ReservationReleaseUseCase(
+class ReservationReleaseHandler(
     private val inventoryRepository: InventoryRepository,
     private val reservationRepository: ReservationRepository,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
-) {
+) : ReservationEventHandler {
+    override val supportType: InboundEventType
+        get() = InboundEventType.RESERVATION_RELEASE
 
     @Transactional
-    fun execute(command: ReservationReleaseCommand): ReservationReleaseResult {
+    override fun handle(reservationInboundEvent: ReservationInboundEvent) {
+        val eventId = reservationInboundEvent.eventId
+        val orderId = reservationInboundEvent.orderId
+        val payload = reservationInboundEvent.payload as ReservationReleasePayload
 
-        val reservation = (reservationRepository.findById(command.reservationId)
-            ?: throw IllegalStateException("Reservation not found for ID: ${command.reservationId}"))
+        val reservation = reservationRepository.findById(payload.reservationId)
+            ?: throw IllegalArgumentException("Invalid reservation id: ${payload.reservationId}")
 
         try {
             reservation.release()
             reservationRepository.save(reservation)
-            reservationRepository.findReservationInfo(command.reservationId)!!
+            reservationRepository.findReservationInfo(payload.reservationId)!!
                 .reservationItemInfos.forEach {
                     val ok = inventoryRepository.releaseReservedInventory(
                         productId = it.productId,
@@ -49,35 +58,16 @@ class ReservationReleaseUseCase(
             )
 
             val outboxRecord = OutboxRecord.create(
-                orderId = command.orderId,
+                orderId = orderId,
                 reservationId = reservation.reservationId,
-                idempotencyKey = command.eventId,
+                idempotencyKey = eventId,
                 eventType = OutboundEventType.RESERVATION_RELEASE,
                 payload = objectMapper.writeValueAsString(payload)
             )
             outboxRepository.save(outboxRecord)
-            return ReservationReleaseResult(command.reservationId)
         } catch (ex: DataIntegrityViolationException) {
-            reservationRepository.findReservationIdForIdempotencyKey(command.orderId, command.eventId)
-                ?: throw IllegalStateException("Reservation not found for idempotency key: ${command.eventId}")
-            return ReservationReleaseResult(command.reservationId)
-        }
-    }
-}
-
-data class ReservationReleaseResult(val reservationId: UUID)
-data class ReservationReleaseCommand(val orderId: UUID, val eventId: UUID, val reservationId: UUID) {
-    companion object {
-        fun from(inboundEvent: ReservationInboundEvent): ReservationReleaseCommand {
-            require(inboundEvent.eventType == InboundEventType.RESERVATION_RELEASE)
-            require(inboundEvent.payload is ReservationReleasePayload)
-
-            val payload = inboundEvent.payload
-            return ReservationReleaseCommand(
-                orderId = inboundEvent.orderId,
-                eventId = inboundEvent.eventId,
-                reservationId = payload.reservationId
-            )
+            reservationRepository.findReservationIdForIdempotencyKey(orderId, eventId)
+                ?: throw IllegalStateException("Reservation not found for idempotency key: $eventId")
         }
     }
 }

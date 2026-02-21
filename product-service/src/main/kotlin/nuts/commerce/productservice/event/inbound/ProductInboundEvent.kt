@@ -1,4 +1,4 @@
-package nuts.commerce.productservice.event
+package nuts.commerce.productservice.event.inbound
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo

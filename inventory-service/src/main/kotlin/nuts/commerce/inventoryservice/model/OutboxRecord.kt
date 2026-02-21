@@ -1,11 +1,9 @@
 package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.inventoryservice.event.OutboundEventType
+import nuts.commerce.inventoryservice.event.outbound.OutboundEventType
 import java.time.Instant
 import java.util.UUID
-import java.util.function.Function
-import javax.swing.event.DocumentEvent
 
 @Entity
 @Table(

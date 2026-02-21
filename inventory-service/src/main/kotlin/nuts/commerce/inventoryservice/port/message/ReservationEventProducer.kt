@@ -1,6 +1,6 @@
 package nuts.commerce.inventoryservice.port.message
 
-import nuts.commerce.inventoryservice.event.ReservationOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ReservationOutboundEvent
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 

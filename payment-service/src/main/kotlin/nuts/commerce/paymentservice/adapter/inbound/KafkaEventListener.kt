@@ -1,14 +1,13 @@
 package nuts.commerce.paymentservice.adapter.inbound
 
-import nuts.commerce.paymentservice.event.InboundEventType
-import nuts.commerce.paymentservice.event.PaymentInboundEvent
+import nuts.commerce.paymentservice.event.inbound.InboundEventType
+import nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent
 import nuts.commerce.paymentservice.usecase.PaymentConfirmCommand
 import nuts.commerce.paymentservice.usecase.PaymentConfirmedUseCase
 import nuts.commerce.paymentservice.usecase.PaymentCreateCommand
 import nuts.commerce.paymentservice.usecase.PaymentReleasedUseCase
 import nuts.commerce.paymentservice.usecase.PaymentCreatedUseCase
 import nuts.commerce.paymentservice.usecase.PaymentReleaseCommand
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.messaging.handler.annotation.Payload

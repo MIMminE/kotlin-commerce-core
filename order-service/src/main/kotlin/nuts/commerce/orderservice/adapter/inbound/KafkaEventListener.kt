@@ -1,7 +1,7 @@
 package nuts.commerce.orderservice.adapter.inbound
 
-import nuts.commerce.orderservice.event.InboundEventType.*
-import nuts.commerce.orderservice.event.OrderInboundEvent
+import nuts.commerce.orderservice.event.inbound.InboundEventType.*
+import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
 import nuts.commerce.orderservice.handle.PaymentConfirmHandler
 import nuts.commerce.orderservice.handle.PaymentCreateFailHandler
 import nuts.commerce.orderservice.handle.PaymentCreateSuccessHandler

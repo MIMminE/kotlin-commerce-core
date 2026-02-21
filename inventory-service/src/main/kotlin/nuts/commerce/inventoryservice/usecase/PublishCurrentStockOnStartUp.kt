@@ -1,8 +1,8 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.event.ProductCreatedPayload
-import nuts.commerce.inventoryservice.event.ProductEventType
-import nuts.commerce.inventoryservice.event.ProductOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ProductCreatedPayload
+import nuts.commerce.inventoryservice.event.outbound.ProductEventType
+import nuts.commerce.inventoryservice.event.outbound.ProductOutboundEvent
 import nuts.commerce.inventoryservice.port.message.ProductEventProducer
 import nuts.commerce.inventoryservice.port.repository.InventoryRepository
 import org.springframework.stereotype.Component

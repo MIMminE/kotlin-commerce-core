@@ -1,8 +1,8 @@
 package nuts.commerce.orderservice.usecase
 
-import nuts.commerce.orderservice.event.OutboundEventType
-import nuts.commerce.orderservice.event.OutboundReservationItem
-import nuts.commerce.orderservice.event.ReservationCreatePayload
+import nuts.commerce.orderservice.event.outbound.OutboundEventType
+import nuts.commerce.orderservice.event.outbound.OutboundReservationItem
+import nuts.commerce.orderservice.event.outbound.ReservationCreatePayload
 import nuts.commerce.orderservice.port.repository.OutboxRepository
 import nuts.commerce.orderservice.port.repository.OrderRepository
 import nuts.commerce.orderservice.port.repository.SageRepository

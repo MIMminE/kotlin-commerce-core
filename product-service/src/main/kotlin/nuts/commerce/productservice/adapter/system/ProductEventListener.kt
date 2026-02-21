@@ -1,8 +1,8 @@
 package nuts.commerce.productservice.adapter.system
 
-import nuts.commerce.productservice.event.InboundEventType
-import nuts.commerce.productservice.event.ProductInboundEvent
-import nuts.commerce.productservice.event.handler.ProductEventHandler
+import nuts.commerce.productservice.event.inbound.InboundEventType
+import nuts.commerce.productservice.event.inbound.ProductInboundEvent
+import nuts.commerce.productservice.event.inbound.handler.ProductEventHandler
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.messaging.handler.annotation.Payload
@@ -23,9 +23,7 @@ class ProductEventListener(handlers: List<ProductEventHandler>) {
         topics = [$$"${system.product-event-listener.topic}"],
         groupId = $$"${system.product-event-listener.group-id}",
     )
-    fun onMessage(
-        @Payload inboundEvent: ProductInboundEvent
-    ) {
+    fun onMessage(@Payload inboundEvent: ProductInboundEvent) {
         handlerMap[inboundEvent.eventType]?.handle(inboundEvent)
             ?: throw IllegalArgumentException("No handler found for event type: ${inboundEvent.eventType}")
     }

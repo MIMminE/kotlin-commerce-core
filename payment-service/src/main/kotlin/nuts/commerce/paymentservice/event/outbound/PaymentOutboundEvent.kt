@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.event
+package nuts.commerce.paymentservice.event.outbound
 
 import java.util.UUID
 

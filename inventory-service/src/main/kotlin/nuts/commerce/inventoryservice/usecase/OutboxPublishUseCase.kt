@@ -1,15 +1,15 @@
 package nuts.commerce.inventoryservice.usecase
 
-import nuts.commerce.inventoryservice.event.OutboundEventType
-import nuts.commerce.inventoryservice.event.OutboundPayload
-import nuts.commerce.inventoryservice.event.ProductEventType
-import nuts.commerce.inventoryservice.event.ProductOutboundEvent
-import nuts.commerce.inventoryservice.event.ProductStockDecrementPayload
-import nuts.commerce.inventoryservice.event.ReservationConfirmSuccessPayload
-import nuts.commerce.inventoryservice.event.ReservationCreationFailPayload
-import nuts.commerce.inventoryservice.event.ReservationCreationSuccessPayload
-import nuts.commerce.inventoryservice.event.ReservationOutboundEvent
-import nuts.commerce.inventoryservice.event.ReservationReleaseSuccessPayload
+import nuts.commerce.inventoryservice.event.outbound.OutboundEventType
+import nuts.commerce.inventoryservice.event.outbound.OutboundPayload
+import nuts.commerce.inventoryservice.event.outbound.ProductEventType
+import nuts.commerce.inventoryservice.event.outbound.ProductOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ProductStockDecrementPayload
+import nuts.commerce.inventoryservice.event.outbound.ReservationConfirmSuccessPayload
+import nuts.commerce.inventoryservice.event.outbound.ReservationCreationFailPayload
+import nuts.commerce.inventoryservice.event.outbound.ReservationCreationSuccessPayload
+import nuts.commerce.inventoryservice.event.outbound.ReservationOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ReservationReleaseSuccessPayload
 import nuts.commerce.inventoryservice.model.OutboxInfo
 import nuts.commerce.inventoryservice.port.message.ReservationEventProducer
 import nuts.commerce.inventoryservice.port.message.ProduceResult

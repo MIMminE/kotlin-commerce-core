@@ -1,10 +1,10 @@
 package nuts.commerce.paymentservice.usecase
 
-import nuts.commerce.paymentservice.event.InboundEventType
-import nuts.commerce.paymentservice.event.OutboundEventType
-import nuts.commerce.paymentservice.event.PaymentConfirmPayload
-import nuts.commerce.paymentservice.event.PaymentConfirmSuccessPayload
-import nuts.commerce.paymentservice.event.PaymentInboundEvent
+import nuts.commerce.paymentservice.event.inbound.InboundEventType
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
+import nuts.commerce.paymentservice.event.inbound.PaymentConfirmPayload
+import nuts.commerce.paymentservice.event.outbound.PaymentConfirmSuccessPayload
+import nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import nuts.commerce.paymentservice.port.payment.PaymentStatusUpdateResult

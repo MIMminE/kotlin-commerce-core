@@ -1,7 +1,7 @@
 package nuts.commerce.paymentservice.model
 
 import jakarta.persistence.*
-import nuts.commerce.paymentservice.event.OutboundEventType
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
 import java.time.Instant
 import java.util.UUID
 

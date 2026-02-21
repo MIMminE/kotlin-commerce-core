@@ -1,6 +1,6 @@
 package nuts.commerce.inventoryservice.adapter.message
 
-import nuts.commerce.inventoryservice.event.ReservationOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ReservationOutboundEvent
 import nuts.commerce.inventoryservice.port.message.ReservationEventProducer
 import nuts.commerce.inventoryservice.port.message.ProduceResult
 import org.springframework.beans.factory.annotation.Value

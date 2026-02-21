@@ -30,6 +30,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      data-locations: classpath:/data.sql
 
 
 system:

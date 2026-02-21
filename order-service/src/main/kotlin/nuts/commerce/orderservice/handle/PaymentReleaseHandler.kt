@@ -1,10 +1,10 @@
 package nuts.commerce.orderservice.handle
 
-import nuts.commerce.orderservice.event.InboundEventType
-import nuts.commerce.orderservice.event.OrderInboundEvent
-import nuts.commerce.orderservice.event.OutboundEventType
-import nuts.commerce.orderservice.event.PaymentReleaseSuccessPayload
-import nuts.commerce.orderservice.event.ReservationReleasePayload
+import nuts.commerce.orderservice.event.inbound.InboundEventType
+import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
+import nuts.commerce.orderservice.event.outbound.OutboundEventType
+import nuts.commerce.orderservice.event.inbound.PaymentReleaseSuccessPayload
+import nuts.commerce.orderservice.event.outbound.ReservationReleasePayload
 import nuts.commerce.orderservice.model.OrderStatus
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.port.repository.OrderRepository

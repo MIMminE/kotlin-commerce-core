@@ -1,8 +1,8 @@
-package nuts.commerce.productservice.event.handler
+package nuts.commerce.productservice.event.inbound.handler
 
-import nuts.commerce.productservice.event.InboundEventType
-import nuts.commerce.productservice.event.ProductInboundEvent
-import nuts.commerce.productservice.event.ProductStockDecrementPayload
+import nuts.commerce.productservice.event.inbound.InboundEventType
+import nuts.commerce.productservice.event.inbound.ProductInboundEvent
+import nuts.commerce.productservice.event.inbound.ProductStockDecrementPayload
 import nuts.commerce.productservice.model.ProductEventInbox
 import nuts.commerce.productservice.port.cache.StockCachePort
 import nuts.commerce.productservice.port.repository.ProductEventInboxRepository

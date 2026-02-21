@@ -1,15 +1,15 @@
 package nuts.commerce.orderservice.adapter.message
 
-import nuts.commerce.orderservice.event.OrderOutboundEvent
-import nuts.commerce.orderservice.event.OutboundEventType
-import nuts.commerce.orderservice.event.OutboundPayload
-import nuts.commerce.orderservice.event.PaymentConfirmPayload
-import nuts.commerce.orderservice.event.PaymentCreateFailedPayload
-import nuts.commerce.orderservice.event.PaymentCreatePayload
-import nuts.commerce.orderservice.event.PaymentReleasePayload
-import nuts.commerce.orderservice.event.ReservationConfirmPayload
-import nuts.commerce.orderservice.event.ReservationCreatePayload
-import nuts.commerce.orderservice.event.ReservationReleasePayload
+import nuts.commerce.orderservice.event.outbound.OrderOutboundEvent
+import nuts.commerce.orderservice.event.outbound.OutboundEventType
+import nuts.commerce.orderservice.event.outbound.OutboundPayload
+import nuts.commerce.orderservice.event.outbound.PaymentConfirmPayload
+import nuts.commerce.orderservice.event.outbound.PaymentCreateFailedPayload
+import nuts.commerce.orderservice.event.outbound.PaymentCreatePayload
+import nuts.commerce.orderservice.event.outbound.PaymentReleasePayload
+import nuts.commerce.orderservice.event.outbound.ReservationConfirmPayload
+import nuts.commerce.orderservice.event.outbound.ReservationCreatePayload
+import nuts.commerce.orderservice.event.outbound.ReservationReleasePayload
 import nuts.commerce.orderservice.model.OutboxInfo
 import nuts.commerce.orderservice.port.message.OrderEventProducer
 import nuts.commerce.orderservice.port.message.ProduceResult

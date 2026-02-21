@@ -1,6 +1,6 @@
 package nuts.commerce.inventoryservice.adapter.message
 
-import nuts.commerce.inventoryservice.event.ProductOutboundEvent
+import nuts.commerce.inventoryservice.event.outbound.ProductOutboundEvent
 import nuts.commerce.inventoryservice.port.message.ProductEventProducer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

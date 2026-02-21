@@ -1,4 +1,4 @@
-package nuts.commerce.orderservice.event
+package nuts.commerce.orderservice.event.outbound
 
 import java.util.UUID
 

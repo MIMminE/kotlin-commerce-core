@@ -1,8 +1,8 @@
 package nuts.commerce.orderservice.handle
 
-import nuts.commerce.orderservice.event.InboundEventType
-import nuts.commerce.orderservice.event.OrderInboundEvent
-import nuts.commerce.orderservice.event.ReservationCreationFailedPayload
+import nuts.commerce.orderservice.event.inbound.InboundEventType
+import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
+import nuts.commerce.orderservice.event.inbound.ReservationCreationFailedPayload
 import nuts.commerce.orderservice.model.OrderStatus
 import nuts.commerce.orderservice.port.repository.OrderRepository
 import nuts.commerce.orderservice.port.repository.SageRepository

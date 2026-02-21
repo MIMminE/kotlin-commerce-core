@@ -1,14 +1,13 @@
 package nuts.commerce.paymentservice.adapter.message
 
-import nuts.commerce.paymentservice.event.OutboundEventType
-import nuts.commerce.paymentservice.event.OutboundPayload
-import nuts.commerce.paymentservice.event.PaymentCreationSuccessPayload
-import nuts.commerce.paymentservice.event.PaymentOutboundEvent
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
+import nuts.commerce.paymentservice.event.outbound.OutboundPayload
+import nuts.commerce.paymentservice.event.outbound.PaymentCreationSuccessPayload
+import nuts.commerce.paymentservice.event.outbound.PaymentOutboundEvent
 import nuts.commerce.paymentservice.model.OutboxInfo
 import nuts.commerce.paymentservice.port.message.PaymentEventProducer
 import nuts.commerce.paymentservice.port.message.ProduceResult
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
