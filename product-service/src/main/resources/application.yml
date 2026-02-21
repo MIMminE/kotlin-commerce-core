@@ -12,6 +12,15 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.productservice.event"
+        spring.json.value.default.type: "nuts.commerce.productservice.event.ProductInboundEvent"
+
+
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
     username: app
@@ -22,13 +31,12 @@ spring:
     hibernate:
       ddl-auto: update
 
-product:
-  kafka:
-    inbound:
-      listener:
-        enabled: true
-      topic: product-inbound
-      group-id: product-service-group
+
+system:
+  product-event-listener:
+    enabled: true
+    topic: product-event
+    group-id: inventory-service-group-product
 
 security:
   api:
@@ -42,8 +50,6 @@ security:
 
 server:
   port: 8080
-
-
 
 logging:
   level:

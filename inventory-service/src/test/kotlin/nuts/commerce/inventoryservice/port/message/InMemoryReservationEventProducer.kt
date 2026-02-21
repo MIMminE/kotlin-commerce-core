@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
-class InMemoryInventoryEventProducer : InventoryEventProducer {
+class InMemoryReservationEventProducer : ReservationEventProducer {
     private val events: ConcurrentHashMap<UUID, CopyOnWriteArrayList<QuantityUpdateEvent>> = ConcurrentHashMap()
 
     override fun produce(inventoryId: UUID, event: QuantityUpdateEvent): CompletableFuture<Unit> {

@@ -1,5 +1,6 @@
 package nuts.commerce.productservice.adapter.web
 
+import nuts.commerce.productservice.model.Money
 import nuts.commerce.productservice.usecase.GetProductDetailUseCase
 import nuts.commerce.productservice.usecase.GetProductsUseCase
 import nuts.commerce.productservice.usecase.RegisterProductCommand
@@ -34,14 +35,19 @@ class ProductController(
     }
 
     @GetMapping("/search/all")
-    fun getProducts(): List<ProductSummaryResponse> {
+    fun getProducts(): ProductSearchAllResponse {
         val products = getProductsUseCase.execute()
-        return products.map {
-            ProductSummaryResponse(
-                productId = it.productId,
-                productName = it.productName.toString()
-            )
-        }
+        return ProductSearchAllResponse(
+            size = products.size,
+            products = products.map {
+                ProductSummaryResponse(
+                    productId = it.productId,
+                    productName = it.productName,
+                    price = it.price,
+                    stock = it.stock
+                )
+            }
+        )
     }
 
     @GetMapping("/search/{productId}")
@@ -61,7 +67,8 @@ class ProductController(
 data class RegisterRequest(val productName: String, val price: Long, val currency: String)
 data class RegisterResponse(val productId: UUID, val productName: String)
 
-data class ProductSummaryResponse(val productId: UUID, val productName: String)
+data class ProductSearchAllResponse(val size: Int, val products: List<ProductSummaryResponse>)
+data class ProductSummaryResponse(val productId: UUID, val productName: String, val price: Money, val stock: Long)
 data class ProductDetailResponse(
     val productId: UUID,
     val productName: String,

@@ -1,4 +1,4 @@
-package nuts.commerce.inventoryservice.adapter.inbound
+package nuts.commerce.inventoryservice.adapter.system
 
 import jakarta.annotation.PostConstruct
 import nuts.commerce.inventoryservice.event.InboundEventType
@@ -12,20 +12,17 @@ import nuts.commerce.inventoryservice.usecase.ReservationCreateUseCase
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
-import org.springframework.kafka.support.KafkaHeaders
-import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
-import tools.jackson.databind.ObjectMapper
 
 @ConditionalOnProperty(
-    prefix = "inventory.kafka.inbound.listener",
+    prefix = "system.reservation-event-listener",
     name = ["enabled"],
     havingValue = "true",
     matchIfMissing = true
 )
 @Component
-class KafkaEventListener(
+class ReservationEventListener(
     private val reservationCreateUseCase: ReservationCreateUseCase,
     private val reservationConfirmUseCase: ReservationConfirmUseCase,
     private val reservationReleaseUseCase: ReservationReleaseUseCase
@@ -38,8 +35,8 @@ class KafkaEventListener(
     }
 
     @KafkaListener(
-        topics = [$$"${inventory.kafka.inbound.topic}"],
-        groupId = $$"${inventory.kafka.inbound.group-id}",
+        topics = [$$"${system.reservation-event-listener.topic}"],
+        groupId = $$"${system.reservation-event-listener.group-id}",
     )
     fun onMessage(
         @Payload inboundEvent: ReservationInboundEvent

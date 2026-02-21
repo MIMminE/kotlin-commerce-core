@@ -2,6 +2,8 @@ package nuts.commerce.inventoryservice.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
@@ -21,6 +23,9 @@ class Inventory protected constructor(
     @Column(name = "product_id", nullable = false, updatable = false)
     val productId: UUID,
 
+    @Column(name = "product_name", nullable = false, updatable = false)
+    val productName: String,
+
     @Column(nullable = false)
     val idempotencyKey: UUID,
 
@@ -30,6 +35,7 @@ class Inventory protected constructor(
     @Column(name = "reserved_quantity", nullable = false)
     var reservedQuantity: Long,
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: InventoryStatus,
 
@@ -43,6 +49,7 @@ class Inventory protected constructor(
             inventoryId: UUID = UUID.randomUUID(),
             idempotencyKey: UUID,
             productId: UUID,
+            productName: String,
             availableQuantity: Long,
             reservationQuantity: Long = 0L,
             status: InventoryStatus = InventoryStatus.AVAILABLE
@@ -51,6 +58,7 @@ class Inventory protected constructor(
                 inventoryId = inventoryId,
                 idempotencyKey = idempotencyKey,
                 productId = productId,
+                productName = productName,
                 availableQuantity = availableQuantity,
                 reservedQuantity = reservationQuantity,
                 status = status

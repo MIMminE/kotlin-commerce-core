@@ -30,6 +30,7 @@ order:
       topic: order-outbound
 
 rest:
-  product-snapshot:
-    url: http://localhost:8080/api/products/snapshots
+  product-service:
+    base-url: http://localhost:8080
+    product-snapshot-endpoint: /api/products/search/all
     api-key: dev-api-key-1017

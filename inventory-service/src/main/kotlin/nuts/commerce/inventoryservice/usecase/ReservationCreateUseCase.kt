@@ -42,6 +42,7 @@ class ReservationCreateUseCase(
         try {
             val savedReservation = reservationRepository.save(reservation) // 예약 정보 저장하는 과정에서 멱등성 또는 동시성 체크가 수행된다.
             val payload = ReservationCreationSuccessPayload(
+                reservationId = savedReservation.reservationId,
                 reservationItemInfoList = reservation.items.map {
                     ReservationOutboundEvent.ReservationItem(
                         productId = it.productId,

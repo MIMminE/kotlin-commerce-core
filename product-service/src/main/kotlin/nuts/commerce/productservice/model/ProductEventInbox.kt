@@ -9,19 +9,13 @@ import java.util.UUID
 
 @Entity
 @Table(
-    name = "stock_update_inbox",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["reservation_id", "idempotency_key"])]
+    name = "product_event_inbox",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["idempotency_key"])]
 )
-class StockUpdateInboxRecord protected constructor(
+class ProductEventInbox protected constructor(
 
     @Id
     val inboxId: UUID,
-
-    @Column(name = "order_id", nullable = false, updatable = false)
-    val orderId: UUID,
-
-    @Column(name = "reservation_id", nullable = false, updatable = false)
-    val reservationId: UUID,
 
     @Column(name = "idempotency_key", nullable = false, updatable = false)
     val idempotencyKey: UUID,
@@ -32,15 +26,11 @@ class StockUpdateInboxRecord protected constructor(
 
     companion object {
         fun create(
-            orderId: UUID,
-            reservationId: UUID,
             idempotencyKey: UUID,
             payload: String
-        ): StockUpdateInboxRecord {
-            return StockUpdateInboxRecord(
+        ): ProductEventInbox {
+            return ProductEventInbox(
                 inboxId = UUID.randomUUID(),
-                orderId = orderId,
-                reservationId = reservationId,
                 idempotencyKey = idempotencyKey,
                 payload = payload
             )

@@ -17,44 +17,25 @@ class JpaInventoryRepository(private val inventoryJpa: InventoryJpa) : Inventory
         return inventoryJpa.saveAndFlush(inventory).inventoryId
     }
 
+    override fun getAllCurrentInventory(): List<InventoryInfo> {
+        return inventoryJpa.findAllInventoryInfo()
+    }
+
     override fun reserveInventory(productId: UUID, quantity: Long): Boolean {
         return inventoryJpa.reserveInventory(productId, quantity) == 1
     }
 
-    override fun confirmReservedInventory(inventoryId: UUID, quantity: Long): Boolean {
-        return inventoryJpa.commitReservedInventory(inventoryId, quantity) == 1
+    override fun confirmReservedInventory(productId: UUID, quantity: Long): Boolean {
+        return inventoryJpa.commitReservedInventory(productId, quantity) == 1
     }
 
-    override fun releaseReservedInventory(inventoryId: UUID, quantity: Long): Boolean {
-        return inventoryJpa.releaseReservedInventory(inventoryId, quantity) == 1
+    override fun releaseReservedInventory(productId: UUID, quantity: Long): Boolean {
+        return inventoryJpa.releaseReservedInventory(productId, quantity) == 1
     }
 }
 
 interface InventoryJpa : JpaRepository<Inventory, UUID> {
 
-    @Query(
-        """
-            select new nuts.commerce.inventoryservice.port.repository.InventoryInfo(
-                i.inventoryId as inventoryId,
-                i.productId as productId,
-                i.availableQuantity as availableQuantity)
-            from Inventory i 
-            where i.productId in :productIds
-        """
-    )
-    fun findAllByProductIdIn(@Param("productIds") productIds: List<UUID>): List<InventoryInfo>
-
-    @Query(
-        """
-            select new nuts.commerce.inventoryservice.port.repository.InventoryInfo(
-                i.inventoryId as inventoryId,
-                i.productId as productId,
-                i.availableQuantity as availableQuantity)
-            from Inventory i 
-            where i.inventoryId = :inventoryId
-        """
-    )
-    fun findInventoryInfoById(@Param("inventoryId") inventoryId: UUID): InventoryInfo?
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
@@ -76,12 +57,12 @@ interface InventoryJpa : JpaRepository<Inventory, UUID> {
         """
             update Inventory i
                set i.reservedQuantity = i.reservedQuantity - :quantity
-             where i.inventoryId = :inventoryId
+             where i.productId = :productId
                and i.reservedQuantity >= :quantity
         """
     )
     fun commitReservedInventory(
-        @Param("inventoryId") inventoryId: UUID,
+        @Param("productId") productId: UUID,
         @Param("quantity") quantity: Long
     ): Int
 
@@ -91,9 +72,21 @@ interface InventoryJpa : JpaRepository<Inventory, UUID> {
         update Inventory i
            set i.reservedQuantity = i.reservedQuantity - :quantity,
                i.availableQuantity = i.availableQuantity + :quantity
-         where i.inventoryId = :inventoryId
+         where i.productId = :productId
            and i.reservedQuantity >= :quantity
     """
     )
-    fun releaseReservedInventory(inventoryId: UUID, quantity: Long): Int
+    fun releaseReservedInventory(productId: UUID, quantity: Long): Int
+
+    @Query(
+        """
+            select new nuts.commerce.inventoryservice.port.repository.InventoryInfo(
+                i.inventoryId as inventoryId,
+                i.productId as productId,
+                i.productName as productName,
+                i.availableQuantity as availableQuantity)
+            from Inventory i
+        """
+    )
+    fun findAllInventoryInfo(): List<InventoryInfo>
 }

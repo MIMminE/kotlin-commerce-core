@@ -1,4 +1,3 @@
-
 spring:
   kafka:
     bootstrap-servers: localhost:9092
@@ -8,7 +7,9 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
-
+        spring.json.add.type.headers: false
+    consumer:
+      auto-offset-reset: earliest
 
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
@@ -19,27 +20,42 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      data-locations: classpath:/data.sql
 
 
-inventory:
-  kafka:
-    inbound:
-      listener:
-        enabled: true
-      topic: inventory-inbound
-      group-id: inventory-service-group
-    outbound:
-      topic: inventory-outbound
+system:
+  startup-runner:
+    enabled: true
 
-  outbox:
-    publisher:
-      enabled: true
-      fixed-delay: 5000
-      executor:
-        core-pool-size: 4
-        max-pool-size: 8
-        queue-capacity: 500
-        await-termination-seconds: 10
+  outbox-publisher:
+    enabled: true
+    fixed-delay: 5000
+    claim-batch-size: 50
+    claim-locked-by: nuts-worker
+    executor:
+      core-pool-size: 4
+      max-pool-size: 8
+      queue-capacity: 500
+      await-termination-seconds: 10
+
+  reservation-event-listener:
+    enabled: true
+    topic: reservation-inbound
+    group-id: inventory-service-group-reservation
+
+
+kafka:
+  product-event-producer:
+    topic: product-event
+
+  reservation-event-producer:
+    topic: reservation-event
 
 server:
   port: 8081

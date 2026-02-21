@@ -44,6 +44,7 @@ class ReservationConfirmUseCase(
                 }
 
             val payload = ReservationConfirmSuccessPayload(
+                reservationId = reservation.reservationId,
                 reservationItemInfoList = reservation.items.map {
                     ReservationOutboundEvent.ReservationItem(
                         productId = it.productId,

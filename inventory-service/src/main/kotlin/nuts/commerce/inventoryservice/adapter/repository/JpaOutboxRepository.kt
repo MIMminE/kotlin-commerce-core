@@ -39,7 +39,7 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
 
         if (candidates.isEmpty()) return ClaimOutboxResult(
             size = 0,
-            claimOutboxInfo = emptyList()
+            outboxInfo = emptyList()
         )
 
         outboxJpa.claimBatch(
@@ -68,7 +68,7 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
 
         return ClaimOutboxResult(
             size = claimOutboxInfo.size,
-            claimOutboxInfo = claimOutboxInfo
+            outboxInfo = claimOutboxInfo
         )
     }
 
