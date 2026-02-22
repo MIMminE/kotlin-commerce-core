@@ -35,8 +35,15 @@ class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
     override fun findByUserIdAndIdempotencyKey(
         userId: String,
         idempotencyKey: UUID
-    ): Order? =
-        orderJpa.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+    ): Order? {
+        try{
+            val findByUserIdAndIdempotencyKey = orderJpa.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+            return  findByUserIdAndIdempotencyKey
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to find order by userId: $userId and idempotencyKey: $idempotencyKey", e)
+        }
+    }
+
 
     override fun updateStatus(
         orderId: UUID,

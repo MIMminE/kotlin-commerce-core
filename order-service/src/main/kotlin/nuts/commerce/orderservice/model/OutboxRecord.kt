@@ -1,6 +1,7 @@
 package nuts.commerce.orderservice.model
 
 import jakarta.persistence.*
+import lombok.NoArgsConstructor
 import nuts.commerce.orderservice.event.outbound.OutboundEventType
 import java.time.Instant
 import java.util.UUID
@@ -25,7 +26,6 @@ class OutboxRecord protected constructor(
     @Column(name = "idempotency_key", nullable = false, updatable = false)
     val idempotencyKey: UUID,
 
-    @Lob
     @Column(nullable = false)
     var payload: String,
 
@@ -46,7 +46,6 @@ class OutboxRecord protected constructor(
     var nextAttemptAt: Instant
 
 ) : BaseEntity() {
-
     companion object {
         fun create(
             outboxId: UUID = UUID.randomUUID(),

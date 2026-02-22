@@ -19,6 +19,7 @@ data class CreatePaymentRequest(
 
 sealed interface CreatePaymentResult {
     data class Success(val providerPaymentId: UUID, val requestPaymentId: UUID) : CreatePaymentResult
+    data class Failure(val reason: String, val requestPaymentId: UUID) : CreatePaymentResult
 }
 
 sealed interface PaymentStatusUpdateResult {

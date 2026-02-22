@@ -1,12 +1,12 @@
 package nuts.commerce.paymentservice.port.message
 
-import nuts.commerce.paymentservice.model.OutboxInfo
+import nuts.commerce.paymentservice.event.outbound.PaymentOutboundEvent
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 
 interface PaymentEventProducer {
-    fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult>
+    fun produce(paymentOutboundEvent: PaymentOutboundEvent): CompletableFuture<ProduceResult>
 }
 
 sealed interface ProduceResult {

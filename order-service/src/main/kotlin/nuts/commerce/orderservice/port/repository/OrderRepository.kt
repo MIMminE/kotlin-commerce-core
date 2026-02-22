@@ -13,6 +13,5 @@ interface OrderRepository {
     fun existsById(id: UUID): Boolean
     fun findAllByUserId(userId: String, pageable: Pageable): Page<Order>
     fun findByUserIdAndIdempotencyKey(userId: String, idempotencyKey: UUID): Order?
-
     fun updateStatus(orderId: UUID, expectStatus: OrderStatus, newStatus: OrderStatus)
 }

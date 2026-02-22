@@ -1,10 +1,10 @@
-package nuts.commerce.paymentservice.usecase
+package nuts.commerce.paymentservice.event.inbound.handler
 
 import nuts.commerce.paymentservice.event.inbound.InboundEventType
-import nuts.commerce.paymentservice.event.outbound.OutboundEventType
 import nuts.commerce.paymentservice.event.inbound.PaymentConfirmPayload
-import nuts.commerce.paymentservice.event.outbound.PaymentConfirmSuccessPayload
 import nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
+import nuts.commerce.paymentservice.event.outbound.PaymentConfirmSuccessPayload
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
 import nuts.commerce.paymentservice.port.payment.PaymentStatusUpdateResult
@@ -16,33 +16,38 @@ import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @Component
-class PaymentConfirmedUseCase(
+class PaymentConfirmRequestHandler(
     private val paymentRepository: PaymentRepository,
     private val outboxRepository: OutboxRepository,
     private val paymentProvider: PaymentProvider,
     private val txTemplate: TransactionTemplate,
     private val objectMapper: ObjectMapper
-) {
-    fun execute(command: PaymentConfirmCommand): PaymentConfirmResult {
+) : PaymentEventHandler {
+    override val supportType: InboundEventType
+        get() = InboundEventType.PAYMENT_CONFIRM
 
-        val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(command.paymentId)
-            ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${command.paymentId}")
+    override fun handle(paymentInboundEvent: PaymentInboundEvent) {
+        val eventId = paymentInboundEvent.eventId
+        val orderId = paymentInboundEvent.orderId
+        val payload = paymentInboundEvent.payload as PaymentConfirmPayload
 
-        paymentProvider.commitPayment(providerPaymentId, command.eventId) // 이벤트 아이디를 통한 멱등성 방어
+        val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(payload.paymentId)
+            ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${payload.paymentId}")
+
+        paymentProvider.commitPayment(providerPaymentId, eventId) // 이벤트 아이디를 통한 멱등성 방어
             .whenComplete { result, _ ->
                 when (result) {
-                    is PaymentStatusUpdateResult.Success -> confirmRequestSuccessHandler(
-                        result,
-                        command.orderId,
-                        command.paymentId,
-                        command.eventId
+                    is PaymentStatusUpdateResult.Success -> successHandle(
+                        result = result,
+                        orderId = orderId,
+                        paymentId = payload.paymentId,
+                        eventId = eventId
                     )
                 }
             }
-        return PaymentConfirmResult(providerPaymentId)
     }
 
-    private fun confirmRequestSuccessHandler(
+    private fun successHandle(
         result: PaymentStatusUpdateResult.Success,
         orderId: UUID,
         paymentId: UUID,
@@ -70,21 +75,3 @@ class PaymentConfirmedUseCase(
         }
     }
 }
-
-data class PaymentConfirmCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID) {
-    companion object {
-        fun from(inboundEvent: PaymentInboundEvent): PaymentConfirmCommand {
-            require(inboundEvent.eventType == InboundEventType.PAYMENT_CONFIRM)
-            require(inboundEvent.payload is PaymentConfirmPayload)
-
-            val payload = inboundEvent.payload
-            return PaymentConfirmCommand(
-                orderId = inboundEvent.orderId,
-                paymentId = payload.paymentId,
-                eventId = inboundEvent.eventId
-            )
-        }
-    }
-}
-
-data class PaymentConfirmResult(val providerPaymentId: UUID)

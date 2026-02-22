@@ -1,9 +1,9 @@
-package nuts.commerce.paymentservice.usecase
+package nuts.commerce.paymentservice.event.inbound.handler
 
 import nuts.commerce.paymentservice.event.inbound.InboundEventType
-import nuts.commerce.paymentservice.event.outbound.OutboundEventType
 import nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent
 import nuts.commerce.paymentservice.event.inbound.PaymentReleasePayload
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
 import nuts.commerce.paymentservice.event.outbound.PaymentReleaseSuccessPayload
 import nuts.commerce.paymentservice.model.OutboxRecord
 import nuts.commerce.paymentservice.port.payment.PaymentProvider
@@ -16,34 +16,39 @@ import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @Component
-class PaymentReleasedUseCase(
+class PaymentReleaseRequestHandler(
     private val paymentRepository: PaymentRepository,
     private val outboxRepository: OutboxRepository,
     private val paymentProvider: PaymentProvider,
     private val txTemplate: TransactionTemplate,
     private val objectMapper: ObjectMapper
-) {
+) : PaymentEventHandler {
 
-    fun execute(command: PaymentReleaseCommand): PaymentReleaseResult {
+    override val supportType: InboundEventType
+        get() = InboundEventType.PAYMENT_RELEASE
 
-        val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(command.paymentId)
-            ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${command.paymentId}")
+    override fun handle(paymentInboundEvent: PaymentInboundEvent) {
+        val eventId = paymentInboundEvent.eventId
+        val orderId = paymentInboundEvent.orderId
+        val payload = paymentInboundEvent.payload as PaymentReleasePayload
 
-        paymentProvider.releasePayment(providerPaymentId, command.eventId) // 이벤트 아이디를 통한 멱등성 방어
+        val providerPaymentId = paymentRepository.getProviderPaymentIdByPaymentId(payload.paymentId)
+            ?: throw IllegalStateException("Provider payment ID not found for payment ID: ${payload.paymentId}")
+
+        paymentProvider.releasePayment(providerPaymentId, eventId) // 이벤트 아이디를 통한 멱등성 방어
             .whenComplete { result, _ ->
                 when (result) {
-                    is PaymentStatusUpdateResult.Success -> releaseRequestSuccessHandler(
-                        result,
-                        command.orderId,
-                        command.paymentId,
-                        command.eventId
+                    is PaymentStatusUpdateResult.Success -> successHandle(
+                        result = result,
+                        orderId = orderId,
+                        paymentId = payload.paymentId,
+                        eventId = eventId
                     )
                 }
             }
-        return PaymentReleaseResult(providerPaymentId)
     }
 
-    private fun releaseRequestSuccessHandler(
+    private fun successHandle(
         result: PaymentStatusUpdateResult.Success,
         orderId: UUID,
         paymentId: UUID,
@@ -71,21 +76,3 @@ class PaymentReleasedUseCase(
         }
     }
 }
-
-data class PaymentReleaseCommand(val orderId: UUID, val paymentId: UUID, val eventId: UUID) {
-    companion object {
-        fun from(inboundEvent: PaymentInboundEvent): PaymentReleaseCommand {
-            require(inboundEvent.eventType == InboundEventType.PAYMENT_RELEASE)
-            require(inboundEvent.payload is PaymentReleasePayload)
-
-            val payload = inboundEvent.payload
-            return PaymentReleaseCommand(
-                orderId = inboundEvent.orderId,
-                paymentId = payload.paymentId,
-                eventId = inboundEvent.eventId
-            )
-        }
-    }
-}
-
-data class PaymentReleaseResult(val providerPaymentId: UUID)

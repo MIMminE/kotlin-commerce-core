@@ -91,14 +91,14 @@ class OrderCreateUseCase(
 
         val order = Order.create(
             userId = command.userId,
-            items = orderItems,
             idempotencyKey = command.idempotencyKey
         )
+        order.addItems(orderItems)
 
         try {
             val savedOrder = orderRepository.save(order)
             return OrderSaveResult(savedOrder.orderId, isNewlyCreated = true)
-        } catch (e: DataIntegrityViolationException) {
+        } catch (e: RuntimeException) {
             val existing = orderRepository.findByUserIdAndIdempotencyKey(command.userId, command.idempotencyKey)
             if (existing != null) {
                 return OrderSaveResult(existing.orderId, isNewlyCreated = false)
@@ -123,7 +123,6 @@ class OrderCreateUseCase(
 
     data class OrderSaveResult(val orderId: UUID, val isNewlyCreated: Boolean)
 }
-
 
 data class OrderCreateCommand(
     val idempotencyKey: UUID,

@@ -38,7 +38,7 @@ system:
 
 kafka:
   order-event-producer:
-    topic: order-outbound
+    topic: order-event
 
 rest:
   product-service:
@@ -46,4 +46,4 @@ rest:
     product-snapshot-endpoint: /api/products/search/all
     api-key: dev-api-key-5678
 server:
-  port: 8082
+  port: 8083

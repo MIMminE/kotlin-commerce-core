@@ -53,7 +53,7 @@ class OrderController(
         val pageable = PageRequest.of(page, size)
         val pageRes = getOrdersUseCase.get(userId, pageable)
         val summaries =
-            pageRes.content.map { OrderSummary(it.orderId, it.userId, it.status.name, it.totalPrice.amount, it.totalPrice.currency) }
+            pageRes.content.map { OrderSummary(it.orderId, it.userId, it.status.name, it.totalPrice!!.amount, it.totalPrice!!.currency) }
         val resultPage = PageImpl(summaries, pageable, pageRes.totalElements)
         return ResponseEntity.ok(resultPage)
     }

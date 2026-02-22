@@ -46,16 +46,16 @@ system:
 
   reservation-event-listener:
     enabled: true
-    topic: reservation-inbound
+    topic: order-event
     group-id: inventory-service-group-reservation
 
 
 kafka:
   product-event-producer:
-    topic: product-event
+    topic: product-inbound
 
   reservation-event-producer:
-    topic: reservation-event
+    topic: order-inbound
 
 server:
   port: 8081

@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import nuts.commerce.orderservice.exception.OrderException
 import java.util.*
 import kotlin.collections.fold
+import kotlin.times
 
 @Entity
 @Table(
@@ -36,7 +37,7 @@ class Order protected constructor(
             column = Column(name = "total_currency", nullable = false, length = 8)
         )
     )
-    val totalPrice: Money,
+    var totalPrice: Money? = null,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -56,6 +57,11 @@ class Order protected constructor(
             )
         }
         items.addAll(newItems)
+        val totalPrice = items.sumOf { it.unitPrice.amount * it.qty }
+        val totalPriceMoney =
+            Money(amount = totalPrice, currency = items.firstOrNull()?.unitPrice?.currency ?: "KRW")
+        this.totalPrice = totalPriceMoney
+        items.forEach { it.order = this }
     }
 
     companion object {
@@ -63,20 +69,13 @@ class Order protected constructor(
             orderId: UUID = UUID.randomUUID(),
             idempotencyKey: UUID,
             userId: String,
-            items: List<OrderItem> = emptyList(),
             status: OrderStatus = OrderStatus.CREATED,
         ): Order {
-
-            val totalPrice = items.sumOf { it.unitPrice.amount * it.qty }
-            val totalPriceMoney =
-                Money(amount = totalPrice, currency = items.firstOrNull()?.unitPrice?.currency ?: "KRW")
 
             return Order(
                 orderId = orderId,
                 idempotencyKey = idempotencyKey,
                 userId = userId,
-                items = items.toMutableList(),
-                totalPrice = totalPriceMoney,
                 status = status
             )
         }

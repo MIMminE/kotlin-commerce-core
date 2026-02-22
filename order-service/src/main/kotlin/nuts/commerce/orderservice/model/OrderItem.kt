@@ -7,10 +7,6 @@ import java.util.UUID
 @Entity
 @Table(
     name = "order_items",
-    indexes = [
-        Index(name = "idx_order_items_order_id", columnList = "order_id"),
-        Index(name = "idx_order_items_product_id", columnList = "product_id")
-    ]
 )
 class OrderItem protected constructor() : BaseEntity() {
 
@@ -22,7 +18,6 @@ class OrderItem protected constructor() : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, updatable = false)
     lateinit var order: Order
-        protected set
 
     @Column(name = "product_id", nullable = false, length = 64)
     lateinit var productId: UUID

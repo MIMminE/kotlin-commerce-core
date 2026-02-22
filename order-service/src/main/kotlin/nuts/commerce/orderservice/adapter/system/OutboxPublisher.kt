@@ -16,8 +16,9 @@ class OutboxPublisher(
     private val outboxPublishUseCase: OutboxPublishUseCase
 ) {
 
-    @Scheduled(fixedDelayString = $$"${system.outbox-publisher.fixed-delay}")
+    @Scheduled(fixedDelayString = $$"${system.outbox-publisher.fixed-delay:5000}")
     fun publishOutbox() {
+        println("[OutboxPublisher] Starting outbox publish process...")
         outboxPublishUseCase.execute()
     }
 }

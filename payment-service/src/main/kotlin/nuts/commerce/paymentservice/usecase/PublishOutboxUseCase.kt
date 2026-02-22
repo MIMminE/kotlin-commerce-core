@@ -1,5 +1,8 @@
 package nuts.commerce.paymentservice.usecase
 
+import nuts.commerce.paymentservice.event.outbound.OutboundEventType
+import nuts.commerce.paymentservice.event.outbound.PaymentOutboundEvent
+import nuts.commerce.paymentservice.event.outbound.converter.OutboundEventConverter
 import nuts.commerce.paymentservice.port.message.PaymentEventProducer
 import nuts.commerce.paymentservice.port.message.ProduceResult
 import nuts.commerce.paymentservice.port.repository.OutboxRepository
@@ -13,47 +16,39 @@ class PublishOutboxUseCase(
     private val outboxRepository: OutboxRepository,
     private val paymentEventProducer: PaymentEventProducer,
     @Qualifier("outboxUpdateExecutor") private val outboxUpdateExecutor: Executor,
-    @Value($$"${payment.outbox.batch-size:50}") private val batchSize: Int
+    @Value($$"${system.outbox-publisher.claim-batch-size}") private val batchSize: Int,
+    @Value($$"${system.outbox-publisher.claim-locked-by}") private val claimLockedBy: String,
+    paymentEventConverterList: List<OutboundEventConverter>
 ) {
 
-    fun execute() {
-        val claimedOutboxResults = outboxRepository.claimAndLockBatchIds(
-            batchSize = batchSize,
-            lockedBy = "Nuts-Worker"
-        )
+    private val eventConverterMap: Map<OutboundEventType, OutboundEventConverter> =
+        paymentEventConverterList.associateBy { it.supportType }
 
+
+    fun execute() {
+        val claimedOutboxResults = outboxRepository.claimAndLockBatchIds(batchSize, claimLockedBy)
         if (claimedOutboxResults.size == 0) {
             return
         }
 
-        claimedOutboxResults.claimOutboxInfo.forEach { outboxInfo ->
-            paymentEventProducer.produce(outboxInfo)
-                .whenCompleteAsync(
-                    { result, ex ->
-                        when {
-                            ex != null -> {
-                                outboxRepository.markFailed(
-                                    outboxId = outboxInfo.outboxId,
-                                    lockedBy = "Nuts-Worker"
-                                )
-                            }
-
-                            result is ProduceResult.Success -> {
-                                outboxRepository.markPublished(
-                                    outboxId = outboxInfo.outboxId,
-                                    lockedBy = "Nuts-Worker"
-                                )
-                            }
-
-                            result is ProduceResult.Failure -> {
-                                outboxRepository.markFailed(
-                                    outboxId = outboxInfo.outboxId,
-                                    lockedBy = "Nuts-Worker"
-                                )
-                            }
-                        }
-                    }, outboxUpdateExecutor
-                )
+        claimedOutboxResults.outboxInfo.forEach { outboxInfo ->
+            eventConverterMap[outboxInfo.eventType]?.let { converter ->
+                paymentEventProducing(converter.convert(outboxInfo))
+            } ?: throw IllegalStateException("No converter found for event type: ${outboxInfo.eventType}")
         }
+    }
+
+    private fun paymentEventProducing(
+        event: PaymentOutboundEvent
+    ) {
+        paymentEventProducer.produce(event)
+            .whenCompleteAsync(
+                { result, _ ->
+                    when (result) {
+                        is ProduceResult.Success -> outboxRepository.markPublished(event.outboxId, claimLockedBy)
+                        is ProduceResult.Failure -> outboxRepository.markFailed(event.outboxId, claimLockedBy)
+                    }
+                }, outboxUpdateExecutor
+            )
     }
 }

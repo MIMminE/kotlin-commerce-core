@@ -8,7 +8,6 @@ spring:
       properties:
         enable.idempotence: true
 
-
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
     username: app
@@ -19,25 +18,26 @@ spring:
     hibernate:
       ddl-auto: update
 
-payment:
-  kafka:
-    inbound:
-      listener:
-        enabled: true
-      topic: payment-inbound
-      group-id: payment-service-group
-    outbound:
-      topic: payment-outbound
+system:
+  payment-event-listener:
+    enabled: true
+    topic: order-event
+    group-id: payment-service-group
 
-  outbox:
-    publisher:
-      enabled: true
-      fixed-delay: 5000
-      executor:
-        core-pool-size: 4
-        max-pool-size: 8
-        queue-capacity: 500
-        await-termination-seconds: 10
+  outbox-publisher:
+    enabled: true
+    fixed-delay: 5000
+    claim-batch-size: 50
+    claim-locked-by: nuts-worker
+    executor:
+      core-pool-size: 4
+      max-pool-size: 8
+      queue-capacity: 500
+      await-termination-seconds: 10
+
+kafka:
+  payment-event-producer:
+    topic: order-inbound
 
 server:
   port: 8082

@@ -13,5 +13,5 @@ interface OutboxRepository {
 
 data class ClaimOutboxResult(
     val size: Int,
-    val claimOutboxInfo: List<OutboxInfo>
+    val outboxInfo: List<OutboxInfo>
 )

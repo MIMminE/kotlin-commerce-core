@@ -27,7 +27,6 @@ class OutboxRecord protected constructor(
     @Column(name = "event_type", nullable = false, updatable = false)
     val eventType: OutboundEventType,
 
-    @Lob
     @Column(nullable = false)
     var payload: String,
 

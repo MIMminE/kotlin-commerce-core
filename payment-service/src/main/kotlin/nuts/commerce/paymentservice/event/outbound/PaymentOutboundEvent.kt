@@ -28,7 +28,8 @@ class PaymentConfirmSuccessPayload(
 ) : OutboundPayload
 
 class PaymentReleaseSuccessPayload(
-    val reason: String
+    val paymentProvider: String,
+    val providerPaymentId: UUID
 ) : OutboundPayload
 
 enum class OutboundEventType {

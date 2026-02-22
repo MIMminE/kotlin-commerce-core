@@ -42,7 +42,7 @@ spring:
 system:
   product-event-listener:
     enabled: true
-    topic: product-event
+    topic: product-inbound
     group-id: inventory-service-group-product
 
 security:

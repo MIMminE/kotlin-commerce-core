@@ -41,7 +41,7 @@ class JpaOutboxRepository(
         )
         if (candidates.isEmpty()) return ClaimOutboxResult(
             size = 0,
-            claimOutboxInfo = emptyList()
+            outboxInfo = emptyList()
         )
 
         outboxJpa.claimBatch(
@@ -70,7 +70,7 @@ class JpaOutboxRepository(
 
         return ClaimOutboxResult(
             size = claimOutboxInfo.size,
-            claimOutboxInfo = claimOutboxInfo
+            outboxInfo = claimOutboxInfo
         )
     }
 

@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.adapter.inbound
+package nuts.commerce.paymentservice.adapter.system
 
 import nuts.commerce.paymentservice.usecase.PublishOutboxUseCase
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @ConditionalOnProperty(
-    prefix = "payment.outbox.publisher",
+    prefix = "system.outbox-publisher",
     name = ["enabled"],
     havingValue = "true",
     matchIfMissing = true
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class OutboxPublisher(private val outboxUseCase: PublishOutboxUseCase) {
 
-    @Scheduled(fixedDelayString = $$"${payment.outbox.publisher.fixed-delay:5000}")
+    @Scheduled(fixedDelayString = $$"${system.outbox-publisher.fixed-delay}")
     fun execute() {
         outboxUseCase.execute()
     }

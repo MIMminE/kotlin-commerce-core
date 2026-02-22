@@ -40,18 +40,17 @@ class OutboxPublishUseCase(
 
         claimedOutboxResults.outboxInfo.forEach { outboxInfo ->
             reservationEventConverterMap[outboxInfo.eventType]?.let { converter ->
-                reservationEventProducing(converter.convert(outboxInfo), outboxUpdateExecutor)
+                reservationEventProducing(converter.convert(outboxInfo))
             } ?: throw IllegalArgumentException("No converter found for event type: ${outboxInfo.eventType}")
 
             productEventConverterMap[outboxInfo.eventType]?.let { converter ->
-                productEventProducing(converter.convert(outboxInfo).items, outboxUpdateExecutor)
+                productEventProducing(converter.convert(outboxInfo).items)
             }
         }
     }
 
     private fun reservationEventProducing(
-        evnet: ReservationOutboundEvent,
-        executor: Executor
+        evnet: ReservationOutboundEvent
     ) {
         reservationEventProducer.produce(evnet)
             .whenCompleteAsync(
@@ -61,13 +60,12 @@ class OutboxPublishUseCase(
                         is ProduceResult.Failure -> outboxRepository.markFailed(evnet.outboxId, claimLockedBy)
                     }
                 },
-                executor
+                outboxUpdateExecutor
             )
     }
 
     private fun productEventProducing(
-        eventList: List<ProductOutboundEvent>,
-        executor: Executor
+        eventList: List<ProductOutboundEvent>
     ) {
         eventList.forEach { productEvent ->
             productEventProducer.produce(productEvent)
@@ -79,7 +77,7 @@ class OutboxPublishUseCase(
                             println("Failed to produce product event: ${productEvent.eventType} for orderId: ${productEvent.eventId}")
                         }
                     },
-                    executor
+                    outboxUpdateExecutor
                 )
         }
     }

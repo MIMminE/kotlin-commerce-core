@@ -15,11 +15,8 @@ import org.springframework.stereotype.Component
     matchIfMissing = true
 )
 @Component
-class ReservationEventListener(
-    handlers: List<ReservationEventHandler>
-) {
-    private val handlerMap: Map<InboundEventType, ReservationEventHandler> =
-        handlers.associateBy { it.supportType }
+class ReservationEventListener(handlers: List<ReservationEventHandler>) {
+    private val handlerMap = handlers.associateBy { it.supportType }
 
     @KafkaListener(
         topics = [$$"${system.reservation-event-listener.topic}"],
