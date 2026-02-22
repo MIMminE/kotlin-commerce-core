@@ -37,9 +37,6 @@ class OrderCreateUseCase(
         // 상품 스냅샷 조회
         val productIds = command.items.map { it.productId }
         val productPriceResponse = productClient.getPriceSnapshots(productIds)
-        if (!productPriceResponse.isSuccess) {
-            throw OrderException.InvalidCommand("failed to fetch product price snapshots")
-        }
 
         val orderId =
             txTemplate.execute { saveOrderWithIdempotencyCheck(command, productPriceResponse) }.let {
@@ -57,8 +54,8 @@ class OrderCreateUseCase(
                 OutboundReservationItem(
                     productId = it.productId,
                     qty = it.qty,
-                    price = snap.price,
-                    currency = snap.currency
+                    price = snap.price.amount,
+                    currency = snap.price.currency
                 )
             }
         )
@@ -120,7 +117,7 @@ class OrderCreateUseCase(
         OrderItem.create(
             productId = it.productId,
             qty = it.qty,
-            unitPrice = Money(snap.price, snap.currency)
+            unitPrice = Money(amount = snap.price.amount, currency = snap.price.currency)
         )
     }
 

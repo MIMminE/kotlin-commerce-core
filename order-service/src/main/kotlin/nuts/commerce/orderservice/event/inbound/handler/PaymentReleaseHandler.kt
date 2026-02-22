@@ -1,9 +1,9 @@
-package nuts.commerce.orderservice.handle
+package nuts.commerce.orderservice.event.inbound.handler
 
 import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
+import nuts.commerce.orderservice.event.inbound.PaymentReleaseSuccessPayload
 import nuts.commerce.orderservice.event.outbound.OutboundEventType
-import nuts.commerce.orderservice.event.inbound.PaymentCreationFailedPayload
 import nuts.commerce.orderservice.event.outbound.ReservationReleasePayload
 import nuts.commerce.orderservice.model.OrderStatus
 import nuts.commerce.orderservice.model.OutboxRecord
@@ -15,33 +15,36 @@ import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.ObjectMapper
 
 @Component
-class PaymentCreateFailHandler(
+class PaymentReleaseHandler(
     private val orderRepository: OrderRepository,
     private val sageRepository: SageRepository,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
-) {
+) : OrderEventHandler {
+    override val supportType: InboundEventType
+        get() = InboundEventType.PAYMENT_RELEASE
 
     @Transactional
-    fun handle(event: OrderInboundEvent) {
-        require(event.eventType == InboundEventType.PAYMENT_CREATION_FAILED)
-        require(event.payload is PaymentCreationFailedPayload)
+    override fun handle(orderInboundEvent: OrderInboundEvent) {
+        val eventId = orderInboundEvent.eventId
+        val orderId = orderInboundEvent.orderId
+        val payload = orderInboundEvent.payload as PaymentReleaseSuccessPayload
 
-        val reservationId = sageRepository.findSageInfoByOrderId(event.orderId)?.let {
-            it.reservationId ?: throw IllegalStateException("reservation id is null for order id: ${event.orderId}")
-        } ?: throw IllegalStateException("sage info not found for order id: ${event.orderId}")
+        val reservationId = sageRepository.findSageInfoByOrderId(orderId)?.let {
+            it.reservationId ?: throw IllegalStateException("reservation id is null for order id: $orderId")
+        } ?: throw IllegalStateException("sage info not found for order id: $orderId")
 
         val outboxRecord = OutboxRecord.create(
-            orderId = event.orderId,
-            idempotencyKey = event.eventId,
-            eventType = OutboundEventType.PAYMENT_RELEASE_REQUEST,
+            orderId = orderId,
+            idempotencyKey = eventId,
+            eventType = OutboundEventType.RESERVATION_RELEASE_REQUEST,
             payload = objectMapper.writeValueAsString(
                 ReservationReleasePayload(reservationId = reservationId)
             )
         )
 
-        orderRepository.updateStatus(event.orderId, OrderStatus.CREATED, OrderStatus.PAYMENT_FAILED)
-        sageRepository.markReservationReleaseAt(event.orderId, event.payload.reason)
+        orderRepository.updateStatus(orderId, OrderStatus.PAYING, OrderStatus.PAYMENT_FAILED)
+        sageRepository.markReservationReleaseAt(orderId, payload.reason)
         outboxRepository.save(outboxRecord)
     }
 }

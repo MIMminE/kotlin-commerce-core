@@ -1,4 +1,4 @@
-package nuts.commerce.orderservice.handle
+package nuts.commerce.orderservice.event.inbound.handler
 
 import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
@@ -19,23 +19,27 @@ class ReservationCreateSuccessHandler(
     private val orderRepository: OrderRepository,
     private val sageRepository: SageRepository,
     private val outboxRepository: OutboxRepository,
-    private val objectMapper: ObjectMapper,
-) {
+    private val objectMapper: ObjectMapper
+) : OrderEventHandler {
+
+    override val supportType: InboundEventType
+        get() = InboundEventType.RESERVATION_CREATION_SUCCEEDED
+
     @Transactional
-    fun execute(event: OrderInboundEvent) {
+    override fun handle(orderInboundEvent: OrderInboundEvent) {
+        val eventId = orderInboundEvent.eventId
+        val orderId = orderInboundEvent.orderId
+        val payload = orderInboundEvent.payload as ReservationCreationSucceededPayload
 
-        require(event.eventType == InboundEventType.RESERVATION_CREATION_SUCCEEDED)
-        require(event.payload is ReservationCreationSucceededPayload)
-
-        val saga = sageRepository.findByOrderId(event.orderId)
-            ?: throw IllegalStateException("Sage record not found for orderId: ${event.orderId}")
+        val saga = sageRepository.findByOrderId(orderId)
+            ?: throw IllegalStateException("Sage record not found for orderId: $orderId")
 
         val totalPrice = saga.totalPrice
         val currency = saga.currency
 
         val outboxRecord = OutboxRecord.create(
-            orderId = event.orderId,
-            idempotencyKey = event.eventId,
+            orderId = orderId,
+            idempotencyKey = eventId,
             eventType = OutboundEventType.PAYMENT_CREATE_REQUEST,
             payload = objectMapper.writeValueAsString(
                 PaymentCreatePayload(
@@ -45,8 +49,8 @@ class ReservationCreateSuccessHandler(
             )
         )
 
-        orderRepository.updateStatus(event.orderId, OrderStatus.CREATED, OrderStatus.PAYING)
-        sageRepository.markPaymentRequestAt(event.orderId)
+        orderRepository.updateStatus(orderId, OrderStatus.CREATED, OrderStatus.PAYING)
+        sageRepository.markPaymentRequestAt(orderId)
         outboxRepository.save(outboxRecord)
     }
 }

@@ -19,8 +19,9 @@ class OrderItem protected constructor() : BaseEntity() {
     lateinit var id: UUID
         protected set
 
-    @Column(name = "order_id", nullable = false, updatable = false)
-    lateinit var orderId: UUID
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false, updatable = false)
+    lateinit var order: Order
         protected set
 
     @Column(name = "product_id", nullable = false, length = 64)

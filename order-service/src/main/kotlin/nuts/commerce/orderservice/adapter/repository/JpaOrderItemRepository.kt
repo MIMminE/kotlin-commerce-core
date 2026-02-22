@@ -8,9 +8,6 @@ import java.util.UUID
 
 @Repository
 class JpaOrderItemRepository(private val orderItemJpa: OrderItemJpa) : OrderItemRepository {
-    override fun findByOrderId(orderId: UUID): List<OrderItem> {
-        return orderItemJpa.findByOrderId(orderId)
-    }
 
     override fun saveAll(orderItems: List<OrderItem>): List<OrderItem> {
         return orderItemJpa.saveAll(orderItems)
@@ -18,5 +15,4 @@ class JpaOrderItemRepository(private val orderItemJpa: OrderItemJpa) : OrderItem
 }
 
 interface OrderItemJpa : JpaRepository<OrderItem, UUID> {
-    fun findByOrderId(orderId: UUID): List<OrderItem>
 }

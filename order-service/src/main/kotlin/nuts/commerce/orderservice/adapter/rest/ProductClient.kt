@@ -1,5 +1,6 @@
 package nuts.commerce.orderservice.adapter.rest
 
+import nuts.commerce.orderservice.model.Money
 import nuts.commerce.orderservice.port.rest.ProductPriceResponse
 import nuts.commerce.orderservice.port.rest.ProductPriceSnapshot
 import nuts.commerce.orderservice.port.rest.ProductRestClient
@@ -8,9 +9,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
-import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import java.util.UUID
 
@@ -27,14 +26,12 @@ class ProductClient(
             set("X-API-KEY", apiKey)
         }
         val entity = HttpEntity<Void>(headers)
-        val exchange = restTemplate.exchange(snapshotUrl, HttpMethod.GET, entity, String::class.java)
-
+        val response = restTemplate.exchange(snapshotUrl, HttpMethod.GET, entity, ProductSearchAllResponse::class.java)
+        return ProductPriceResponse(
+            productPriceSnapshot = response.body?.products
+                ?: throw RuntimeException("Failed to fetch product price snapshots")
+        )
     }
 }
 
-
-data class ProductPriceResponse(
-    val productPriceSnapshot: List<ProductPriceSnapshot>,
-    val isSuccess: Boolean,
-    val errorMessage: String? = null
-)
+data class ProductSearchAllResponse(val size: Int, val products: List<ProductPriceSnapshot>)

@@ -18,6 +18,7 @@ class OrderController(
     private val orderCreateUseCase: OrderCreateUseCase,
     private val getOrdersUseCase: GetOrdersUseCase
 ) {
+
     @PostMapping
     fun create(@RequestBody req: CreateOrderRequest): ResponseEntity<CreateOrderResponse> {
         val idempotencyKey = req.idempotencyKey
@@ -52,7 +53,6 @@ class OrderController(
         val pageable = PageRequest.of(page, size)
         val pageRes = getOrdersUseCase.get(userId, pageable)
         val summaries =
-            // Order 엔티티의 필드명에 맞춰 매핑(orderId, totalPrice)
             pageRes.content.map { OrderSummary(it.orderId, it.userId, it.status.name, it.totalPrice.amount, it.totalPrice.currency) }
         val resultPage = PageImpl(summaries, pageable, pageRes.totalElements)
         return ResponseEntity.ok(resultPage)

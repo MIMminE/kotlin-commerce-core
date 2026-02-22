@@ -8,7 +8,6 @@ spring:
       properties:
         enable.idempotence: true
 
-
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
     username: app
@@ -18,19 +17,33 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    defer-datasource-initialization: true
 
-order:
-  kafka:
-    inbound:
-      listener:
-        enabled: true
-      topic: order-inbound
-      group-id: order-service-group
-    outbound:
-      topic: order-outbound
+system:
+  outbox-publisher:
+    enabled: true
+    fixed-delay: 5000
+    claim-batch-size: 50
+    claim-locked-by: nuts-worker
+    executor:
+      core-pool-size: 4
+      max-pool-size: 8
+      queue-capacity: 500
+      await-termination-seconds: 10
+
+  order-event-listener:
+    enabled: true
+    topic: order-inbound
+    group-id: order-service-group
+
+kafka:
+  order-event-producer:
+    topic: order-outbound
 
 rest:
   product-service:
     base-url: http://localhost:8080
     product-snapshot-endpoint: /api/products/search/all
-    api-key: dev-api-key-1017
+    api-key: dev-api-key-5678
+server:
+  port: 8082

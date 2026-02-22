@@ -1,12 +1,12 @@
 package nuts.commerce.orderservice.port.message
 
-import nuts.commerce.orderservice.model.OutboxInfo
+import nuts.commerce.orderservice.event.outbound.OrderOutboundEvent
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 
 interface OrderEventProducer {
-    fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult>
+    fun produce(outboundEvent: OrderOutboundEvent): CompletableFuture<ProduceResult>
 }
 
 sealed interface ProduceResult {

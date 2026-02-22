@@ -5,7 +5,7 @@ import nuts.commerce.orderservice.application.port.repository.InMemoryOutboxRepo
 import nuts.commerce.orderservice.model.OutboxEventType
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.model.OutboxStatus
-import nuts.commerce.orderservice.usecase.PublishOrderOutboxUseCase
+import nuts.commerce.orderservice.usecase.OutboxPublishUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.PlatformTransactionManager
@@ -25,7 +25,7 @@ class PublishReserveInventoryOutboxTest {
     private lateinit var messageProducer: InMemoryOrderEventProducer
     private lateinit var txManager: PlatformTransactionManager
     private lateinit var txTemplate: TransactionTemplate
-    private lateinit var useCase: PublishOrderOutboxUseCase
+    private lateinit var useCase: OutboxPublishUseCase
     private lateinit var objectMapper: ObjectMapper
 
     @BeforeEach
@@ -41,7 +41,7 @@ class PublishReserveInventoryOutboxTest {
         }
         txTemplate = TransactionTemplate(txManager)
         objectMapper = ObjectMapper()
-        useCase = PublishOrderOutboxUseCase(
+        useCase = OutboxPublishUseCase(
             outboxRepository = outboxRepository,
             orderEventProducer = messageProducer,
             transactionTemplate = txTemplate,

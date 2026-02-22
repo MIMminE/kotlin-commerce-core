@@ -1,4 +1,4 @@
-package nuts.commerce.orderservice.handle
+package nuts.commerce.orderservice.event.inbound.handler
 
 import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
@@ -13,16 +13,17 @@ import org.springframework.transaction.annotation.Transactional
 class ReservationCreateFailHandler(
     private val orderRepository: OrderRepository,
     private val sageRepository: SageRepository,
-) {
+) : OrderEventHandler {
+    override val supportType: InboundEventType
+        get() = InboundEventType.RESERVATION_CREATION_FAILED
+
     @Transactional
-    fun handle(event: OrderInboundEvent) {
+    override fun handle(orderInboundEvent: OrderInboundEvent) {
+        val eventId = orderInboundEvent.eventId
+        val orderId = orderInboundEvent.orderId
+        val payload = orderInboundEvent.payload as ReservationCreationFailedPayload
 
-        require(event.eventType == InboundEventType.RESERVATION_CREATION_FAILED)
-        require(event.payload is ReservationCreationFailedPayload)
-
-        val payload = event.payload
-
-        orderRepository.updateStatus(event.orderId, OrderStatus.CREATED, OrderStatus.FAIL)
-        sageRepository.markFailedAt(event.orderId, payload.reason)
+        orderRepository.updateStatus(orderId, OrderStatus.CREATED, OrderStatus.FAIL)
+        sageRepository.markFailedAt(orderId, payload.reason)
     }
 }

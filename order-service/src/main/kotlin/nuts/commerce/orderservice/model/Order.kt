@@ -25,8 +25,7 @@ class Order protected constructor(
     @Column(nullable = false, updatable = false, length = 64)
     val userId: String,
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     val items: MutableList<OrderItem> = mutableListOf(),
 
     @Embedded

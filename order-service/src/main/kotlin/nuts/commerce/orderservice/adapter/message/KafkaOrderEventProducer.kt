@@ -22,77 +22,24 @@ import java.util.concurrent.CompletableFuture
 @Component
 class KafkaOrderEventProducer(
     private val kafkaTemplate: KafkaTemplate<String, OrderOutboundEvent>,
-    @Value($$"${order.kafka.outbound.topic:order-outbound}")
+    @Value($$"${kafka.order-event-producer.topic}")
     private val orderTopic: String,
-    private val objectMapper: ObjectMapper
-
 ) : OrderEventProducer {
 
-    override fun produce(outboxInfo: OutboxInfo): CompletableFuture<ProduceResult> {
-        val event =
-            when (outboxInfo.eventType) {
-                OutboundEventType.RESERVATION_CREATE_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    ReservationCreatePayload::class.java
-                )
-
-                OutboundEventType.RESERVATION_CONFIRM_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    ReservationConfirmPayload::class.java
-                )
-
-                OutboundEventType.RESERVATION_RELEASE_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    ReservationReleasePayload::class.java
-                )
-
-                OutboundEventType.PAYMENT_CREATE_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    PaymentCreatePayload::class.java
-                )
-
-                OutboundEventType.PAYMENT_CREATE_FAILED -> createOrderOutboundEvent(
-                    outboxInfo,
-                    PaymentCreateFailedPayload::class.java
-                )
-
-                OutboundEventType.PAYMENT_CONFIRM_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    PaymentConfirmPayload::class.java
-                )
-
-                OutboundEventType.PAYMENT_RELEASE_REQUEST -> createOrderOutboundEvent(
-                    outboxInfo,
-                    PaymentReleasePayload::class.java
-                )
-            }
-
-        return kafkaTemplate.send(orderTopic, event)
+    override fun produce(outboundEvent: OrderOutboundEvent): CompletableFuture<ProduceResult> {
+        return kafkaTemplate.send(orderTopic, outboundEvent)
             .handle { _, ex ->
                 return@handle when (ex) {
                     null -> ProduceResult.Success(
-                        eventId = event.eventId,
-                        outboxId = event.outboxId
+                        eventId = outboundEvent.eventId,
+                        outboxId = outboundEvent.outboxId
                     )
 
                     else -> ProduceResult.Failure(
                         reason = ex.message ?: "Unknown error",
-                        outboxId = event.outboxId
+                        outboxId = outboundEvent.outboxId
                     )
                 }
             }
-    }
-
-    private fun createOrderOutboundEvent(
-        outboxInfo: OutboxInfo,
-        payloadClass: Class<out OutboundPayload>
-    ): OrderOutboundEvent {
-
-        return OrderOutboundEvent(
-            orderId = outboxInfo.orderId,
-            outboxId = outboxInfo.outboxId,
-            eventType = outboxInfo.eventType,
-            payload = objectMapper.readValue(outboxInfo.payload, payloadClass)
-        )
     }
 }

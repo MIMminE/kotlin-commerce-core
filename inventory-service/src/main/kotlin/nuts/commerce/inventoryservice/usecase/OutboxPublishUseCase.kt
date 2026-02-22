@@ -12,7 +12,6 @@ import nuts.commerce.inventoryservice.port.repository.OutboxRepository
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.Executor
 
 @Component
@@ -20,7 +19,6 @@ class OutboxPublishUseCase(
     private val outboxRepository: OutboxRepository,
     private val reservationEventProducer: ReservationEventProducer,
     private val productEventProducer: ProductEventProducer,
-    private val objectMapper: ObjectMapper,
     @Qualifier("outboxUpdateExecutor") private val outboxUpdateExecutor: Executor,
     @Value($$"${system.outbox-publisher.claim-batch-size}") private val batchSize: Int,
     @Value($$"${system.outbox-publisher.claim-locked-by}") private val claimLockedBy: String,

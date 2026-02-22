@@ -55,6 +55,10 @@ class OutboxRecord protected constructor(
             idempotencyKey: UUID,
             payload: String,
             status: OutboxStatus = OutboxStatus.PENDING,
+            lockedBy: String? = null,
+            lockedUntil: Instant? = null,
+            attemptCount: Int = 0,
+            nextAttemptAt: Instant = Instant.now(),
         ): OutboxRecord {
             return OutboxRecord(
                 outboxId = outboxId,
@@ -63,6 +67,10 @@ class OutboxRecord protected constructor(
                 eventType = eventType,
                 payload = payload,
                 status = status,
+                lockedBy = lockedBy,
+                lockedUntil = lockedUntil,
+                attemptCount = attemptCount,
+                nextAttemptAt = nextAttemptAt
             )
         }
     }

@@ -18,7 +18,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "nuts.commerce.productservice.event"
-        spring.json.value.default.type: "nuts.commerce.productservice.event.ProductInboundEvent"
+        spring.json.value.default.type: "nuts.commerce.productservice.event.inbound.ProductInboundEvent"
 
 
   datasource:

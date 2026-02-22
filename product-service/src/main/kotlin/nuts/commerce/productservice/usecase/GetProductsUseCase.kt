@@ -15,6 +15,7 @@ class GetProductsUseCase(
 
     fun execute(): List<ProductSummary> {
         val allProductInfo = productRepository.getAllProductInfo()
+        if (allProductInfo.isEmpty()) throw IllegalStateException("상품 정보가 존재하지 않습니다.")
         val productIds = allProductInfo.map { it.productId }
         val stocks = stockCachePort.getStocks(productIds)
 
