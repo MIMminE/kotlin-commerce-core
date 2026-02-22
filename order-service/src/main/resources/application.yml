@@ -7,7 +7,14 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
-
+        spring.json.add.type.headers: false
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.orderservice.event"
+        spring.json.value.default.type: "nuts.commerce.orderservice.event.inbound.OrderInboundEvent"
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
     username: app
@@ -33,12 +40,15 @@ system:
 
   order-event-listener:
     enabled: true
-    topic: order-inbound
+    topic: order-event
     group-id: order-service-group
 
 kafka:
-  order-event-producer:
-    topic: order-event
+  reservation-event-producer:
+    topic: reservation-event
+
+  payment-event-producer:
+    topic: payment-event
 
 rest:
   product-service:

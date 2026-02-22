@@ -7,6 +7,13 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.paymentservice.event"
+        spring.json.value.default.type: "nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent"
 
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
@@ -21,7 +28,7 @@ spring:
 system:
   payment-event-listener:
     enabled: true
-    topic: order-event
+    topic: payment-event
     group-id: payment-service-group
 
   outbox-publisher:
@@ -37,7 +44,7 @@ system:
 
 kafka:
   payment-event-producer:
-    topic: order-inbound
+    topic: order-event
 
 server:
   port: 8082

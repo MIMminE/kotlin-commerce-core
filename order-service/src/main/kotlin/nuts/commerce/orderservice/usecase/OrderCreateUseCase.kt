@@ -2,7 +2,7 @@ package nuts.commerce.orderservice.usecase
 
 import nuts.commerce.orderservice.event.outbound.OutboundEventType
 import nuts.commerce.orderservice.event.outbound.OutboundReservationItem
-import nuts.commerce.orderservice.event.outbound.ReservationCreatePayload
+import nuts.commerce.orderservice.event.outbound.ReservationCreatePayloadReservation
 import nuts.commerce.orderservice.port.repository.OutboxRepository
 import nuts.commerce.orderservice.port.repository.OrderRepository
 import nuts.commerce.orderservice.port.repository.SageRepository
@@ -15,7 +15,6 @@ import nuts.commerce.orderservice.model.OrderSaga
 import nuts.commerce.orderservice.exception.OrderException
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.port.rest.ProductPriceResponse
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.ObjectMapper
@@ -46,7 +45,7 @@ class OrderCreateUseCase(
                 return@let it.orderId
             }
 
-        val payload = ReservationCreatePayload(
+        val payload = ReservationCreatePayloadReservation(
             reservationItems = command.items.map {
                 val snap = productPriceResponse.productPriceSnapshot.find { ps -> ps.productId == it.productId }
                     ?: throw OrderException.InvalidCommand("product not found: ${it.productId}")

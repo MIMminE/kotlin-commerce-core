@@ -14,7 +14,6 @@ class KafkaPaymentEventProducer(
     private val kafkaTemplate: KafkaTemplate<String, PaymentOutboundEvent>,
     @Value($$"${kafka.payment-event-producer.topic}")
     private val topic: String,
-    private val objectMapper: ObjectMapper
 ) : PaymentEventProducer {
 
     override fun produce(paymentOutboundEvent: PaymentOutboundEvent): CompletableFuture<ProduceResult> {

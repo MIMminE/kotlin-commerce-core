@@ -32,6 +32,7 @@ class ReservationConfirmSuccessPayload(
 ) : OutboundPayload
 
 class ReservationReleaseSuccessPayload(
+    val reservationId: UUID,
     val reservationItemInfoList: List<ReservationOutboundEvent.ReservationItem>
 ) : OutboundPayload
 

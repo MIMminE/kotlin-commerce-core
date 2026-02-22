@@ -24,7 +24,7 @@ class PaymentConfirmRequestHandler(
     private val objectMapper: ObjectMapper
 ) : PaymentEventHandler {
     override val supportType: InboundEventType
-        get() = InboundEventType.PAYMENT_CONFIRM
+        get() = InboundEventType.PAYMENT_CONFIRM_REQUEST
 
     override fun handle(paymentInboundEvent: PaymentInboundEvent) {
         val eventId = paymentInboundEvent.eventId

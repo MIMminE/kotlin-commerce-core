@@ -4,7 +4,7 @@ import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
 import nuts.commerce.orderservice.event.inbound.PaymentCreationFailedPayload
 import nuts.commerce.orderservice.event.outbound.OutboundEventType
-import nuts.commerce.orderservice.event.outbound.ReservationReleasePayload
+import nuts.commerce.orderservice.event.outbound.ReservationReleasePayloadReservation
 import nuts.commerce.orderservice.model.OrderStatus
 import nuts.commerce.orderservice.model.OutboxRecord
 import nuts.commerce.orderservice.port.repository.OrderRepository
@@ -20,7 +20,7 @@ class PaymentCreateFailHandler(
     private val sageRepository: SageRepository,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
-) : OrderEventHandler {
+) : InboundEventHandler {
     override val supportType: InboundEventType
         get() = InboundEventType.PAYMENT_CREATION_FAILED
 
@@ -39,7 +39,7 @@ class PaymentCreateFailHandler(
             idempotencyKey = eventId,
             eventType = OutboundEventType.PAYMENT_RELEASE_REQUEST,
             payload = objectMapper.writeValueAsString(
-                ReservationReleasePayload(reservationId = reservationId)
+                ReservationReleasePayloadReservation(reservationId = reservationId)
             )
         )
 

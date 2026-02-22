@@ -1,6 +1,6 @@
 package nuts.commerce.orderservice.application.usecase
 
-import nuts.commerce.orderservice.application.port.message.InMemoryOrderEventProducer
+import nuts.commerce.orderservice.application.port.message.InMemoryReservationEventProducer
 import nuts.commerce.orderservice.application.port.repository.InMemoryOutboxRepository
 import nuts.commerce.orderservice.model.OutboxEventType
 import nuts.commerce.orderservice.model.OutboxRecord
@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class PublishReserveInventoryOutboxTest {
 
     private lateinit var outboxRepository: InMemoryOutboxRepository
-    private lateinit var messageProducer: InMemoryOrderEventProducer
+    private lateinit var messageProducer: InMemoryReservationEventProducer
     private lateinit var txManager: PlatformTransactionManager
     private lateinit var txTemplate: TransactionTemplate
     private lateinit var useCase: OutboxPublishUseCase
@@ -31,7 +31,7 @@ class PublishReserveInventoryOutboxTest {
     @BeforeEach
     fun setUp() {
         outboxRepository = InMemoryOutboxRepository()
-        messageProducer = InMemoryOrderEventProducer()
+        messageProducer = InMemoryReservationEventProducer()
         txManager = object : PlatformTransactionManager {
             override fun getTransaction(definition: TransactionDefinition?): TransactionStatus =
                 SimpleTransactionStatus()
@@ -43,7 +43,7 @@ class PublishReserveInventoryOutboxTest {
         objectMapper = ObjectMapper()
         useCase = OutboxPublishUseCase(
             outboxRepository = outboxRepository,
-            orderEventProducer = messageProducer,
+            reservationEventProducer = messageProducer,
             transactionTemplate = txTemplate,
             batchSize = 10,
             maxRetries = 3

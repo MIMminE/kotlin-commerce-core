@@ -4,9 +4,8 @@ import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
 import nuts.commerce.orderservice.event.inbound.PaymentCreationSuccessPayload
 import nuts.commerce.orderservice.event.outbound.OutboundEventType
-import nuts.commerce.orderservice.event.outbound.ReservationConfirmPayload
+import nuts.commerce.orderservice.event.outbound.ReservationConfirmPayloadReservation
 import nuts.commerce.orderservice.model.OutboxRecord
-import nuts.commerce.orderservice.port.repository.OrderRepository
 import nuts.commerce.orderservice.port.repository.OutboxRepository
 import nuts.commerce.orderservice.port.repository.SageRepository
 import org.springframework.stereotype.Component
@@ -18,7 +17,7 @@ class PaymentCreateSuccessHandler(
     private val sageRepository: SageRepository,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
-) : OrderEventHandler {
+) : InboundEventHandler {
     override val supportType: InboundEventType
         get() = InboundEventType.PAYMENT_CREATION_SUCCEEDED
 
@@ -36,7 +35,7 @@ class PaymentCreateSuccessHandler(
             idempotencyKey = eventId,
             eventType = OutboundEventType.RESERVATION_CONFIRM_REQUEST,
             payload = objectMapper.writeValueAsString(
-                ReservationConfirmPayload(
+                ReservationConfirmPayloadReservation(
                     reservationId = reservationId
                 )
             )

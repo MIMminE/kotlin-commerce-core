@@ -1,6 +1,5 @@
 package nuts.commerce.inventoryservice.adapter.system
 
-import nuts.commerce.inventoryservice.event.inbound.InboundEventType
 import nuts.commerce.inventoryservice.event.inbound.ReservationInboundEvent
 import nuts.commerce.inventoryservice.event.inbound.handler.ReservationEventHandler
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

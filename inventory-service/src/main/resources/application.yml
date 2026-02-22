@@ -10,6 +10,11 @@ spring:
         spring.json.add.type.headers: false
     consumer:
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.inventoryservice.event"
+        spring.json.value.default.type: "nuts.commerce.inventoryservice.event.inbound.ReservationInboundEvent"
 
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
@@ -46,16 +51,15 @@ system:
 
   reservation-event-listener:
     enabled: true
-    topic: order-event
+    topic: reservation-event
     group-id: inventory-service-group-reservation
-
 
 kafka:
   product-event-producer:
-    topic: product-inbound
+    topic: product-event
 
   reservation-event-producer:
-    topic: order-inbound
+    topic: order-event
 
 server:
   port: 8081

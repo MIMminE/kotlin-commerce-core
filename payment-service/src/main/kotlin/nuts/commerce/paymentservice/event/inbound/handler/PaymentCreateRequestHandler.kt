@@ -33,7 +33,7 @@ class PaymentCreateRequestHandler(
     private val logger = LoggerFactory.getLogger(PaymentCreateRequestHandler::class.java)
 
     override val supportType: InboundEventType
-        get() = InboundEventType.PAYMENT_CREATE
+        get() = InboundEventType.PAYMENT_CREATE_REQUEST
 
     override fun handle(paymentInboundEvent: PaymentInboundEvent) {
         val eventId = paymentInboundEvent.eventId

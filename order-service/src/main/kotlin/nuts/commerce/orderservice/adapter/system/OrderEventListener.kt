@@ -2,7 +2,7 @@ package nuts.commerce.orderservice.adapter.system
 
 import nuts.commerce.orderservice.event.inbound.InboundEventType
 import nuts.commerce.orderservice.event.inbound.OrderInboundEvent
-import nuts.commerce.orderservice.event.inbound.handler.OrderEventHandler
+import nuts.commerce.orderservice.event.inbound.handler.InboundEventHandler
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.messaging.handler.annotation.Payload
@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component
 )
 @Component
 class OrderEventListener(
-    orderEventHandlerList: List<OrderEventHandler>
+    inboundEventHandlerList: List<InboundEventHandler>
 ) {
-    private val orderEventListenerMap: Map<InboundEventType, OrderEventHandler> =
-        orderEventHandlerList.associateBy { it.supportType }
+    private val orderEventListenerMap: Map<InboundEventType, InboundEventHandler> =
+        inboundEventHandlerList.associateBy { it.supportType }
 
     @KafkaListener(
         topics = [$$"${system.order-event-listener.topic}"],

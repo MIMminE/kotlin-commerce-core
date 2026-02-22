@@ -25,7 +25,7 @@ class PaymentReleaseRequestHandler(
 ) : PaymentEventHandler {
 
     override val supportType: InboundEventType
-        get() = InboundEventType.PAYMENT_RELEASE
+        get() = InboundEventType.PAYMENT_RELEASE_REQUEST
 
     override fun handle(paymentInboundEvent: PaymentInboundEvent) {
         val eventId = paymentInboundEvent.eventId

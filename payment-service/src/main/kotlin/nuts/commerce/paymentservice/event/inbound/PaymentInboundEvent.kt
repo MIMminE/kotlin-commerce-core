@@ -1,11 +1,24 @@
 package nuts.commerce.paymentservice.event.inbound
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.util.UUID
 
 class PaymentInboundEvent(
     val eventId: UUID,
     val orderId: UUID,
     val eventType: InboundEventType,
+
+    @field:JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+        property = "eventType"
+    )
+    @field:JsonSubTypes(
+        JsonSubTypes.Type(value = PaymentCreatePayload::class, name = "PAYMENT_CREATE_REQUEST"),
+        JsonSubTypes.Type(value = PaymentConfirmPayload::class, name = "PAYMENT_CONFIRM"),
+        JsonSubTypes.Type(value = PaymentReleasePayload::class, name = "PAYMENT_RELEASE")
+    )
     val payload: InboundPayload
 )
 
@@ -25,7 +38,7 @@ data class PaymentReleasePayload(
 ) : InboundPayload
 
 enum class InboundEventType {
-    PAYMENT_CREATE,
-    PAYMENT_CONFIRM,
-    PAYMENT_RELEASE
+    PAYMENT_CREATE_REQUEST,
+    PAYMENT_CONFIRM_REQUEST,
+    PAYMENT_RELEASE_REQUEST
 }

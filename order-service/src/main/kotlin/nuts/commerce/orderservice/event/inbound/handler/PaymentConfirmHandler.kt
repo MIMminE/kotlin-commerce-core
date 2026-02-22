@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 class PaymentConfirmHandler(
     private val orderRepository: OrderRepository,
     private val sageRepository: SageRepository
-) : OrderEventHandler {
+) : InboundEventHandler {
     override val supportType: InboundEventType
         get() = InboundEventType.PAYMENT_CONFIRM
 

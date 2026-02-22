@@ -20,7 +20,7 @@ class ReservationCreateSuccessHandler(
     private val sageRepository: SageRepository,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper
-) : OrderEventHandler {
+) : InboundEventHandler {
 
     override val supportType: InboundEventType
         get() = InboundEventType.RESERVATION_CREATION_SUCCEEDED
