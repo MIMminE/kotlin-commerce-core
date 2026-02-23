@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: nuts.commerce.productservice.event.inbound.ProductInboundEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: nuts.commerce.productservice.*
+
+system:
+  product-event-listener:
+    enabled: true
+    topic: product-event
+    group-id: product-event-listener-it
+

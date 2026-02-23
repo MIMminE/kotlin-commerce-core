@@ -22,27 +22,12 @@ class Product protected constructor(
     val idempotencyKey: UUID,
 
     @Embedded
-    @Column(nullable = false)
     var price: Money,
 
     @Version
     var version: Long? = null
 
 ) : BaseEntity() {
-
-    fun updatePrice(newPrice: Money) {
-        if (newPrice.amount < 0) {
-            throw ProductException.InvalidCommand("price cannot be negative")
-        }
-        this.price = newPrice
-    }
-
-    fun updateName(newName: String) {
-        if (newName.isBlank()) {
-            throw ProductException.InvalidCommand("product name cannot be blank")
-        }
-        this.productName = newName
-    }
 
     companion object {
         fun create(

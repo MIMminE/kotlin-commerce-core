@@ -11,7 +11,7 @@ import java.util.*
 @Repository
 class JpaProductRepository(private val productJpa: ProductJpa) : ProductRepository {
     override fun save(product: Product): UUID {
-        return productJpa.save(product).productId
+        return productJpa.saveAndFlush(product).productId
     }
 
     override fun getAllProductInfo(): List<ProductInfo> {

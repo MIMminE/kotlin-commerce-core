@@ -1,5 +1,6 @@
 package nuts.commerce.productservice.adapter.system
 
+import jakarta.annotation.PostConstruct
 import nuts.commerce.productservice.event.inbound.InboundEventType
 import nuts.commerce.productservice.event.inbound.ProductInboundEvent
 import nuts.commerce.productservice.event.inbound.handler.ProductEventHandler
@@ -18,6 +19,12 @@ import org.springframework.stereotype.Component
 class ProductEventListener(handlers: List<ProductEventHandler>) {
     private val handlerMap: Map<InboundEventType, ProductEventHandler> =
         handlers.associateBy { it.supportType }
+
+    @PostConstruct
+    fun init() {
+        val supportedTypes = handlerMap.keys.joinToString(", ")
+        println("ProductEventListener initialized with handlers for event types: $supportedTypes")
+    }
 
     @KafkaListener(
         topics = [$$"${system.product-event-listener.topic}"],

@@ -7,15 +7,16 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-class JpaProductEventInboxRepository(private val stockUpdateInboxJpa: StockUpdateInboxJpa) : ProductEventInboxRepository {
+class JpaProductEventInboxRepository(private val productInboxJpa: ProductInboxJpa) :
+    ProductEventInboxRepository {
     override fun save(stockUpdateInbox: ProductEventInbox): ProductEventInbox {
-        return stockUpdateInboxJpa.saveAndFlush(stockUpdateInbox)
+        return productInboxJpa.saveAndFlush(stockUpdateInbox)
     }
 
-    override fun findById(id: String): ProductEventInbox? {
-        return stockUpdateInboxJpa.findById(UUID.fromString(id)).orElse(null)
+    override fun findById(id: UUID): ProductEventInbox? {
+        return productInboxJpa.findById(id).orElse(null)
     }
 }
 
 @Repository
-interface StockUpdateInboxJpa : JpaRepository<ProductEventInbox, UUID>
+interface ProductInboxJpa : JpaRepository<ProductEventInbox, UUID>
