@@ -1,0 +1,32 @@
+kafka:
+  reservation-event-producer:
+    topic: reservation-event-test
+
+  payment-event-producer:
+    topic: payment-event-test
+
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: "nuts.commerce.orderservice.event.inbound.OrderInboundEvent"
+
+system:
+  order-event-listener:
+    enabled: true
+    topic: order-event-test
+    group-id: order-service-group-test

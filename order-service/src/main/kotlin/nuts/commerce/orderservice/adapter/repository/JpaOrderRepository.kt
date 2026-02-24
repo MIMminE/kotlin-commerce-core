@@ -14,6 +14,7 @@ import java.util.*
 @Repository
 class JpaOrderRepository(private val orderJpa: OrderJpa) : OrderRepository {
     override fun save(order: Order): Order {
+        order.validate()
         return orderJpa.saveAndFlush(order)
     }
 

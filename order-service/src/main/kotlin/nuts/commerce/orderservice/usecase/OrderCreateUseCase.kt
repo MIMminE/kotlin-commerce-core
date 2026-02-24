@@ -138,8 +138,5 @@ data class Item(
     val unitPriceCurrency: String,
 )
 
-data class ReserveInventoryPayload(val orderId: UUID, val items: List<Item>) {
-    data class Item(val productId: String, val qty: Long, val price: Long, val currency: String)
-}
 
 data class OrderCreateResult(val orderId: UUID)

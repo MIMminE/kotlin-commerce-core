@@ -57,7 +57,6 @@ class OrderController(
         val resultPage = PageImpl(summaries, pageable, pageRes.totalElements)
         return ResponseEntity.ok(resultPage)
     }
-
 }
 
 data class CreateOrderRequest(

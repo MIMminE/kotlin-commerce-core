@@ -18,6 +18,7 @@ data class OrderInboundEvent(
         JsonSubTypes.Type(value = ReservationCreationSucceededPayload::class, name = "RESERVATION_CREATION_SUCCEEDED"),
         JsonSubTypes.Type(value = ReservationCreationFailedPayload::class, name = "RESERVATION_CREATION_FAILED"),
         JsonSubTypes.Type(value = ReservationConfirmSuccessPayload::class, name = "RESERVATION_CONFIRM"),
+        JsonSubTypes.Type(value = ReservationReleaseSuccessPayload::class, name = "RESERVATION_RELEASE"),
         JsonSubTypes.Type(value = PaymentCreationSuccessPayload::class, name = "PAYMENT_CREATION_SUCCEEDED"),
         JsonSubTypes.Type(value = PaymentCreationFailedPayload::class, name = "PAYMENT_CREATION_FAILED"),
         JsonSubTypes.Type(value = PaymentConfirmSuccessPayload::class, name = "PAYMENT_CONFIRM"),

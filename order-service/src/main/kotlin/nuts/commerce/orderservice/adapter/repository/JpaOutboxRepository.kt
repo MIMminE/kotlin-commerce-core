@@ -22,7 +22,6 @@ class JpaOutboxRepository(private val outboxJpa: OrderOutboxJpa) : OutboxReposit
         return outboxJpa.saveAndFlush(record).outboxId
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun claimAndLockBatchIds(
         batchSize: Int,
         lockedBy: String
@@ -70,7 +69,6 @@ class JpaOutboxRepository(private val outboxJpa: OrderOutboxJpa) : OutboxReposit
         )
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markPublished(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(
@@ -85,7 +83,6 @@ class JpaOutboxRepository(private val outboxJpa: OrderOutboxJpa) : OutboxReposit
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markFailed(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(
@@ -165,6 +162,7 @@ interface OrderOutboxJpa : JpaRepository<OutboxRecord, UUID> {
                o.lockedUntil = null
          where o.outboxId = :outboxId
            and o.lockedBy = :lockedBy
+           and o.nextAttemptAt <= :now
            and o.status = :expectedStatus
         """
     )

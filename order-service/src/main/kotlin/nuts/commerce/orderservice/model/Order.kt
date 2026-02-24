@@ -64,6 +64,15 @@ class Order protected constructor(
         items.forEach { it.order = this }
     }
 
+    fun validate() {
+        if (items.isEmpty()) {
+            throw OrderException.InvalidCommand("Order must have at least one item")
+        }
+        if (totalPrice == null) {
+            throw OrderException.InvalidCommand("Order totalPrice must be set")
+        }
+    }
+
     companion object {
         fun create(
             orderId: UUID = UUID.randomUUID(),
