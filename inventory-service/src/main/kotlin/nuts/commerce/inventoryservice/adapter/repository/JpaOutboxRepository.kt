@@ -22,7 +22,6 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
         return outboxJpa.saveAndFlush(record).outboxId
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun claimAndLockBatchIds(
         batchSize: Int,
         lockedBy: String
@@ -72,7 +71,6 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
         )
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markPublished(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(
@@ -87,7 +85,6 @@ class JpaOutboxRepository(private val outboxJpa: OutboxJpa) : OutboxRepository {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markFailed(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(

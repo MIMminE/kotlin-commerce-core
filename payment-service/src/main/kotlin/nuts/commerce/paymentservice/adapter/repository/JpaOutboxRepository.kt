@@ -52,8 +52,6 @@ class JpaOutboxRepository(
             leaseUntil = leaseUntil
         )
 
-        val findById = outboxJpa.findById(candidates.first())
-
         val claimOutboxInfo = outboxJpa.findClaimed(
             workerId = lockedBy,
             outboxStatus = OutboxStatus.PROCESSING,

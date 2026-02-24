@@ -1,0 +1,31 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: "nuts.commerce.inventoryservice.event.inbound.ReservationInboundEvent"
+
+kafka:
+  product-event-producer:
+    topic: product-event-test
+
+  reservation-event-producer:
+    topic: order-event-test
+
+system:
+  reservation-event-listener:
+    enabled: true
+    topic: reservation-event
+    group-id: inventory-service-group-test

@@ -39,7 +39,7 @@ data class ReservationReleasePayload(
 data class InboundReservationItem(val productId: UUID, val qty: Long)
 
 enum class InboundEventType {
-    RESERVATION_CREATE,
-    RESERVATION_CONFIRM,
-    RESERVATION_RELEASE
+    RESERVATION_CREATE_REQUEST,
+    RESERVATION_CONFIRM_REQUEST,
+    RESERVATION_RELEASE_REQUEST
 }

@@ -23,7 +23,7 @@ class ReservationConfirmHandler(
     private val objectMapper: ObjectMapper
 ) : ReservationEventHandler {
     override val supportType: InboundEventType
-        get() = InboundEventType.RESERVATION_CONFIRM
+        get() = InboundEventType.RESERVATION_CONFIRM_REQUEST
 
     @Transactional
     override fun handle(reservationInboundEvent: ReservationInboundEvent) {

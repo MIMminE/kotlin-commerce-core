@@ -23,7 +23,7 @@ class ReservationReleaseHandler(
     private val objectMapper: ObjectMapper
 ) : ReservationEventHandler {
     override val supportType: InboundEventType
-        get() = InboundEventType.RESERVATION_RELEASE
+        get() = InboundEventType.RESERVATION_RELEASE_REQUEST
 
     @Transactional
     override fun handle(reservationInboundEvent: ReservationInboundEvent) {
@@ -49,6 +49,7 @@ class ReservationReleaseHandler(
                 }
 
             val payload = ReservationReleaseSuccessPayload(
+                reservationId = reservation.reservationId,
                 reservationItemInfoList = reservation.items.map {
                     ReservationOutboundEvent.ReservationItem(
                         productId = it.productId,

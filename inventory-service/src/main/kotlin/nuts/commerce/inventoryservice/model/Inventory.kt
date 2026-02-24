@@ -39,9 +39,6 @@ class Inventory protected constructor(
     @Column(nullable = false)
     var status: InventoryStatus,
 
-    @Version
-    var version: Long? = null
-
 ) : BaseEntity() {
 
     companion object {

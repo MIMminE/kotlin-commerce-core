@@ -27,7 +27,7 @@ class ReservationCreateHandler(
     private val objectMapper: ObjectMapper
 ) : ReservationEventHandler {
     override val supportType: InboundEventType
-        get() = InboundEventType.RESERVATION_CREATE
+        get() = InboundEventType.RESERVATION_CREATE_REQUEST
 
     @Transactional
     override fun handle(reservationInboundEvent: ReservationInboundEvent) {
@@ -35,18 +35,20 @@ class ReservationCreateHandler(
         val orderId = reservationInboundEvent.orderId
         val payload = reservationInboundEvent.payload as ReservationCreatePayload
 
-        val reservationItems = createReservationItemsWithReserve(payload.requestItem)
-        val reservation = reservationRepository.save(
-            Reservation.create(
-                orderId = orderId,
-                idempotencyKey = eventId,
-                items = reservationItems
-            )
-        )
-
         try {
+            val reservationItems = createReservationItemsWithReserve(payload.requestItem)
+
+            val reservation = reservationRepository.save(
+                Reservation.create(
+                    orderId = orderId,
+                    idempotencyKey = eventId,
+                )
+            )
+
+            reservation.addItems(reservationItems)
+
             val savedReservation = reservationRepository.save(reservation) // 예약 정보 저장하는 과정에서 멱등성 또는 동시성 체크가 수행된다.
-            val payload = ReservationCreationSuccessPayload(
+            val successPayload = ReservationCreationSuccessPayload(
                 reservationId = savedReservation.reservationId,
                 reservationItemInfoList = reservation.items.map {
                     ReservationOutboundEvent.ReservationItem(
@@ -60,7 +62,7 @@ class ReservationCreateHandler(
                 reservationId = savedReservation.reservationId,
                 idempotencyKey = eventId,
                 eventType = OutboundEventType.RESERVATION_CREATION_SUCCEEDED,
-                payload = objectMapper.writeValueAsString(payload)
+                payload = objectMapper.writeValueAsString(successPayload)
             )
             outboxRepository.save(outboxRecord)
 
@@ -70,7 +72,7 @@ class ReservationCreateHandler(
                     ?: throw IllegalStateException("Reservation not found for idempotency key: ${eventId}")
 
         } catch (ex: Exception) {
-            val payload = ReservationCreationFailPayload(
+            val failurePayload = ReservationCreationFailPayload(
                 reason = ex.message ?: "Unknown error occurred during reservation creation"
             )
             val outboxRecord = OutboxRecord.create(
@@ -78,7 +80,7 @@ class ReservationCreateHandler(
                 reservationId = null,
                 idempotencyKey = eventId,
                 eventType = OutboundEventType.RESERVATION_CREATION_FAILED,
-                payload = objectMapper.writeValueAsString(payload)
+                payload = objectMapper.writeValueAsString(failurePayload)
             )
             outboxRepository.save(outboxRecord)
         }

@@ -24,7 +24,7 @@ class Reservation protected constructor(
     var status: ReservationStatus,
 
     @OneToMany(mappedBy = "reservationId", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var items: MutableList<ReservationItem>,
+    var items: MutableList<ReservationItem> = mutableListOf(),
 
     @Version
     var version: Long? = null
@@ -37,20 +37,19 @@ class Reservation protected constructor(
             orderId: UUID,
             idempotencyKey: UUID,
             status: ReservationStatus = ReservationStatus.CREATED,
-            items: List<ReservationItem> = mutableListOf()
         ): Reservation {
             return Reservation(
                 reservationId = reservationId,
                 orderId = orderId,
                 idempotencyKey = idempotencyKey,
                 status = status,
-                items = items.toMutableList()
             )
         }
     }
 
     fun addItems(newItems: List<ReservationItem>) {
         items.addAll(newItems)
+        items.forEach { it.reservationId = reservationId }
     }
 
     fun confirm() {
@@ -63,7 +62,7 @@ class Reservation protected constructor(
         status = ReservationStatus.RELEASED
     }
 
-    fun fail(){
+    fun fail() {
         require(status == ReservationStatus.CREATED) { "invalid transition $status -> FAILED" }
         status = ReservationStatus.FAILED
     }
