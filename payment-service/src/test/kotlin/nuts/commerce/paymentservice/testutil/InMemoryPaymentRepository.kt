@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.adapter.repository
+package nuts.commerce.paymentservice.testutil
 
 import nuts.commerce.paymentservice.model.Payment
 import nuts.commerce.paymentservice.port.repository.PaymentRepository

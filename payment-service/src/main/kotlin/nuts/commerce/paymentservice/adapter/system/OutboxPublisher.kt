@@ -16,6 +16,9 @@ class OutboxPublisher(private val outboxUseCase: PublishOutboxUseCase) {
 
     @Scheduled(fixedDelayString = $$"${system.outbox-publisher.fixed-delay}")
     fun execute() {
-        outboxUseCase.execute()
+        val claimOutboxResult = outboxUseCase.claim()
+        if(claimOutboxResult.size > 0) {
+            outboxUseCase.publish(claimOutboxResult)
+        }
     }
 }

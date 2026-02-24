@@ -28,11 +28,3 @@ class KafkaEventListener(handlers: List<PaymentEventHandler>) {
             ?: throw IllegalArgumentException("No handler found for event type: ${inboundEvent.eventType}")
     }
 }
-
-data class PaymentEventEnvelope(
-    val orderId: UUID,
-    val paymentId: UUID,
-    val eventId: UUID,
-    val eventType: String,
-    val payload: JsonNode
-)

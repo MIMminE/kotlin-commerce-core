@@ -10,6 +10,7 @@ import nuts.commerce.productservice.event.inbound.handler.ProductCreateHandler
 import nuts.commerce.productservice.event.inbound.handler.ProductStockDecrementHandler
 import nuts.commerce.productservice.event.inbound.handler.ProductStockIncrementHandler
 import org.junit.jupiter.api.BeforeEach
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -66,7 +67,7 @@ class ProductEventListenerTest {
 
     @BeforeEach
     fun resetMocks() {
-        org.mockito.Mockito.reset(createdHandler, incrementHandler, decrementHandler)
+        Mockito.reset(createdHandler, incrementHandler, decrementHandler)
         whenever(createdHandler.supportType).thenReturn(InboundEventType.CREATED)
         whenever(incrementHandler.supportType).thenReturn(InboundEventType.INCREMENT_STOCK)
         whenever(decrementHandler.supportType).thenReturn(InboundEventType.DECREMENT_STOCK)

@@ -25,7 +25,6 @@ class JpaOutboxRepository(
         return outboxJpa.saveAndFlush(record).outboxId
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun claimAndLockBatchIds(
         batchSize: Int,
         lockedBy: String
@@ -37,7 +36,7 @@ class JpaOutboxRepository(
         val candidates = outboxJpa.findClaimCandidates(
             now = now,
             pageable = Pageable.ofSize(batchSize),
-            outboxStatus = OutboxStatus.PENDING
+            outboxStatusList = listOf(OutboxStatus.PENDING, OutboxStatus.RETRY_SCHEDULED)
         )
         if (candidates.isEmpty()) return ClaimOutboxResult(
             size = 0,
@@ -52,6 +51,8 @@ class JpaOutboxRepository(
             now = now,
             leaseUntil = leaseUntil
         )
+
+        val findById = outboxJpa.findById(candidates.first())
 
         val claimOutboxInfo = outboxJpa.findClaimed(
             workerId = lockedBy,
@@ -74,7 +75,6 @@ class JpaOutboxRepository(
         )
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markPublished(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(
@@ -89,7 +89,6 @@ class JpaOutboxRepository(
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun markFailed(outboxId: UUID, lockedBy: String) {
         val now = Instant.now()
         val updatedRows = outboxJpa.markOutboxStatus(
@@ -112,14 +111,14 @@ interface OutboxJpa : JpaRepository<OutboxRecord, UUID> {
         """
         select o.outboxId
           from OutboxRecord o 
-         where o.status = :outboxStatus
+         where o.status in :outboxStatusList
            and o.nextAttemptAt <= :now
            and (o.lockedUntil is null or o.lockedUntil < :now)
          order by o.createdAt
     """
     )
     fun findClaimCandidates(
-        @Param("now") now: Instant, pageable: Pageable, @Param("outboxStatus") outboxStatus: OutboxStatus
+        @Param("now") now: Instant, pageable: Pageable, @Param("outboxStatusList") outboxStatusList: List<OutboxStatus>
     ): List<UUID>
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -165,7 +164,8 @@ interface OutboxJpa : JpaRepository<OutboxRecord, UUID> {
         update OutboxRecord o
            set o.status = :newStatus,
                o.lockedBy = null,
-               o.lockedUntil = null
+               o.lockedUntil = null,
+               o.attemptCount = o.attemptCount + 1
          where o.outboxId = :outboxId
            and o.lockedBy = :lockedBy
            and o.status = :expectedStatus

@@ -16,8 +16,8 @@ class PaymentInboundEvent(
     )
     @field:JsonSubTypes(
         JsonSubTypes.Type(value = PaymentCreatePayload::class, name = "PAYMENT_CREATE_REQUEST"),
-        JsonSubTypes.Type(value = PaymentConfirmPayload::class, name = "PAYMENT_CONFIRM"),
-        JsonSubTypes.Type(value = PaymentReleasePayload::class, name = "PAYMENT_RELEASE")
+        JsonSubTypes.Type(value = PaymentConfirmPayload::class, name = "PAYMENT_CONFIRM_REQUEST"),
+        JsonSubTypes.Type(value = PaymentReleasePayload::class, name = "PAYMENT_RELEASE_REQUEST")
     )
     val payload: InboundPayload
 )

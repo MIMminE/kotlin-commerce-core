@@ -1,8 +1,8 @@
 package nuts.commerce.paymentservice.event.inbound.handler
 
 import nuts.commerce.paymentservice.adapter.payment.InMemoryPaymentProvider
-import nuts.commerce.paymentservice.adapter.repository.InMemoryOutboxRepository
-import nuts.commerce.paymentservice.adapter.repository.InMemoryPaymentRepository
+import nuts.commerce.paymentservice.testutil.InMemoryOutboxRepository
+import nuts.commerce.paymentservice.testutil.InMemoryPaymentRepository
 import nuts.commerce.paymentservice.event.inbound.InboundEventType
 import nuts.commerce.paymentservice.event.inbound.PaymentCreatePayload
 import nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent

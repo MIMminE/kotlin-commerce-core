@@ -28,4 +28,3 @@ class RegisterProductUseCaseTest {
         assertEquals(result.productId, saved?.productId)
     }
 }
-

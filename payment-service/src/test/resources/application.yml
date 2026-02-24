@@ -1,0 +1,32 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: "nuts.commerce.paymentservice.event.inbound.PaymentInboundEvent"
+
+
+kafka:
+  payment-event-producer:
+    topic: order-event-test
+
+system:
+  payment-event-listener:
+    enabled: true
+    topic: payment-event
+    group-id: payment-service-group-test
+  outbox-publisher:
+    claim-batch-size: 10
+    claim-locked-by: nuts-worker-test

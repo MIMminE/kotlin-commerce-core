@@ -1,4 +1,4 @@
-package nuts.commerce.paymentservice.adapter.repository
+package nuts.commerce.paymentservice.testutil
 
 import nuts.commerce.paymentservice.model.OutboxInfo
 import nuts.commerce.paymentservice.model.OutboxRecord
