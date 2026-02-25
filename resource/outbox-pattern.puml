@@ -1,0 +1,56 @@
+@startuml
+title Outbox 패턴 (Order Service 기준)
+
+participant "Order Service" as Order
+database "OrderDB (orders table)" as OrderDB
+database "OrderDB (outbox table)" as Outbox
+participant "Outbox Publisher" as OutboxPublisher
+participant "Kafka Broker" as Kafka
+
+== 1) 비즈니스 트랜잭션: 엔터티 저장 + Outbox 삽입 ==
+note left of Order
+  이 블록은 단일 DB 트랜잭션 내에서 실행된다.
+  - 주문(또는 비즈니스 엔터티) 저장
+  - Outbox 테이블에 이벤트 행 삽입 (status=PENDING)
+  둘은 같은 TX에 묶여 원자성을 가진다.
+end note
+Order -> OrderDB : BEGIN TX
+Order -> OrderDB : insert order row
+Order -> Outbox : insert outbox row (event payload, status=PENDING)
+Order -> OrderDB : COMMIT TX
+
+== 2) 퍼블리셔: PENDING 레코드 폴링 및 퍼블리시 ==
+note right of OutboxPublisher
+  퍼블리셔는 DB에서 PENDING 행을 읽고(짧은 DB TX),
+  DB TX를 커밋한 뒤에 메시지를 외부(예: Kafka)에 퍼블리싱한다.
+  퍼블리시가 성공하면 별도 DB TX로 상태를 업데이트한다.
+  이로써 DB와 외부 시스템 간의 긴 트랜잭션을 피할 수 있다.
+end note
+
+group Read pending rows (short DB transaction)
+  OutboxPublisher -> Outbox : BEGIN TX (select ... for update / select)
+  OutboxPublisher -> Outbox : select next PENDING row(s)
+  OutboxPublisher -> Outbox : COMMIT TX
+end
+
+group Publish to external broker (outside DB TX)
+  OutboxPublisher -> Kafka : publish(event)
+end
+
+alt publish success
+  group Mark published (short DB transaction)
+    OutboxPublisher -> Outbox : BEGIN TX
+    OutboxPublisher -> Outbox : Update OutboxRecord Status
+    OutboxPublisher -> Outbox : COMMIT TX
+  end
+else publish fail
+  group Handle failure (short DB transaction)
+    OutboxPublisher -> Outbox : BEGIN TX
+    OutboxPublisher -> Outbox : Update OutboxRecord Status
+    note right: 실패 상태로 업데이트하거나 재시도를 위한 메타데이터 기록
+    OutboxPublisher -> Outbox : COMMIT TX
+    note right: 퍼블리시 실패 시 재시도 정책에 따라 처리
+  end
+end
+
+@enduml

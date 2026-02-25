@@ -106,7 +106,7 @@ else Release Reservation Message 수신
     Inventory -> Kafka : Produce [Reservation Released Message]
 end
 
-== 8. 예약 확정 및 오더 상태 변경 ==
+== 9. 예약 확정 및 오더 상태 변경 ==
 Kafka -> Order : Consume [Reservation Confirmed Message]
 Order -> OrderDB : Update Order Entity (status=COMPLETED) & Update Order Saga Reservation Confirmed Status
 
