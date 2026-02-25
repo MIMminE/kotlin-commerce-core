@@ -1,0 +1,114 @@
+@startuml
+title 주문-인벤토리-결제-상품 흐름 (0~10 단계)
+
+participant "Client" as Client
+participant "Order Service" as Order
+participant "Product Service" as Product
+participant "Inventory Service" as Inventory
+participant "Payment Service" as Payment
+participant "Kafka Broker" as Kafka
+participant "Redis Cache" as Redis
+database "OrderDB" as OrderDB
+database "InventoryDB" as InventoryDB
+database "PaymentDB" as PaymentDB
+participant "PG Gateway" as PG
+
+== 0. 시스템 부팅 시점 ==
+Inventory -> Kafka : Publish [Create Product Stock Snapshot Message]
+Kafka -> Product : Deliver [Create Product Stock Snapshot Message]
+Product -> Redis : Update Cached Stock
+
+== 1. 클라이언트 주문 요청 ==
+Client -> Order : POST /orders { items: [{productId, qty}, ...] }
+
+== 2. 상품 정보 조회 및 주문 이벤트 발행==
+
+Order -> Product : GET /product-snapshot { productIds }
+note over Order, Product
+  Headers:
+  - x-api-key: {API_KEY}
+end note
+Product -> Redis : Get(productId) -> Cached(stock)
+Redis --> Product : Return Cached Data (stock by productId)
+Product --> Order : 200 OK (price, cachedStock)
+Order -> Kafka : Produce [Create Reservation Request Message ]
+
+== 3. 인벤토리 예약 처리 및 이벤트 발행 ==
+Kafka -> Inventory : Consume [Create Reservation Request Message ]
+Inventory -> InventoryDB :  Reserve Stock Hold Qty
+
+alt 예약 성공
+  Inventory -> Kafka : Produce [Create Successful Reservation Message]
+  Inventory -> Kafka : Produce [Inventory Available Stock Decreased Message]
+else 예약 실패
+  Inventory -> Kafka : Produce [Create Failed Reservation Message]
+end
+
+
+
+== 4. 예약 성공/실패 메시지 처리 및 이벤트 발행 ==
+
+alt Create Successful Reservation Message 수신
+    Kafka -> Order : Consume [Create Successful Reservation Message]
+    Order -> OrderDB : Create Order Entity (status=CREATED) & Create Order Sage Entity
+    Order --> Client : 200 OK (reserved)
+    Order -> Kafka : Produce [Payment Requested Message]
+else Create Failed Reservation Message 수신
+    Kafka -> Order : Consume [Create Failed Reservation Message]
+    Order -> OrderDB : Create Order Entity (status=FAIL)
+    Order --> Client : 200 OK (reservation failed)
+end
+
+== 5. 가용 재고 차감 메시지 처리 ==
+Kafka -> Product : Consume [Inventory Available Stock Decreased Message]
+Product -> Redis : Adjust Cached Available Stock
+
+
+== 6. 결제 요청 메시지 처리 및 이벤트 발행 ==
+
+Kafka -> Payment : Consume [Payment Requested Message]
+Payment -> PaymentDB : Create Payment Entity (status=CREATED)
+Payment -> PG : Async Request Payment
+PG --> Payment : Payment Result (success / failed / timeout)
+
+alt PG Result : Success
+  Payment -> PaymentDB : Update Payment Entity (status=APPROVED)
+  Payment -> Kafka : Produce [Payment Success Message]
+
+else PG Result : Failed or Timeout
+  Payment -> PaymentDB : Update Payment Entity (status=FAILED)
+  Payment -> Kafka : Produce [Payment Failed Message]
+
+end
+
+== 7. 결제 결과 메시지 처리 및 이벤트 발행 ==
+
+alt
+    Kafka -> Order : Consume [Payment Success Message]
+    Order -> OrderDB : Update Order Saga Payment Success Status
+    Order -> Kafka : Produce [Confirm Reservation Message]
+else
+    Kafka -> Order : Consume [Payment Failed Message]
+    Order -> OrderDB : Update Order Saga Payment Failed Status
+    Order -> Kafka : Produce [Release Reservation Message]
+end
+
+
+== 8. 예약 확정/반환 메시지 처리 및 이벤트 발행 ==
+alt Confirm Reservation Message 수신
+    Kafka -> Inventory : Consume [Confirm Reservation Message]
+    Inventory -> InventoryDB : Confirm Reserved Stock
+    Inventory -> Kafka : Produce [Reservation Confirmed Message]
+
+else Release Reservation Message 수신
+    Kafka -> Inventory : Consume [Release Reservation Message]
+    Inventory -> InventoryDB : Release Reserved Stock
+    Inventory -> Kafka : Produce [Reservation Released Message]
+end
+
+== 8. 예약 확정 및 오더 상태 변경 ==
+Kafka -> Order : Consume [Reservation Confirmed Message]
+Order -> OrderDB : Update Order Entity (status=COMPLETED) & Update Order Saga Reservation Confirmed Status
+
+@enduml
+
