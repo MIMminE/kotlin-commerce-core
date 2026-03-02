@@ -33,9 +33,25 @@ jobs:
 
       - name: Run tests for service
         working-directory: ${{ matrix.service }}
+        continue-on-error: true
         run: |
           echo "Running tests for ${{ matrix.service }}"
-          ./gradlew test --no-daemon --stacktrace
+          ./gradlew test --no-daemon --stacktrace || true
+          echo $? > ../test_exit_code_${{ matrix.service }}
+
+      - name: Collect and print failing test summaries
+        if: always()
+        working-directory: ${{ matrix.service }}
+        run: |
+          echo "Collecting test reports for ${{ matrix.service }}"
+          echo "-- Test reports (plain files) --"
+          if [ -d build/test-results ]; then
+            find build/test-results -type f -name '*.xml' -or -name '*.txt' -print -exec sed -n '1,200p' {} \; || true
+          fi
+          echo "-- Human-readable reports (if any) --"
+          if [ -d build/reports/tests/test ]; then
+            find build/reports/tests/test -type f -maxdepth 1 -print -exec sed -n '1,200p' {} \; || true
+          fi
 
       - name: Upload test results (if any)
         if: always()
@@ -45,3 +61,18 @@ jobs:
           path: |
             ${{ matrix.service }}/build/test-results
             ${{ matrix.service }}/build/reports
+
+      - name: Fail workflow if tests failed
+        if: always()
+        run: |
+          CODE_FILE=../test_exit_code_${{ matrix.service }}
+          if [ -f "$CODE_FILE" ]; then
+            code=$(cat "$CODE_FILE" | tr -d '\r' )
+            echo "Test exit code: $code"
+            if [ "$code" != "0" ]; then
+              echo "Tests failed for ${{ matrix.service }} (exit $code). Failing job.";
+              exit $code
+            fi
+          else
+            echo "No exit code file found; assuming tests passed."
+          fi
