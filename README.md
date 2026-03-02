@@ -108,14 +108,6 @@ CI: `.github/workflows/ci.yml` — `master` 푸시 시 각 서비스의 `./gradl
 }
 ```
 
-    - Response: 201 Created
-
-```json
-{
-  "orderId": "<UUID>"
-}
-```
-
 - GET /api/orders?userId={userId}&page={n}&size={m}
     - 주문 요약 페이지 반환(요약: orderId, userId, status, totalAmount, currency)
 
