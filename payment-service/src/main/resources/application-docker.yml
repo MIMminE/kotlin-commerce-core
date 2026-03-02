@@ -1,0 +1,28 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.paymentservice.event"
+  datasource:
+    url: jdbc:postgresql://payment-postgres:5432/payment_db
+    username: app
+    password: app_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+server:
+  port: 8082
+system:
+  outbox-publisher:
+    enabled: true
+    fixed-delay: 5000
+    claim-batch-size: 50
+    claim-locked-by: nuts-worker
+

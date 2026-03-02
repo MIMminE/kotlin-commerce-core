@@ -1,0 +1,30 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+    consumer:
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "nuts.commerce.orderservice.event"
+  datasource:
+    url: jdbc:postgresql://order-postgres:5432/orders_db
+    username: app
+    password: app_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+server:
+  port: 8083
+system:
+  outbox-publisher:
+    enabled: true
+    fixed-delay: 5000
+    claim-batch-size: 50
+    claim-locked-by: nuts-worker
+
