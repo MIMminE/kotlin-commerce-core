@@ -185,6 +185,7 @@ CI: `.github/workflows/ci.yml` — `master` 푸시 시 각 서비스의 `./gradl
 
 ## 주문 생성 시퀀스(단계별)
 
+목적: 주문 생성에서 재고 예약, 결제 처리, 상품 재고 동기화에 이르는 전체 이벤트 흐름의 일관성과 신뢰성을 보장.
 ![Order create sequence](./portfolio/order-create-sequence.png)
 
 1) 클라이언트 요청: `POST /orders` (헤더: `Idempotency-Key`)
