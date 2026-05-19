@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuts Market</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#">
+          <span class="brand-mark">N</span>
+          <span>Nuts Market</span>
+        </a>
+
+        <label class="search">
+          <span>검색</span>
+          <input id="searchInput" type="search" placeholder="상품명을 검색해 보세요" />
+        </label>
+
+        <nav class="nav">
+          <a href="#catalog">신상품</a>
+          <a href="#catalog">베스트</a>
+          <a href="#checkout">장바구니</a>
+          <a href="#orders">주문조회</a>
+        </nav>
+
+        <div class="service-pill" aria-live="polite">
+          <span id="serviceStatus" class="status-dot"></span>
+          <span id="statusText">상품 준비 중</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="category-strip" aria-label="상품 카테고리">
+        <button class="category-chip is-active" type="button" data-category="전체">전체</button>
+        <button class="category-chip" type="button" data-category="데일리 추천">데일리 추천</button>
+        <button class="category-chip" type="button" data-category="프리미엄">프리미엄</button>
+        <button class="category-chip" type="button" data-category="베스트">베스트</button>
+        <button class="category-chip" type="button" data-category="스마트홈">스마트홈</button>
+        <button class="category-chip" type="button" data-category="액세서리">액세서리</button>
+      </section>
+
+      <section class="shop-layout">
+        <section id="catalog" class="catalog">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Shop</p>
+              <h2>추천 상품</h2>
+            </div>
+            <button id="refreshProducts" class="text-button" type="button">새로고침</button>
+          </div>
+
+          <div id="productList" class="product-grid"></div>
+        </section>
+
+        <aside id="checkout" class="sidebar">
+          <section class="panel cart-panel">
+            <div class="section-title compact">
+              <div>
+                <p class="eyebrow">Cart</p>
+                <h2>장바구니</h2>
+              </div>
+            </div>
+
+            <form id="orderForm" class="order-form">
+              <label>
+                고객 ID
+                <input name="userId" value="user-123" required />
+              </label>
+
+              <label>
+                상품
+                <select name="productId" required></select>
+              </label>
+
+              <label>
+                수량
+                <input name="qty" type="number" min="1" value="1" required />
+              </label>
+
+              <div id="cartSummary" class="cart-summary"></div>
+              <button class="primary-button" type="submit">주문하기</button>
+            </form>
+          </section>
+
+          <section id="orders" class="panel">
+            <div class="section-title compact">
+              <div>
+                <p class="eyebrow">Orders</p>
+                <h2>최근 주문</h2>
+              </div>
+              <button id="refreshOrders" class="icon-button" type="button" title="주문 새로고침">↻</button>
+            </div>
+            <div id="orderList" class="order-list"></div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="backoffice">
+        <details>
+          <summary>운영자용 상품 등록</summary>
+          <form id="productForm" class="inline-form">
+            <input name="productName" placeholder="상품명" required />
+            <input name="price" type="number" min="100" step="100" placeholder="가격" required />
+            <button type="submit">등록</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="technical-log">
+        <details>
+          <summary>호출 로그</summary>
+          <pre id="logOutput"></pre>
+          <button id="clearLog" class="text-button" type="button">로그 지우기</button>
+        </details>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

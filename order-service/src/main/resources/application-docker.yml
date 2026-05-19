@@ -28,3 +28,6 @@ system:
     claim-batch-size: 50
     claim-locked-by: nuts-worker
 
+rest:
+  product-service:
+    base-url: http://product-service:8080
