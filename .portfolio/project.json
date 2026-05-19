@@ -1,0 +1,36 @@
+{
+  "id": "kotlin-commerce-core",
+  "title": "Kotlin Commerce Core",
+  "subtitle": "Kafka 이벤트 기반 커머스 MSA",
+  "category": "백엔드 아키텍처형",
+  "status": "Portfolio Ready",
+  "description": "주문, 재고, 결제, 상품 서비스를 Kafka 이벤트로 연결하고 Transactional Outbox, Lease, Idempotency를 적용한 커머스 프로젝트입니다.",
+  "problem": "분산 서비스에서는 주문 저장과 메시지 발행, 중복 요청, 재시도 상황에서 데이터 정합성이 흔들릴 수 있습니다.",
+  "solution": "Transactional Outbox와 lease 기반 publisher를 사용해 메시지 유실과 중복 발행 위험을 줄였습니다.",
+  "impact": "주문 도메인의 신뢰성 패턴을 작은 MSA와 데모 UI로 구현해 아키텍처 설계 역량을 보여줍니다.",
+  "stacks": ["Kotlin", "Spring Boot", "Kafka", "PostgreSQL", "Redis", "Docker Compose", "Testcontainers"],
+  "highlights": [
+    "Transactional Outbox",
+    "Idempotency",
+    "Lease Publisher",
+    "Redis Cache",
+    "Kafka Event Flow"
+  ],
+  "interviewPoints": [
+    "DB 트랜잭션과 Kafka 발행을 직접 묶을 수 없는 문제 설명",
+    "SKIP LOCKED 기반 publisher 확장성 설명",
+    "멱등성 키로 API 재시도를 처리한 이유 설명"
+  ],
+  "coverImage": {
+    "path": "portfolio/web-client-preview.png",
+    "alt": "Kotlin Commerce Core 데모 UI"
+  },
+  "documents": [
+    { "label": "README", "path": "README.md", "type": "docs" },
+    { "label": "API 목록", "path": "portfolio/portfolio_api_list.md", "type": "docs" }
+  ],
+  "localDemo": {
+    "label": "Commerce Demo UI",
+    "url": "http://localhost:5183"
+  }
+}
