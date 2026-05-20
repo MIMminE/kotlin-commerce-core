@@ -1,0 +1,24 @@
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Java / Gradle
+.gradle/
+.gradle-user/
+**/build/
+out/
+
+# Node
+node_modules/
+demo-ui/node_modules/
+demo-ui/dist/
+dist/
+*.tsbuildinfo
+
+# Runtime / logs
+*.log
+.env
+.env.*
+!.env.example
