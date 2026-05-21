@@ -8,7 +8,7 @@
   "stacks": ["Kotlin", "Spring Boot", "Kafka", "PostgreSQL", "Redis", "Docker Compose", "Testcontainers"],
   "repoUrl": "https://github.com/MIMminE/kotlin-commerce-core",
   "article": "blog/article.md",
-  "coverImage": "portfolio/web-client-preview.png",
+  "coverImage": "blog/images/01-web-client-preview.png",
   "coverAlt": "Kotlin Commerce Core 데모 UI",
   "links": [
     {
