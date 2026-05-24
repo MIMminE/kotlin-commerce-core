@@ -4,6 +4,18 @@ Kotlin과 Spring Boot로 구현한 이벤트 기반 커머스 마이크로서비
 
 > 이직 포트폴리오 관점에서는 “단순 CRUD 백엔드”가 아니라, 주문 도메인에서 필요한 신뢰성 패턴을 작은 MSA로 직접 구현한 프로젝트입니다.
 
+## Portfolio Positioning
+
+이 레포는 취업용 포트폴리오에서 **분산 커머스 백엔드의 신뢰성 설계 역량**을 보여주기 위한 프로젝트입니다.
+
+| 평가 포인트 | 이 프로젝트에서 보여주는 내용 |
+| --- | --- |
+| MSA 경계 설계 | 주문, 재고, 결제, 상품 서비스를 각자 DB를 가진 서비스로 분리 |
+| 메시지 신뢰성 | Transactional Outbox로 DB 저장과 Kafka 발행 사이의 실패 간극 보완 |
+| 동시 실행 고려 | Lease 기반 publisher로 다중 인스턴스 경합 제어 |
+| 중복 요청/이벤트 방어 | Idempotency-Key와 eventId 기반 멱등 처리 |
+| 설명 가능한 포트폴리오 | 웹 클라이언트와 블로그 글로 주문 흐름을 직접 확인 가능 |
+
 <p align="center">
   <img src="portfolio/web-client-preview.png" alt="Commerce client preview" width="900" />
 </p>
