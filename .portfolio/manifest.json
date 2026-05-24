@@ -9,7 +9,7 @@
   "repoUrl": "https://github.com/MIMminE/kotlin-commerce-core",
   "article": "blog/article.md",
   "coverImage": "blog/images/01-web-client-preview.png",
-  "coverAlt": "Kotlin Commerce Core 데모 UI",
+  "coverAlt": "Kotlin Commerce Core 웹 클라이언트",
   "links": [
     {
       "label": "포트폴리오 설명",
