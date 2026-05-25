@@ -231,7 +231,7 @@ GitHub Actions에서 각 서비스의 테스트를 실행하고 테스트 리포
 - lease와 `SKIP LOCKED`를 사용해 Publisher 병렬 처리 안정성을 고려한 점
 - 멱등성 키로 클라이언트 재시도와 중복 요청을 다룬 점
 - Redis 캐시를 상품 조회 흐름에 연결해 읽기 성능을 고려한 점
-- Docker Compose와 웹 클라이언트로 면접자가 로컬에서 빠르게 흐름을 확인할 수 있게 만든 점
+- Docker Compose와 웹 클라이언트로 검토자가 로컬에서 빠르게 흐름을 확인할 수 있게 만든 점
 
 ## Repository Structure
 

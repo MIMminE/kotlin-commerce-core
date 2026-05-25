@@ -70,4 +70,4 @@ docker compose up -d
 - 컨테이너 프로파일: `application-docker.yml` 사용 (`SPRING_PROFILES_ACTIVE=docker`)
 - 루트 `docker-compose.yml`: Zookeeper + Kafka, Redis, 서비스별 Postgres, 그리고 각 서비스 빌드/런 정의
     - Compose는 각 서비스를 빌드(build: ./<service>)해 컨테이너를 생성합니다.
-- CI: `.github/workflows/ci.yml` — `master` 푸시 시 각 서비스의 `./gradlew test` 실행 및 테스트 리포트 업로드
+- CI: `.github/workflows/ci.yml` — `main`/`dev` 푸시 시 각 서비스의 `./gradlew test` 실행 및 테스트 리포트 업로드
