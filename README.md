@@ -245,3 +245,19 @@ GitHub Actions에서 각 서비스의 테스트를 실행하고 테스트 리포
 ├── portfolio/            # README용 스크린샷 및 아키텍처 이미지
 └── docker-compose.yml
 ```
+
+## Portfolio Blog Package
+
+포트폴리오 허브에 게시되는 본문과 이미지는 `blog/`와 `.portfolio/manifest.json`을 기준으로 관리합니다. 로컬에서 패키지를 만들면 `dist/portfolio-package` 아래에 S3 업로드용 산출물이 생성됩니다.
+
+```bash
+node scripts/build-portfolio-package.mjs
+```
+
+```text
+blog/article.md
+blog/images/*
+.portfolio/manifest.json
+-> dist/portfolio-package/
+-> S3 portfolio-feed/kotlin-commerce-core/
+```
