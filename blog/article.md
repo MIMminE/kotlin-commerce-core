@@ -26,7 +26,7 @@ Kotlin Commerce Core는 주문, 재고, 결제, 상품 서비스를 나누고 Ka
 
 ## 해결하고 싶었던 문제
 
-커머스 MSA를 포트폴리오로 보여줄 때 단순히 서비스 개수를 늘리는 것은 큰 의미가 없다고 봤습니다. 실제 면접에서 더 중요한 질문은 서비스가 나뉜 뒤 생기는 실패와 중복, 정합성 문제를 어떻게 다루는가입니다.
+커머스 MSA를 포트폴리오로 보여줄 때 단순히 서비스 개수를 늘리는 것은 큰 의미가 없다고 봤습니다. 실제 설계에서 더 중요한 지점은 서비스가 나뉜 뒤 생기는 실패와 중복, 정합성 문제를 어떻게 다루는가입니다.
 
 | 문제 | 설계 대응 |
 | --- | --- |
@@ -48,7 +48,7 @@ Kotlin Commerce Core는 주문, 재고, 결제, 상품 서비스를 나누고 Ka
 
 ## 시스템 개요
 
-![System overview](./images/02-system-overview.svg)
+![커머스 MSA 시스템 개요](./images/02-system-overview.svg)
 
 서비스는 주문 생성 이후 재고 예약, 결제 처리, 상품 캐시 갱신까지 이벤트 기반으로 이어집니다.
 
@@ -63,7 +63,7 @@ Kotlin Commerce Core는 주문, 재고, 결제, 상품 서비스를 나누고 Ka
 
 ## 웹 클라이언트를 붙인 이유
 
-![Web client preview](./images/01-web-client-preview.png)
+![웹 클라이언트 주문 흐름](./images/01-web-client-preview.png)
 
 백엔드 아키텍처 프로젝트는 API 호출 예시만 있으면 읽는 사람이 흐름을 상상해야 합니다. 그래서 주문 흐름을 직접 확인할 수 있는 브라우저 웹 클라이언트를 붙였습니다.
 
@@ -71,7 +71,7 @@ Kotlin Commerce Core는 주문, 재고, 결제, 상품 서비스를 나누고 Ka
 
 ## 주문 이벤트 흐름
 
-![Order flow](./images/03-order-flow.svg)
+![주문 이벤트 처리 흐름](./images/03-order-flow.svg)
 
 주문 생성 흐름은 다음과 같습니다.
 
@@ -87,7 +87,7 @@ Kotlin Commerce Core는 주문, 재고, 결제, 상품 서비스를 나누고 Ka
 
 ## Transactional Outbox
 
-![Outbox flow](./images/04-outbox-flow.svg)
+![Transactional Outbox 발행 흐름](./images/04-outbox-flow.svg)
 
 Transactional Outbox는 DB 저장과 메시지 발행 사이의 불일치를 줄이기 위한 패턴입니다.
 
@@ -146,7 +146,7 @@ Outbox Publisher가 하나만 실행된다면 단순 조회 후 발행도 가능
 
 ## 주문 확인 화면
 
-![Checkout UI](./images/05-ui-checkout.png)
+![주문 확인 UI](./images/05-ui-checkout.png)
 
 웹 클라이언트는 서비스가 여러 개로 나뉘어 있어도 사용자가 보는 흐름은 하나의 주문 경험으로 이어진다는 점을 보여줍니다. 상품 선택, 주문 생성, 최근 주문 확인을 같은 화면에서 확인할 수 있어 이벤트 기반 흐름을 설명할 때 보조 자료로 쓰기 좋습니다.
 
@@ -169,9 +169,15 @@ product-service
 
 서비스가 많아지면 실행 난이도가 올라가기 때문에, 포트폴리오에서는 로컬 재현 가능성이 중요하다고 봤습니다.
 
-## 블로그 포스팅 패키지
+## 검증과 게시 구조
 
-Kotlin Commerce Core도 Portfolio Hub에 게시할 수 있도록 블로그 패키지 구조를 추가했습니다.
+이 프로젝트는 서비스가 여러 개라서 "로컬에서 다시 띄워볼 수 있는가"가 중요합니다. Docker Compose 실행 단위와 각 서비스 테스트, 포트폴리오 패키징을 분리해 검증 기준을 잡았습니다.
+
+| 검증 항목 | 확인 내용 |
+| --- | --- |
+| 서비스 테스트 | 주문, 재고, 결제, 상품 서비스의 핵심 도메인 테스트와 멱등 처리 흐름 확인 |
+| 로컬 재현 | Kafka, Redis, PostgreSQL, 각 서비스를 Docker Compose로 띄워 주문 이벤트 흐름 확인 |
+| 포트폴리오 패키지 | 본문, 다이어그램, 웹 클라이언트 이미지, manifest가 S3 feed 구조로 묶이는지 확인 |
 
 ```text
 blog/article.md
@@ -181,7 +187,7 @@ blog/images/*
 -> S3 portfolio-feed/kotlin-commerce-core/
 ```
 
-포스팅 업로드는 수동 GitHub Actions 워크플로우로만 실행합니다. 아키텍처 글은 코드가 바뀔 때마다 자동 게시되는 것보다, 글과 이미지가 정리된 시점에 명시적으로 게시하는 편이 더 안전하다고 봤습니다.
+포스팅 업로드는 수동 GitHub Actions로만 실행해, 아키텍처 글과 이미지가 정리된 시점에 공개 feed에 반영하도록 했습니다.
 
 ## 회고
 
@@ -190,11 +196,3 @@ blog/images/*
 MSA는 구조 자체가 목적이 되기 쉽습니다. 하지만 실제로 중요한 것은 메시지 발행 실패, 중복 이벤트, 재시도, 멱등성, 캐시 무효화처럼 운영 중에 터지는 문제입니다. Kotlin Commerce Core는 그런 문제들을 커머스 주문 흐름 안에 넣어 설명하기 위해 만든 프로젝트입니다.
 
 나중에 더 확장한다면 Saga 보상 트랜잭션, DLQ, OpenTelemetry trace, consumer lag 모니터링, 재처리 운영 화면까지 붙여볼 수 있습니다.
-
-## 면접에서 설명할 포인트
-
-- Outbox를 쓰는 이유와 Kafka 발행 실패 시 복구 흐름
-- Lease가 중복 발행을 줄이는 방식과 consumer 멱등성이 여전히 필요한 이유
-- Idempotency-Key와 eventId 멱등 처리가 서로 다른 계층의 문제를 해결한다는 점
-- Redis 캐시가 재고 정합성을 깨지 않도록 이벤트와 함께 다뤄야 한다는 점
-- MSA의 핵심은 서비스 분리가 아니라 분리 이후의 실패 모델을 설계하는 것이라는 점
